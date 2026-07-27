@@ -15,6 +15,8 @@ services:
     networks:
       - bibliotech-network
 
+  # ... (configuração do db continua igual) ...
+
   # 2. Configuração da sua API Spring Boot
   api:
     build: . 
@@ -26,14 +28,15 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JWT_SECRET: minhachavesecretamuitoSegura1234567890
-      # --- ADICIONE A LINHA ABAIXO ---
-      GEMINI_API_KEY: AQ.Ab8RN6KMwIhIZ_CU-aZXujNFSt7C0ND3ptJz4l_7gTzOC5stCg
-      # -------------------------------
+      JWT_SECRET: ${JWT_SECRET}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
       - "8080:8080"
     networks:
       - bibliotech-network
+    env_file:
+      - .env  
+
 # Cria uma rede interna para a API achar o Banco de Dados pelo nome "db"
 networks:
   bibliotech-network:
