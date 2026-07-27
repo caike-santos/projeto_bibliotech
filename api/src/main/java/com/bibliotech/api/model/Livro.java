@@ -1,5 +1,6 @@
 package com.bibliotech.api.model;
 
+
 import jakarta.persistence.*;
 
 @Entity
@@ -32,6 +33,21 @@ public class Livro {
     private Integer quantidadeTotal;
 
     private Integer quantidadeDisponivel;
+
+    private boolean ativo = true;
+
+    // Relacionamento Muitos para Muitos com a nova entidade Tag
+    @ManyToMany
+    @JoinTable(
+        name = "livro_tags",
+        joinColumns = @JoinColumn(name = "livro_id"),
+        inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private java.util.List<Tag> tagsSecundarias = new java.util.ArrayList<>();
+
+    // Não se esqueça de gerar o Getter e Setter para tagsSecundarias no final do arquivo!
+    public java.util.List<Tag> getTagsSecundarias() { return tagsSecundarias; }
+    public void setTagsSecundarias(java.util.List<Tag> tagsSecundarias) { this.tagsSecundarias = tagsSecundarias; }
 
     public Livro(){
     }
@@ -101,5 +117,12 @@ public class Livro {
     }
     public String getTitulo() {
         return titulo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+    public boolean isAtivo() {
+        return ativo;
     }
 }

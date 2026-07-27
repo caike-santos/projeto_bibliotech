@@ -6,6 +6,7 @@ import com.bibliotech.api.service.EmprestimoService;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -29,6 +30,21 @@ public class EmprestimoController {
     @GetMapping
     public List<Emprestimo> listarEmprestimos() {
         return repository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Emprestimo> buscarEmprestimoPorId(@PathVariable Long id) {
+        Emprestimo emprestimo = repository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException());
+        
+        return ResponseEntity.ok(emprestimo);
+    }
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<Emprestimo>> buscarEmprestimosDoUsuario(@PathVariable Long usuarioId) {
+        List<Emprestimo> historico = repository.findByUsuarioId(usuarioId);
+        
+        return ResponseEntity.ok(historico);
     }
 
     @PutMapping("/{id}/renovar")

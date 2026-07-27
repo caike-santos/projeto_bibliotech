@@ -1,5 +1,7 @@
 package com.bibliotech.api.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,4 +13,7 @@ public interface EmprestimoRepository extends JpaRepository<Emprestimo, Long>{
 
     // Regra 3 (Novo): Verifica se existe ALGUM empréstimo com um status específico para o usuário
     boolean existsByUsuarioIdAndStatus(Long usuarioId, String status);
+
+    // Busca todo o histórico de empréstimos de um usuário específico
+    List<Emprestimo> findByUsuarioId(Long usuarioId);
 }

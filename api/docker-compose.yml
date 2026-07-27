@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # 1. Configuração do Banco de Dados MySQL
+  db:
+    image: mysql:8.0
+    container_name: bibliotech-mysql
+    environment:
+      MYSQL_DATABASE: bibliotech_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql # Salva os dados para não perder quando desligar
+    networks:
+      - bibliotech-network
+
+  # 2. Configuração da sua API Spring Boot
+  api:
+    build: . 
+    container_name: bibliotech-api
+    depends_on:
+      - db 
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/bibliotech_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: minhachavesecretamuitoSegura1234567890
+      # --- ADICIONE A LINHA ABAIXO ---
+      GEMINI_API_KEY: AQ.Ab8RN6KMwIhIZ_CU-aZXujNFSt7C0ND3ptJz4l_7gTzOC5stCg
+      # -------------------------------
+    ports:
+      - "8080:8080"
+    networks:
+      - bibliotech-network
+# Cria uma rede interna para a API achar o Banco de Dados pelo nome "db"
+networks:
+  bibliotech-network:
+
+# Cria um disco virtual para salvar os dados do MySQL permanentemente
+volumes:
+  mysql_data:

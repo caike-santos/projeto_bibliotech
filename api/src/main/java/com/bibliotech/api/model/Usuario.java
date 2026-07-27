@@ -1,10 +1,15 @@
 package com.bibliotech.api.model;
 
+import java.util.Collection;
+
+import org.jspecify.annotations.Nullable;
+import org.springframework.security.core.GrantedAuthority;
+
 import jakarta.persistence.*;
 
 @Entity // Avisa ao Spring que esta classe vai virar uma tabela no banco
 @Table(name = "usuarios") // Define o nome exato da tabela
-public class Usuario {
+public class Usuario implements org.springframework.security.core.userdetails.UserDetails{
 
     @Id // Diz que este campo é a Chave Primária (PK)
     @GeneratedValue(strategy = GenerationType.IDENTITY) // O banco vai gerar o ID automaticamente (Auto Increment)
@@ -26,6 +31,8 @@ public class Usuario {
     private String status; // ATIVO ou BLOQUEADO
 
     private int pontosGamificacao = 0; // Inicia com 0 pontos
+
+    private boolean enabled = true;
 
     // CONSTRUTOR VAZIO (Obrigatório para o Spring funcionar)
     public Usuario() {
@@ -52,4 +59,31 @@ public class Usuario {
 
     public int getPontosGamificacao() { return pontosGamificacao; }
     public void setPontosGamificacao(int pontosGamificacao) { this.pontosGamificacao = pontosGamificacao; }
+
+    public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+    
+}
+
+    @Override
+    public boolean isEnabled() {
+       return this.enabled;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return java.util.List.of(); // Devolve uma lista vazia (sem restrição de perfis por enquanto)
+    }
+
+    @Override
+    public String getPassword() {
+        return senha; // Aponta para a variável que guarda a senha no seu banco
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    
 }

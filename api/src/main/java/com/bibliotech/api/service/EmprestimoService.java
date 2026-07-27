@@ -1,70 +1,105 @@
 package com.bibliotech.api.service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
-import com.bibliotech.api.model.Emprestimo;
-import com.bibliotech.api.model.Usuario;
-import com.bibliotech.api.repository.EmprestimoRepository;
-import com.bibliotech.api.repository.UsuarioRepository;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.temporal.ChronoUnit;
 
-@Service // Indica que aqui ficam as Regras de Negócio
+import com.bibliotech.api.model.Emprestimo;
+import com.bibliotech.api.model.Livro;
+import com.bibliotech.api.model.Usuario;
+import com.bibliotech.api.model.Reserva;
+import com.bibliotech.api.model.Notificacao;
+import com.bibliotech.api.repository.EmprestimoRepository;
+import com.bibliotech.api.repository.LivroRepository;
+import com.bibliotech.api.repository.UsuarioRepository;
+import com.bibliotech.api.repository.ReservaRepository;
+import com.bibliotech.api.repository.NotificacaoRepository;
+
+@Service
 public class EmprestimoService {
 
     private final EmprestimoRepository emprestimoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final LivroRepository livroRepository;
+    private final ReservaRepository reservaRepository;
+    private final NotificacaoRepository notificacaoRepository;
 
-    public EmprestimoService(EmprestimoRepository emprestimoRepository, UsuarioRepository usuarioRepository) {
+    public EmprestimoService(EmprestimoRepository emprestimoRepository, UsuarioRepository usuarioRepository, 
+                             LivroRepository livroRepository, ReservaRepository reservaRepository, 
+                             NotificacaoRepository notificacaoRepository) {
         this.emprestimoRepository = emprestimoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.livroRepository = livroRepository;
+        this.reservaRepository = reservaRepository;
+        this.notificacaoRepository = notificacaoRepository;
     }
 
+    @Transactional
     public Emprestimo realizarEmprestimo(Emprestimo novoEmprestimo) {
-        // RN01 - Verifica se o usuário já tem 3 empréstimos ATIVOS
-        int quantidadeAtivos = emprestimoRepository.countByUsuarioIdAndStatus(novoEmprestimo.getUsuario().getId(), "ATIVO");
-        
+        Long usuarioId = novoEmprestimo.getUsuario().getId();
+
+        int quantidadeAtivos = emprestimoRepository.countByUsuarioIdAndStatus(usuarioId, "ATIVO");
         if (quantidadeAtivos >= 3) {
-            // Se tiver 3 ou mais, o Java aborta e lança um erro
             throw new RuntimeException("Limite excedido: O leitor já possui 3 livros emprestados.");
         }
 
-        // RN02 - Prazo de Devolução Automático (14 dias)
-        // Setamos os valores no backend para garantir que ninguém burle as regras
-        novoEmprestimo.setDataRetirada(LocalDate.now());
-        novoEmprestimo.setDataDevolucaoPrevista(LocalDate.now().plusDays(14));
-        novoEmprestimo.setStatus("ATIVO");
-        novoEmprestimo.setRenovacoesFeitas(0);
-
-        Long usuarioId = novoEmprestimo.getUsuario().getId();
-
-        // RN03 - Bloqueio por Atraso
         if (emprestimoRepository.existsByUsuarioIdAndStatus(usuarioId, "ATRASADO")) {
             throw new RuntimeException("Bloqueado: O leitor possui livros em atraso e precisa regularizar sua situação.");
         }
 
-        // Se passar pela regra, salva no banco
+        Livro livro = livroRepository.findById(novoEmprestimo.getLivro().getId())
+                .orElseThrow(() -> new RuntimeException("Livro não encontrado no sistema."));
+
+        // --- NOVA REGRA: VERIFICA SE O USUÁRIO É O DONO DA RESERVA ---
+        java.util.Optional<Reserva> reservaNotificada = reservaRepository.findFirstByUsuarioIdAndLivroIdAndStatus(usuarioId, livro.getId(), "NOTIFICADO");
+
+        if (reservaNotificada.isPresent()) {
+            // É a pessoa da fila! Libera o empréstimo e conclui a reserva.
+            Reserva reserva = reservaNotificada.get();
+            reserva.setStatus("CONCLUIDA");
+            reservaRepository.save(reserva);
+            
+            // Atenção: Não diminuímos o estoque aqui porque ele já foi "congelado" na devolução!
+        } else {
+            // É um usuário comum tentando pegar o livro
+            if (livro.getQuantidadeDisponivel() <= 0) {
+                throw new RuntimeException("Operação negada: O livro '" + livro.getTitulo() + "' está sem estoque no momento.");
+            }
+            // Fluxo normal: diminui 1 do estoque e salva
+            livro.setQuantidadeDisponivel(livro.getQuantidadeDisponivel() - 1);
+            livroRepository.save(livro);
+        }
+
+        novoEmprestimo.setDataRetirada(LocalDate.now());
+        novoEmprestimo.setDataDevolucaoPrevista(LocalDate.now().plusDays(14));
+        novoEmprestimo.setStatus("ATIVO");
+        novoEmprestimo.setRenovacoesFeitas(0);
+        novoEmprestimo.setLivro(livro); 
+
         return emprestimoRepository.save(novoEmprestimo);
     }
 
-    // RN04 - Limite de Renovação
     public Emprestimo renovarEmprestimo(Long emprestimoId) {
-        // Busca o empréstimo no banco ou devolve erro se não existir
         Emprestimo emprestimo = emprestimoRepository.findById(emprestimoId)
                 .orElseThrow(() -> new RuntimeException("Empréstimo não encontrado."));
 
-        // RN03 aplicada à renovação (Não pode renovar se estiver bloqueado por atraso)
         if (emprestimoRepository.existsByUsuarioIdAndStatus(emprestimo.getUsuario().getId(), "ATRASADO")) {
             throw new RuntimeException("Bloqueado: O leitor não pode fazer renovações pois possui livros em atraso.");
         }
 
-        // RN04 - Só pode renovar 1 vez
         if (emprestimo.getRenovacoesFeitas() >= 1) {
             throw new RuntimeException("Limite de renovação: Este livro já foi renovado o limite máximo de vezes permitidas.");
         }
+        
+        // RN07 - Bloqueio de renovação se houver fila de espera
+        boolean temFilaDeEspera = reservaRepository.existsByLivroIdAndStatus(emprestimo.getLivro().getId(), "AGUARDANDO");
+        if (temFilaDeEspera) {
+            throw new RuntimeException("Renovação negada: Há leitores na fila de espera aguardando este livro.");
+        }
 
-        // Aplica a renovação: Adiciona +1 à contagem e joga o prazo para mais 14 dias
         emprestimo.setRenovacoesFeitas(emprestimo.getRenovacoesFeitas() + 1);
         emprestimo.setDataDevolucaoPrevista(emprestimo.getDataDevolucaoPrevista().plusDays(14));
 
@@ -83,27 +118,42 @@ public class EmprestimoService {
         emprestimo.setDataDevolucaoReal(LocalDate.now());
         emprestimo.setStatus("DEVOLVIDO");
 
-        // Regra de Negócio: Verificar Atrasos vs Gamificação
-        if (!emprestimo.getDataDevolucaoReal().isAfter(emprestimo.getDataDevolucaoPrevista())) {
+        Livro livro = emprestimo.getLivro();
+        livro.setQuantidadeDisponivel(livro.getQuantidadeDisponivel() + 1);
+        
+        // --- NOVA REGRA: AVISAR A FILA DE ESPERA ---
+        List<Reserva> fila = reservaRepository.findByLivroIdAndStatusOrderByDataSolicitacaoAsc(livro.getId(), "AGUARDANDO");
+        
+        if (!fila.isEmpty()) {
+            // Pega quem pediu primeiro
+            Reserva proximoDaFila = fila.get(0);
+            proximoDaFila.setStatus("NOTIFICADO");
+            reservaRepository.save(proximoDaFila);
+
+            // Gera o alerta no sistema
+            Notificacao aviso = new Notificacao();
+            aviso.setUsuario(proximoDaFila.getUsuario());
+            aviso.setMensagem("Boas notícias! O livro '" + livro.getTitulo() + "' que você reservou acabou de ser devolvido. Ele está reservado para você no balcão por 48 horas.");
+            aviso.setDataEnvio(java.time.LocalDateTime.now());
+            aviso.setLida(false);
+            notificacaoRepository.save(aviso);
             
-            // ENTREGOU NO PRAZO: Ganha Gamificação e Zera Multa
+            // "Congela" o livro para o próximo da fila, impedindo que outro leitor pegue antes
+            livro.setQuantidadeDisponivel(livro.getQuantidadeDisponivel() - 1);
+        }
+
+        livroRepository.save(livro);
+
+        if (!emprestimo.getDataDevolucaoReal().isAfter(emprestimo.getDataDevolucaoPrevista())) {
             Usuario usuario = emprestimo.getUsuario();
             int pontosAtuais = usuario.getPontosGamificacao();
             usuario.setPontosGamificacao(pontosAtuais + 10);
             usuarioRepository.save(usuario);
-            
-            emprestimo.setValorMulta(0.0); // Zera a multa por segurança
-            
+            emprestimo.setValorMulta(0.0); 
         } else {
-            // ENTREGOU ATRASADO: Perde o direito aos pontos e paga multa
-            // Calcula a diferença exata de dias entre o dia que era pra devolver e o dia que devolveu
             long diasAtraso = ChronoUnit.DAYS.between(emprestimo.getDataDevolucaoPrevista(), emprestimo.getDataDevolucaoReal());
-            
-            // R$ 2.00 cobrados por cada dia
             double valorDaMulta = diasAtraso * 2.00;
-            
             emprestimo.setValorMulta(valorDaMulta);
-            
             System.out.println("Alerta de Atraso: " + diasAtraso + " dias. Multa gerada: R$ " + valorDaMulta);
         }
 
