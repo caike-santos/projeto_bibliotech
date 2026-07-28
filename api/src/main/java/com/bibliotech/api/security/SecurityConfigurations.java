@@ -16,11 +16,14 @@ public class SecurityConfigurations {
     private SecurityFilter securityFilter;
 
     @Bean
-    public org.springframework.security.web.SecurityFilterChain securityFilterChain(org.springframework.security.config.annotation.web.builders.HttpSecurity http) throws Exception {
-        return http.csrf(csrf -> csrf.disable())
-                // Avisa ao Spring que nossa API é Stateless (não guarda sessão, usaremos Token)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
+
+                    req.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll();
                     // Libera as rotas do Swagger para podermos ler a documentação sem precisar de login
                     req.requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll();
                     
@@ -52,5 +55,20 @@ public class SecurityConfigurations {
     @Bean
     public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
         return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        
+        configuration.setAllowedOrigins(java.util.Arrays.asList("http://127.0.0.1:5500", "http://localhost:5500"));
+        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        
+        // Alteramos para "*" para aceitar qualquer cabeçalho que o navegador mandar no Preflight
+        configuration.setAllowedHeaders(java.util.Arrays.asList("*")); 
+        
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
