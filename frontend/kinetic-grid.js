@@ -42,11 +42,11 @@ class KineticGrid {
     updateThemeColors() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         if (isDark) {
-            this.theme.dotColor = '#374151';
+            this.theme.dotColor = '#FFFFFF'; // Branco para destacar no fundo escuro
             this.theme.lineColor = '#B6FF2E';
             this.theme.trailColor = '#B6FF2E';
         } else {
-            this.theme.dotColor = '#E5E7EB';
+            this.theme.dotColor = '#23262F'; // Escuro para destacar no fundo claro
             this.theme.lineColor = '#064E3B';
             this.theme.trailColor = '#064E3B';
         }
