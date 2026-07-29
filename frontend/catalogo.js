@@ -529,7 +529,7 @@ async function carregarMeusEmprestimos() {
             const emprestimos = historico.filter(emp => emp.status === 'ATIVO' || emp.status === 'ATRASADO');
 
             if(emprestimos.length === 0) {
-                lista.innerHTML = '<p style="color: var(--text-muted);">N nenhum empréstimo ativo no momento.</p>';
+                lista.innerHTML = '<p style="color: var(--text-muted);">Nenhum empréstimo ativo no momento.</p>';
                 return;
             }
             

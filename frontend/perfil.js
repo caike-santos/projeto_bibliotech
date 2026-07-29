@@ -196,7 +196,7 @@ async function carregarHistorico(usuarioId, token) {
                 }
 
                 const statusHtml = isAguardando ? 
-                    `<span class="status-badge" style="background: rgba(234, 179, 8, 0.1); color: var(--warning-color); border-color: var(--warning-color);">AGUARDANDO RETIRADA</span>` : 
+                    `<span class="status-badge" style="background: rgba(234, 179, 8, 0.1); color: var(--warning-color); border-color: var(--warning-color); white-space: nowrap; font-size: 0.65rem; letter-spacing: 0;">AGUARDANDO RETIRADA</span>` : 
                     `<span class="status-badge ${badgeClass}">${emp.status}</span>`;
 
                 const tr = document.createElement('tr');
