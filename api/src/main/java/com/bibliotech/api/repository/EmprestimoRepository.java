@@ -22,4 +22,7 @@ public interface EmprestimoRepository extends JpaRepository<Emprestimo, Long>{
 
     // Encontra todos os empréstimos previstos para uma data e status específicos
     List<Emprestimo> findByDataDevolucaoPrevistaAndStatus(java.time.LocalDate data, String status);
+
+    // Encontra todos os empréstimos vencidos (data prevista antes de hoje) e com um status específico
+    List<Emprestimo> findByStatusAndDataDevolucaoPrevistaBefore(String status, java.time.LocalDate data);
 }
