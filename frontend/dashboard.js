@@ -168,9 +168,10 @@ function renderizarAcervo() {
                 <td data-label="Autor">${l.autor}</td>
                 <td data-label="Estoque">${l.quantidadeDisponivel}/${l.quantidadeTotal}</td>
                 <td data-label="Ações">
-                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
                         <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: #3B82F6;" onclick="abrirEdicaoLivro(${l.id})">Editar</button>
-                        <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto;" onclick="inativarLivro(${l.id})">Inativar</button>
+                        <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--warning-color);" onclick="inativarLivro(${l.id})">Inativar</button>
+                        <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--error-color, #ef4444);" onclick="excluirLivroDefinitivo(${l.id})">Excluir</button>
                     </div>
                 </td>
             </tr>
@@ -257,7 +258,7 @@ async function confirmarRevisaoIA() {
 }
 
 async function inativarLivro(id) {
-    if(!confirm('Tem certeza que deseja inativar este livro?')) return;
+    if(!confirm('Tem certeza que deseja inativar este livro? (Ele sairá do catálogo, mas o ISBN continuará reservado)')) return;
     const token = localStorage.getItem('jwtToken');
     try {
         await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
@@ -267,6 +268,28 @@ async function inativarLivro(id) {
         showToast('Erro ao inativar livro.', 'error');
     }
 }
+
+async function excluirLivroDefinitivo(id) {
+    if(!confirm('CUIDADO: Tem certeza que deseja EXCLUIR DEFINITIVAMENTE este livro? O ISBN será liberado. Esta ação não pode ser desfeita.')) return;
+    const token = localStorage.getItem('jwtToken');
+    try {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/hard/${id}`, { 
+            method: 'DELETE', 
+            headers: { 'Authorization': `Bearer ${token}` } 
+        });
+
+        if (response.ok) {
+            showToast('Livro excluído definitivamente com sucesso!', 'success');
+            carregarDados();
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            showToast(errorData.message || 'Erro: O livro não pode ser excluído pois possui histórico de empréstimos.', 'error');
+        }
+    } catch(e) {
+        showToast('Erro ao se conectar com o servidor para exclusão.', 'error');
+    }
+}
+
 
 let livroParaEdicao = null;
 

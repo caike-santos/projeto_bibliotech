@@ -3,6 +3,15 @@ let usuarioLogadoId = null;
 let usuarioLogadoNome = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Menu Hamburger
+    const btnHamburger = document.getElementById('btnHamburger');
+    const userMenu = document.getElementById('userMenu');
+    if(btnHamburger && userMenu) {
+        btnHamburger.addEventListener('click', () => {
+            userMenu.classList.toggle('active');
+        });
+    }
+
     verificarAutenticacao();
     await carregarDadosDoUsuario();
     carregarCatalogo();

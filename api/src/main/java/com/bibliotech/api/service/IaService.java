@@ -32,11 +32,13 @@ public class IaService {
     public Livro buscarLivroCompletoPorIsbn(String isbn) {
        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + apiKey.trim();
 
-        String prompt = "Atue como um especialista em literatura. Para o livro com ISBN " + isbn 
-                + ", responda estritamente em formato JSON puro (sem markdown). "
-                + "REGRA 1: Se você não encontrar nenhum livro real com este exato ISBN, retorne APENAS o JSON: {\"erro\": \"ISBN não encontrado\"}. Não invente dados! "
-                + "REGRA 2: Se encontrar, traga as informações da versão em Português do Brasil (PT-BR). "
-                + "As chaves do JSON devem ser: titulo, autor, editora, sinopse, ano (apenas o numero), generoPrincipal, tagsSecundarias (array de 3 strings) e capaUrl (se tiver uma URL real da capa, se não, null).";
+        String prompt = "Atue como um bibliotecário especialista em catalogação. "
+                + "Sua tarefa é encontrar os metadados do livro que possui EXATAMENTE o ISBN: " + isbn + ". "
+                + "CRÍTICO: ISBN é um identificador único universal. Pesquise no seu banco de dados com extrema precisão. Não tente adivinhar, aproximar ou associar a outro livro aleatório. Se você não tem certeza absoluta sobre a qual livro esse ISBN pertence, aborte a missão. "
+                + "Responda estritamente em formato JSON puro (sem markdown). "
+                + "REGRA 1: Se você não tiver 100% de certeza, retorne APENAS o JSON: {\"erro\": \"ISBN não encontrado\"}. É terminantemente proibido alucinar dados ou retornar o livro errado. "
+                + "REGRA 2: Se encontrar o livro correto, traduza as informações para Português do Brasil (PT-BR). "
+                + "As chaves do JSON devem ser: titulo, autor, editora, sinopse, ano (numero inteiro), generoPrincipal, tagsSecundarias (array de 3 strings) e capaUrl (URL de imagem válida ou null).";
 
         // Montamos a estrutura JSON para a API do Gemini
         String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt.replace("\"", "\\\"") + "\"}]}]}";
@@ -131,7 +133,7 @@ public class IaService {
         // Prompt blindado: A IA é obrigada a escolher apenas os livros que enviamos no catálogo
         String prompt = "Atue como um bibliotecário especialista. Um leitor leu os seguintes livros: " + titulos + 
                         ". Recomende 3 livros para ele ler a seguir, escolhendo EXCLUSIVAMENTE desta lista do nosso acervo atual: [" + catalogoDisponivel + "]. " +
-                        "Faça um texto amigável em português, justificando brevemente a indicação. É estritamente proibido recomendar qualquer livro que não esteja na lista do acervo fornecida. Não use markdown.";
+                        "SEJA EXTREMAMENTE CONCISO E DIRETO. Faça um texto muito curto, listando apenas os 3 livros e no máximo 1 frase super curta de justificativa para cada. É estritamente proibido recomendar livros fora do acervo fornecido. Não use markdown.";
 
         String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt.replace("\"", "\\\"") + "\"}]}]}";
 

@@ -120,25 +120,31 @@
             gap: 1rem;
         }
 
-        .lumina-tooltip {
+        .lumina-bubble {
             background: var(--surface-color);
             color: var(--text-color);
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
             font-size: 0.85rem;
             font-weight: 600;
             box-shadow: var(--shadow);
             border: 1px solid var(--primary-color);
             opacity: 0;
-            transform: translateX(20px);
+            transform: translateY(10px);
             transition: all 0.3s ease;
-            pointer-events: none;
-            white-space: nowrap;
+            max-width: 260px;
+            white-space: normal;
+            word-wrap: break-word;
+            margin-bottom: 0.5rem;
         }
 
-        .lumina-floating-container:hover .lumina-tooltip {
+        /* O bubble aparece de duas formas:
+           1. Pelo JS (removemos a opacidade/transform)
+           2. Pelo Hover no container */
+        .lumina-btn-container:hover .lumina-bubble {
+            display: block !important;
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
         }
 
         .btn-lumina-floating {
@@ -298,17 +304,46 @@
             color: var(--primary-color);
         }
 
+        /* Menu Hamburger */
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
         /* Responsividade Catálogo */
         @media (max-width: 768px) {
             .navbar {
-                flex-direction: column !important;
-                gap: 1rem;
+                flex-wrap: wrap;
+                flex-direction: row !important;
+                justify-content: space-between !important;
                 padding: 1rem !important;
             }
+            .hamburger-btn {
+                display: block;
+                order: 2;
+            }
+            .search-container {
+                order: 3;
+                width: 100%;
+                margin-top: 1rem;
+            }
             .user-menu {
+                display: none;
                 flex-direction: column;
                 width: 100%;
-                gap: 0.5rem;
+                gap: 1rem;
+                order: 4;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid var(--border-color);
+            }
+            .user-menu.active {
+                display: flex !important;
             }
             .search-container {
                 width: 100%;
@@ -336,15 +371,19 @@
             <h2>BiblioTech <span>AI</span></h2>
         </div>
 
+        <button class="hamburger-btn" id="btnHamburger" aria-label="Menu">
+            <i class="ph ph-list"></i>
+        </button>
+
         <!-- Barra de Pesquisa de Títulos -->
         <div class="search-container">
             <i class="ph ph-magnifying-glass"></i>
             <input type="text" id="inputBusca" class="search-input" placeholder="Pesquisar por título ou autor...">
         </div>
 
-        <div class="user-menu">
+        <div class="user-menu" id="userMenu">
             <!-- Gamification Badge -->
-            <span class="user-badge" id="gamificacaoBadge" style="background: var(--primary-color); color: var(--bg-color); font-weight: bold; cursor: pointer;" title="Nível de Leitor"><i class="ph ph-medal"></i> Carregando...</span>
+            <span class="user-badge" id="gamificacaoBadge" style="background: var(--primary-color); color: var(--bg-color); font-weight: bold;" title="Nível de Leitor"><i class="ph ph-medal"></i> Carregando...</span>
             
             <!-- Notificações -->
             <div style="position: relative;">

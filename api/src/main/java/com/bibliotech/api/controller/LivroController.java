@@ -148,6 +148,32 @@ public class LivroController {
 
         livroRepository.save(livro);
     }
+
+    // Rota DELETE (Hard Delete) para excluir totalmente o livro do banco de dados
+    @DeleteMapping("/hard/{id}")
+    public ResponseEntity<?> excluirLivroDefinitivo(@PathVariable Long id) {
+        // 1. Busca o livro
+        Livro livro = livroRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Livro não encontrado."));
+
+        // 2. Valida se o livro tem algum histórico de empréstimo
+        boolean possuiEmprestimo = emprestimoRepository.existsByLivroId(id);
+        if (possuiEmprestimo) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.BAD_REQUEST, 
+                "Não é possível excluir definitivamente um livro que possui histórico de empréstimos. Use a opção de Inativar."
+            );
+        }
+
+        // 3. Limpa associações para evitar erro de Foreign Key (ex: na tabela livro_tags)
+        livro.getTagsSecundarias().clear();
+        livroRepository.save(livro);
+
+        // 4. Exclui permanentemente
+        livroRepository.delete(livro);
+
+        return ResponseEntity.ok().build();
+    }
     // Rota de IA: Gera recomendações baseadas no histórico do leitor e no acervo real
     @GetMapping("/recomendacoes/usuario/{usuarioId}")
     public ResponseEntity<String> recomendarLivros(@PathVariable Long usuarioId) {
