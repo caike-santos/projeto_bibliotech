@@ -94,6 +94,13 @@ public class LivroController {
         livroExistente.setSinopse(livroAtualizado.getSinopse());
         livroExistente.setGeneroPrincipal(livroAtualizado.getGeneroPrincipal());
         
+        if (livroAtualizado.getQuantidadeTotal() != null) {
+            livroExistente.setQuantidadeTotal(livroAtualizado.getQuantidadeTotal());
+        }
+        if (livroAtualizado.getQuantidadeDisponivel() != null) {
+            livroExistente.setQuantidadeDisponivel(livroAtualizado.getQuantidadeDisponivel());
+        }
+        
         List<Tag> tagsProcessadas = new ArrayList<>();
         if (livroAtualizado.getTagsSecundarias() != null) {
             for (Tag tagEnviada : livroAtualizado.getTagsSecundarias()) {

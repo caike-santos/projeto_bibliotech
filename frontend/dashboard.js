@@ -257,6 +257,8 @@ function abrirEdicaoLivro(id) {
     document.getElementById('editLivroGenero').value = livroParaEdicao.generoPrincipal || '';
     document.getElementById('editLivroTags').value = (livroParaEdicao.tagsSecundarias || []).map(t => t.nome).join(', ');
     document.getElementById('editLivroSinopse').value = livroParaEdicao.sinopse || '';
+    document.getElementById('editLivroQtdTotal').value = livroParaEdicao.quantidadeTotal !== undefined ? livroParaEdicao.quantidadeTotal : '';
+    document.getElementById('editLivroQtdDisponivel').value = livroParaEdicao.quantidadeDisponivel !== undefined ? livroParaEdicao.quantidadeDisponivel : '';
 
     fecharModais();
     document.getElementById('modalOverlay').classList.add('active');
@@ -280,7 +282,9 @@ async function salvarEdicaoLivro() {
         capaUrl: document.getElementById('editLivroCapaUrl').value.trim(),
         generoPrincipal: document.getElementById('editLivroGenero').value.trim(),
         tagsSecundarias: tagsArray,
-        sinopse: document.getElementById('editLivroSinopse').value.trim()
+        sinopse: document.getElementById('editLivroSinopse').value.trim(),
+        quantidadeTotal: document.getElementById('editLivroQtdTotal').value ? parseInt(document.getElementById('editLivroQtdTotal').value) : null,
+        quantidadeDisponivel: document.getElementById('editLivroQtdDisponivel').value ? parseInt(document.getElementById('editLivroQtdDisponivel').value) : null
     };
 
     const token = localStorage.getItem('jwtToken');
