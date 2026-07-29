@@ -29,15 +29,11 @@ public class IaService {
         this.tagRepository = tagRepository;
     }
 
-    public void enriquecerDadosDoLivro(Livro livro) {
+    public Livro buscarLivroCompletoPorIsbn(String isbn) {
        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + apiKey.trim();
 
-        String titulo = livro.getTitulo() != null ? livro.getTitulo() : "Desconhecido";
-        String editora = livro.getEditora() != null ? livro.getEditora() : "Desconhecida";
-
-        // Prompt atualizado para não pedir url de capa (a IA inventava links quebrados)
-        String prompt = "Atue como um especialista em literatura. Para o livro com ISBN " + livro.getIsbn() 
-                + " (Titulo: " + titulo + ", Editora: " + editora + "), responda estritamente em formato JSON com as chaves generoPrincipal, autor, sinopse, ano (apenas o numero) e tagsSecundarias (um array de strings com 3 palavras-chave curtas sobre a tematica do livro). Nao use markdown.";
+        String prompt = "Atue como um especialista em literatura. Para o livro com ISBN " + isbn 
+                + ", responda estritamente em formato JSON com as chaves: titulo, autor, editora, sinopse, ano (apenas o numero), generoPrincipal, tagsSecundarias (array de strings com 3 palavras-chave curtas) e capaUrl (se souber uma URL direta real da capa do livro, forneca. Se não souber, retorne null). Não use markdown, retorne apenas o objeto JSON puro.";
 
         // Montamos a estrutura JSON para a API do Gemini
         String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt.replace("\"", "\\\"") + "\"}]}]}";
@@ -46,6 +42,9 @@ public class IaService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
+
+        Livro livro = new Livro();
+        livro.setIsbn(isbn);
 
         try {
             String respostaJson = restTemplate.postForObject(url, entity, String.class);
@@ -60,27 +59,21 @@ public class IaService {
 
             JsonNode dadosExtraidos = mapper.readTree(respostaIA);
 
-            if (dadosExtraidos.has("generoPrincipal")) {
-                livro.setGeneroPrincipal(dadosExtraidos.path("generoPrincipal").asText());
+            if (dadosExtraidos.hasNonNull("titulo")) livro.setTitulo(dadosExtraidos.path("titulo").asText());
+            if (dadosExtraidos.hasNonNull("autor")) livro.setAutor(dadosExtraidos.path("autor").asText());
+            if (dadosExtraidos.hasNonNull("editora")) livro.setEditora(dadosExtraidos.path("editora").asText());
+            if (dadosExtraidos.hasNonNull("sinopse")) livro.setSinopse(dadosExtraidos.path("sinopse").asText());
+            if (dadosExtraidos.hasNonNull("generoPrincipal")) livro.setGeneroPrincipal(dadosExtraidos.path("generoPrincipal").asText());
+            if (dadosExtraidos.hasNonNull("ano")) livro.setAno(dadosExtraidos.path("ano").asInt());
+            
+            // Lida com a capa
+            if (dadosExtraidos.hasNonNull("capaUrl") && !dadosExtraidos.path("capaUrl").asText().trim().isEmpty() && !dadosExtraidos.path("capaUrl").asText().equalsIgnoreCase("null")) {
+                livro.setCapaUrl(dadosExtraidos.path("capaUrl").asText());
+            } else {
+                livro.setCapaUrl("https://covers.openlibrary.org/b/isbn/" + isbn + "-L.jpg");
             }
 
-            if ((livro.getAutor() == null || livro.getAutor().isEmpty()) && dadosExtraidos.has("autor")) {
-                livro.setAutor(dadosExtraidos.path("autor").asText());
-            }
-            if ((livro.getSinopse() == null || livro.getSinopse().isEmpty()) && dadosExtraidos.has("sinopse")) {
-                livro.setSinopse(dadosExtraidos.path("sinopse").asText());
-            }
-            
-            if (livro.getAno() == null && dadosExtraidos.hasNonNull("ano")) {
-                livro.setAno(dadosExtraidos.path("ano").asInt());
-            }
-            
-            // Força a capa do OpenLibrary baseada no ISBN de forma determinística
-            if (livro.getCapaUrl() == null || livro.getCapaUrl().isEmpty()) {
-                livro.setCapaUrl("https://covers.openlibrary.org/b/isbn/" + livro.getIsbn() + "-L.jpg");
-            }
-
-            // --- NOVA EXTRAÇÃO: TAGS SECUNDÁRIAS ---
+            // Lida com as tags secundárias
             if (dadosExtraidos.has("tagsSecundarias") && dadosExtraidos.path("tagsSecundarias").isArray()) {
                 List<Tag> tagsDoLivro = new ArrayList<>();
                 
@@ -88,27 +81,29 @@ public class IaService {
                     String nomeTag = tagNode.asText().trim();
                     
                     if (!nomeTag.isEmpty()) {
-                        // Busca no banco ignorando maiúsculas/minúsculas
                         Optional<Tag> tagExistente = tagRepository.findByNomeIgnoreCase(nomeTag);
                         
                         if (tagExistente.isPresent()) {
-                            // Se a tag já existe no sistema, apenas adiciona ao livro
                             tagsDoLivro.add(tagExistente.get());
                         } else {
-                            // Se for uma tag nova, cria, salva no banco de dados e adiciona ao livro
                             Tag novaTag = new Tag(nomeTag);
                             novaTag = tagRepository.save(novaTag);
                             tagsDoLivro.add(novaTag);
                         }
                     }
                 }
-                
-                // Vincula a lista de tags processadas ao livro
                 livro.setTagsSecundarias(tagsDoLivro);
             }
 
+            // Caso a IA falhe em trazer pelo menos o titulo
+            if (livro.getTitulo() == null || livro.getTitulo().isEmpty()) {
+                throw new RuntimeException("A IA não conseguiu encontrar o livro com este ISBN.");
+            }
+
+            return livro;
+
         } catch (Exception e) {
-            System.err.println("Aviso: Falha ao enriquecer com IA. " + e.getMessage());
+            throw new RuntimeException("Falha ao buscar dados do livro com a IA: " + e.getMessage());
         }
     }
 

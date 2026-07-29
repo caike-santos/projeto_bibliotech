@@ -7,7 +7,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.bibliotech.api.model.Livro;
-import com.bibliotech.api.service.LivroApiService;
 import com.bibliotech.api.service.IaService;
 import com.bibliotech.api.repository.EmprestimoRepository;
 import com.bibliotech.api.repository.LivroRepository; // Importante para SALVAR no final
@@ -23,14 +22,12 @@ import org.springdoc.core.annotations.ParameterObject;
 @RequestMapping("/livros")
 public class LivroController {
 
-    private final LivroApiService livroApiService;
     private final IaService iaService;
     private final LivroRepository livroRepository;
     private final EmprestimoRepository emprestimoRepository;
     private final TagRepository tagRepository;
 
-    public LivroController(LivroApiService livroApiService, IaService iaService, LivroRepository livroRepository, EmprestimoRepository emprestimoRepository, TagRepository tagRepository) {
-        this.livroApiService = livroApiService;
+    public LivroController(IaService iaService, LivroRepository livroRepository, EmprestimoRepository emprestimoRepository, TagRepository tagRepository) {
         this.iaService = iaService;
         this.livroRepository = livroRepository;
         this.emprestimoRepository = emprestimoRepository;
@@ -39,23 +36,20 @@ public class LivroController {
 
     // A mágica completa acontece aqui!
    @PostMapping("/cadastrar-por-isbn/{isbn}")
-public Livro cadastrarLivroAutomaticamente(
-        @PathVariable String isbn, 
-        @RequestParam(defaultValue = "1") Integer quantidade) { 
-    
-    // 1. Busca os dados brutos na Brasil API
-    Livro livro = livroApiService.buscarDadosDoLivroPorIsbn(isbn);
+    public Livro cadastrarLivroAutomaticamente(
+            @PathVariable String isbn, 
+            @RequestParam(defaultValue = "1") Integer quantidade) { 
+        
+        // 1. Busca todos os dados do livro, gênero e capa usando EXCLUSIVAMENTE a Inteligência Artificial Gemini
+        Livro livro = iaService.buscarLivroCompletoPorIsbn(isbn);
 
-    // 2. Passa o livro pela Inteligência Artificial para descobrir o Gênero e preencher o resto
-    iaService.enriquecerDadosDoLivro(livro);
+        // 2. Aplica a sua regra de negócio de estoque
+        livro.setQuantidadeTotal(quantidade);
+        livro.setQuantidadeDisponivel(quantidade);
 
-    // 3. Aplica a sua regra de negócio de estoque
-    livro.setQuantidadeTotal(quantidade);
-    livro.setQuantidadeDisponivel(quantidade);
-
-    // 4. Salva no banco de dados
-    return livroRepository.save(livro);
-}
+        // 3. Salva no banco de dados
+        return livroRepository.save(livro);
+    }
 
     // 1. Rota clássica para listar TODOS os livros do banco
    
