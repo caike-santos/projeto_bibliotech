@@ -226,12 +226,16 @@ function abrirModalTermos(livroId, tipo) {
         btn.style.cursor = 'not-allowed';
         
         btn.onclick = () => {
-            if (!checkbox.checked) return;
+            if (!checkbox.checked || !acaoPendente) return;
+            
+            // Salva os dados antes de fechar o modal
+            const acao = acaoPendente;
             fecharModalTermos();
-            if (acaoPendente.tipo === 'EMPRESTIMO') {
-                realizarEmprestimo(acaoPendente.livroId);
-            } else if (acaoPendente.tipo === 'RESERVA') {
-                entrarFilaEspera(acaoPendente.livroId);
+            
+            if (acao.tipo === 'EMPRESTIMO') {
+                realizarEmprestimo(acao.livroId);
+            } else if (acao.tipo === 'RESERVA') {
+                entrarFilaEspera(acao.livroId);
             }
         };
     }
