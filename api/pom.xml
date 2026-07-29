@@ -61,6 +61,18 @@
             <version>4.4.0</version>
         </dependency>
 
+        <!-- Integração Google Login -->
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client-gson</artifactId>
+            <version>1.43.3</version>
+        </dependency>
+
         <!-- 3. Utilitários e Documentação -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

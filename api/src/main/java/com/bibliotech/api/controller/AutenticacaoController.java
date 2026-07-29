@@ -75,7 +75,7 @@ public class AutenticacaoController {
                     usuario.setNome(name);
                     usuario.setEmail(email);
                     usuario.setSenha(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
-                    usuario.setTipo(com.bibliotech.api.model.TipoUsuario.LEITOR);
+                    usuario.setTipo("LEITOR");
                     usuario.setStatus("ATIVO");
                     usuario.setPontosGamificacao(0);
                     usuario = usuarioRepository.save(usuario);
