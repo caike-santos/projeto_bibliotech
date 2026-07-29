@@ -7,7 +7,41 @@ document.addEventListener('DOMContentLoaded', () => {
         container.id = 'toast-container';
         document.body.appendChild(container);
     }
+    
+    // Inject global loader if it doesn't exist
+    if (!document.getElementById('global-loader')) {
+        const loader = document.createElement('div');
+        loader.id = 'global-loader';
+        loader.innerHTML = `
+            <div class="loader-spinner"></div>
+            <div class="loader-text" id="loader-text">Carregando...</div>
+        `;
+        document.body.appendChild(loader);
+    }
 });
+
+/**
+ * Exibe a tela de carregamento global
+ * @param {string} message 
+ */
+function showGlobalLoader(message = 'Carregando...') {
+    const loader = document.getElementById('global-loader');
+    const textEl = document.getElementById('loader-text');
+    if (loader && textEl) {
+        textEl.innerText = message;
+        loader.classList.add('show');
+    }
+}
+
+/**
+ * Oculta a tela de carregamento global
+ */
+function hideGlobalLoader() {
+    const loader = document.getElementById('global-loader');
+    if (loader) {
+        loader.classList.remove('show');
+    }
+}
 
 /**
  * Exibe um toast na tela.
@@ -88,3 +122,39 @@ async function handleApiError(response, defaultMessage = 'Ocorreu um erro inespe
 
     showToast(finalMessage, 'error');
 }
+
+// --- Fetch Interceptor Global ---
+// Captura todas as chamadas de rede para exibir e ocultar o Loader automaticamente
+let activeRequests = 0;
+const originalFetch = window.fetch;
+
+window.fetch = async function(...args) {
+    activeRequests++;
+    
+    // Determina a mensagem baseada na URL
+    const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+    let msg = 'Carregando...';
+    
+    if (url.includes('/login')) msg = 'Autenticando credenciais...';
+    else if (url.includes('/cadastrar-por-isbn')) msg = 'A Lumina está lendo e catalogando o livro...';
+    else if (url.includes('/recomendacoes') || url.includes('/clustering')) msg = 'Analisando perfis e recomendações...';
+    else if (url.includes('/emprestimos') && url.includes('/renovar')) msg = 'Renovando empréstimo...';
+    else if (url.includes('/emprestimos') && !url.includes('/usuario')) msg = 'Registrando transação...';
+    else if (url.includes('/reservas')) msg = 'Processando reserva...';
+    else if (url.includes('/livros') && args[1]?.method === 'POST') msg = 'Salvando livro...';
+    
+    showGlobalLoader(msg);
+
+    try {
+        const response = await originalFetch.apply(this, args);
+        return response;
+    } catch (error) {
+        throw error;
+    } finally {
+        activeRequests--;
+        if (activeRequests <= 0) {
+            activeRequests = 0;
+            hideGlobalLoader();
+        }
+    }
+};
