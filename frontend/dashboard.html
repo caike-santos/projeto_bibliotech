@@ -271,6 +271,7 @@
                 <div class="stats-grid">
                     <div class="stat-card"><h3>Total de Livros</h3><span id="statLivros">0</span></div>
                     <div class="stat-card"><h3>Leitores Ativos</h3><span id="statUsuarios">0</span></div>
+                    <div class="stat-card"><h3>Equipe (Admin/Biblio)</h3><span id="statEquipe">0</span></div>
                     <div class="stat-card"><h3>Empréstimos</h3><span id="statEmprestimos">0</span></div>
                 </div>
                 
@@ -510,5 +511,10 @@
 
     <script src="toast.js"></script>
     <script src="dashboard.js"></script>
+    <script>
+        // Carrega o tema do localStorage
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
 </body>
 </html>

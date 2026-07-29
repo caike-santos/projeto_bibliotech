@@ -121,10 +121,10 @@ function renderizarLivros(livros) {
                 <div class="livro-estoque">
                     <i class="ph ph-books"></i> Disponíveis: ${livro.quantidadeDisponivel}
                 </div>
-                ${livro.quantidadeDisponivel > 0 
-                    ? `<button class="btn-primary btn-emprestar" onclick="event.stopPropagation(); realizarEmprestimo(${livro.id})">Solicitar Empréstimo</button>` 
-                    : `<button class="btn-primary btn-warning btn-emprestar" onclick="event.stopPropagation(); entrarFilaEspera(${livro.id})">Fazer Reserva</button>`
-                }
+                    ${livro.quantidadeDisponivel > 0 
+                        ? `<button class="btn-primary btn-emprestar" onclick="event.stopPropagation(); abrirModalTermos(${livro.id}, 'EMPRESTIMO')">Solicitar Empréstimo</button>` 
+                        : `<button class="btn-primary btn-warning btn-emprestar" onclick="event.stopPropagation(); abrirModalTermos(${livro.id}, 'RESERVA')">Fazer Reserva</button>`
+                    }
             </div>
         `;
         
@@ -168,21 +168,21 @@ function abrirDetalhesLivro(livro) {
     const btnReservar = document.getElementById('btnReservarModal');
 
     // Lógica de Fila de Espera vs Empréstimo
-    if (livro.quantidadeDisponivel > 0) {
-        btnEmprestar.style.display = 'block';
-        btnReservar.style.display = 'none';
-        btnEmprestar.onclick = () => {
-            realizarEmprestimo(livro.id);
-            fecharDetalhesLivro();
-        };
-    } else {
-        btnEmprestar.style.display = 'none';
-        btnReservar.style.display = 'block';
-        btnReservar.onclick = () => {
-            entrarFilaEspera(livro.id);
-            fecharDetalhesLivro();
-        };
-    }
+        if (livro.quantidadeDisponivel > 0) {
+            btnEmprestar.style.display = 'block';
+            btnReservar.style.display = 'none';
+            btnEmprestar.onclick = () => {
+                fecharDetalhesLivro();
+                abrirModalTermos(livro.id, 'EMPRESTIMO');
+            };
+        } else {
+            btnEmprestar.style.display = 'none';
+            btnReservar.style.display = 'block';
+            btnReservar.onclick = () => {
+                fecharDetalhesLivro();
+                abrirModalTermos(livro.id, 'RESERVA');
+            };
+        }
 
     const modal = document.getElementById('modalDetalhes');
     modal.style.transform = 'translateX(-50%) scale(1)';
@@ -210,6 +210,60 @@ function configurarBusca() {
         renderizarLivros(livrosFiltrados);
     });
 }
+
+// ---------------- LÓGICA DO MODAL DE TERMOS ---------------- //
+let acaoPendente = null;
+
+function abrirModalTermos(livroId, tipo) {
+    acaoPendente = { tipo, livroId };
+    const checkbox = document.getElementById('checkTermos');
+    const btn = document.getElementById('btnConfirmarTermos');
+    
+    if (checkbox) checkbox.checked = false;
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+        
+        btn.onclick = () => {
+            if (!checkbox.checked) return;
+            fecharModalTermos();
+            if (acaoPendente.tipo === 'EMPRESTIMO') {
+                realizarEmprestimo(acaoPendente.livroId);
+            } else if (acaoPendente.tipo === 'RESERVA') {
+                entrarFilaEspera(acaoPendente.livroId);
+            }
+        };
+    }
+
+    const modal = document.getElementById('modalTermos');
+    if (modal) modal.style.transform = 'translate(-50%, -50%) scale(1)';
+}
+
+function fecharModalTermos() {
+    acaoPendente = null;
+    const modal = document.getElementById('modalTermos');
+    if (modal) modal.style.transform = 'translate(-50%, -50%) scale(0)';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const checkbox = document.getElementById('checkTermos');
+    if (checkbox) {
+        checkbox.addEventListener('change', function() {
+            const btn = document.getElementById('btnConfirmarTermos');
+            if (!btn) return;
+            if (this.checked) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            }
+        });
+    }
+});
 
 // Rota de Empréstimo (Conectada ao Back-end)
 async function realizarEmprestimo(livroId) {
@@ -249,13 +303,29 @@ async function realizarEmprestimo(livroId) {
 function configurarChatLumina() {
     const btnToggle = document.getElementById('btnLuminaToggle');
     const modal = document.getElementById('luminaChatModal');
-    const btnClose = document.getElementById('btnCloseChat');
+    const closeBtn = document.getElementById('luminaClose');
     const btnSend = document.getElementById('luminaSend');
     const input = document.getElementById('luminaInput');
     const messages = document.getElementById('luminaMessages');
+    const bubble = document.getElementById('luminaBubble');
 
-    btnToggle.addEventListener('click', () => modal.classList.toggle('active'));
-    btnClose.addEventListener('click', () => modal.classList.remove('active'));
+    // Mostra o balão se for a primeira vez
+    if (bubble && !localStorage.getItem('luminaWelcomeSeen')) {
+        bubble.style.display = 'block';
+    }
+
+    btnToggle.addEventListener('click', () => {
+        if (bubble) {
+            bubble.style.display = 'none';
+            localStorage.setItem('luminaWelcomeSeen', 'true');
+        }
+        modal.classList.add('active');
+        if(messages.children.length === 0) {
+            adicionarMsg('Olá! Eu sou a Lumina. Posso te ajudar a encontrar um livro, recomendar leituras ou tirar dúvidas sobre a biblioteca. O que deseja hoje?', 'bot');
+        }
+    });
+
+    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
 
     btnSend.addEventListener('click', enviarMensagem);
     input.addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarMensagem(); });
@@ -455,7 +525,7 @@ async function carregarMeusEmprestimos() {
             const emprestimos = historico.filter(emp => emp.status === 'ATIVO' || emp.status === 'ATRASADO');
 
             if(emprestimos.length === 0) {
-                lista.innerHTML = '<p style="color: var(--text-muted);">Nenhum empréstimo ativo no momento.</p>';
+                lista.innerHTML = '<p style="color: var(--text-muted);">N nenhum empréstimo ativo no momento.</p>';
                 return;
             }
             
@@ -532,11 +602,22 @@ async function carregarNotificacoes() {
             notifs.forEach(n => {
                 const div = document.createElement('div');
                 div.style = `padding: 0.75rem; border-radius: 0.5rem; background: ${n.lida ? 'var(--bg-color)' : 'rgba(182, 255, 46, 0.1)'}; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.5rem;`;
-                
+                if(!n.lida) {
+                    div.style.borderLeft = '3px solid var(--primary-color)';
+                }
+
+                let icone = '<i class="ph ph-info" style="color: var(--primary-color); font-size: 1.2rem;"></i>';
+                if (n.mensagem.includes("Bem-vindo")) icone = '<i class="ph ph-hand-waving" style="color: #F59E0B; font-size: 1.2rem;"></i>';
+                else if (n.mensagem.includes("Reserva") || n.mensagem.includes("reservado")) icone = '<i class="ph ph-books" style="color: var(--primary-color); font-size: 1.2rem;"></i>';
+                else if (n.mensagem.includes("Atraso") || n.mensagem.includes("vence")) icone = '<i class="ph ph-warning" style="color: #EF4444; font-size: 1.2rem;"></i>';
+
                 div.innerHTML = `
-                    <div>
-                        <strong>${n.titulo || 'Aviso'}</strong>
-                        <p style="font-size:0.8rem; margin-top:0.25rem;">${n.mensagem}</p>
+                    <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                        <div style="margin-top: 2px;">${icone}</div>
+                        <div>
+                            <strong>${n.titulo || 'Aviso'}</strong>
+                            <p style="font-size:0.8rem; margin-top:0.25rem;">${n.mensagem}</p>
+                        </div>
                     </div>
                     <button id="btnNotif-${n.id}" class="btn-primary" style="width: auto; align-self: flex-end; padding: 0.3rem 0.8rem; font-size: 0.7rem;" ${n.lida ? 'disabled' : ''}>
                         ${n.lida ? 'Visto' : 'Marcar como lida'}
@@ -553,6 +634,7 @@ async function carregarNotificacoes() {
                         btnNotif.disabled = true;
                         btnNotif.innerText = 'Visto';
                         div.style.background = 'var(--bg-color)';
+                        div.style.borderLeft = '1px solid var(--border-color)';
                         n.lida = true; // Atualiza o estado local
 
                         await fetch(`https://bibliotech-api-e9wg.onrender.com/notificacoes/${n.id}/ler`, {

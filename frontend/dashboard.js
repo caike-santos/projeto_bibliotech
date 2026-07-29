@@ -102,8 +102,16 @@ async function carregarDados() {
 // ---------------- ANALYTICS ---------------- //
 let chartInstancia = null;
 function atualizarDashboard() {
+    // Atualizar Contadores
     document.getElementById('statLivros').innerText = livros.length;
-    document.getElementById('statUsuarios').innerText = usuarios.length;
+    
+    const leitores = usuarios.filter(u => u.tipo === 'LEITOR');
+    const equipe = usuarios.filter(u => u.tipo === 'ADMIN' || u.tipo === 'BIBLIOTECARIO');
+    
+    document.getElementById('statUsuarios').innerText = leitores.length;
+    
+    const statEquipe = document.getElementById('statEquipe');
+    if (statEquipe) statEquipe.innerText = equipe.length;
     document.getElementById('statEmprestimos').innerText = emprestimos.length;
 
     // Gráfico de Gêneros
@@ -238,8 +246,11 @@ async function inativarLivro(id) {
     const token = localStorage.getItem('jwtToken');
     try {
         await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        showToast('Livro inativado com sucesso.', 'info');
         carregarDados();
-    } catch(e) {}
+    } catch(e) {
+        showToast('Erro ao inativar livro.', 'error');
+    }
 }
 
 let livroParaEdicao = null;
@@ -272,6 +283,14 @@ async function salvarEdicaoLivro() {
     const tagsStr = document.getElementById('editLivroTags').value;
     const tagsArray = tagsStr ? tagsStr.split(',').map(t => ({ nome: t.trim() })).filter(t => t.nome !== '') : [];
 
+    const qtdTotal = document.getElementById('editLivroQtdTotal').value ? parseInt(document.getElementById('editLivroQtdTotal').value) : 0;
+    const qtdDisp = document.getElementById('editLivroQtdDisponivel').value ? parseInt(document.getElementById('editLivroQtdDisponivel').value) : 0;
+
+    if (qtdDisp > qtdTotal) {
+        showToast('A quantidade disponível não pode ser maior que a quantidade total.', 'warning');
+        return;
+    }
+
     // O PUT no backend atualiza apenas os campos cadastrais
     const payload = {
         ...livroParaEdicao, // Mantemos os dados originais como base
@@ -283,8 +302,8 @@ async function salvarEdicaoLivro() {
         generoPrincipal: document.getElementById('editLivroGenero').value.trim(),
         tagsSecundarias: tagsArray,
         sinopse: document.getElementById('editLivroSinopse').value.trim(),
-        quantidadeTotal: document.getElementById('editLivroQtdTotal').value ? parseInt(document.getElementById('editLivroQtdTotal').value) : null,
-        quantidadeDisponivel: document.getElementById('editLivroQtdDisponivel').value ? parseInt(document.getElementById('editLivroQtdDisponivel').value) : null
+        quantidadeTotal: qtdTotal,
+        quantidadeDisponivel: qtdDisp
     };
 
     const token = localStorage.getItem('jwtToken');
@@ -392,12 +411,15 @@ async function cadastrarUsuarioInterno() {
 }
 
 async function inativarUsuario(id) {
-    if(!confirm('Tem certeza que deseja bloquear este usuário?')) return;
+    if(!confirm('Tem certeza que deseja inativar/bloquear este usuário?')) return;
     const token = localStorage.getItem('jwtToken');
     try {
         await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        showToast('Usuário inativado com sucesso.', 'info');
         carregarDados();
-    } catch(e) {}
+    } catch(e) {
+        showToast('Erro ao inativar usuário.', 'error');
+    }
 }
 
 // ---------------- EMPRÉSTIMOS ---------------- //
@@ -424,12 +446,15 @@ function renderizarEmprestimos() {
 }
 
 async function forcarDevolucao(id) {
-    if(!confirm('Confirmar devolução deste livro?')) return;
+    if(!confirm('Confirmar devolução deste empréstimo?')) return;
     const token = localStorage.getItem('jwtToken');
     try {
         await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/${id}/devolver`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        showToast('Devolução confirmada com sucesso.', 'success');
         carregarDados();
-    } catch(e) {}
+    } catch(e) {
+        showToast('Erro ao confirmar devolução.', 'error');
+    }
 }
 
 // ---------------- RESERVAS ---------------- //

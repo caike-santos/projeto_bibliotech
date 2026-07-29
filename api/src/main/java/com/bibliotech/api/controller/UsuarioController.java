@@ -1,15 +1,15 @@
 package com.bibliotech.api.controller;
 
+import com.bibliotech.api.model.Notificacao;
 import com.bibliotech.api.model.Usuario;
+import com.bibliotech.api.repository.NotificacaoRepository;
 import com.bibliotech.api.repository.UsuarioRepository;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.List;
-
 import org.springframework.web.bind.annotation.*;
 import com.bibliotech.api.repository.EmprestimoRepository;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -21,11 +21,13 @@ public class UsuarioController {
     private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final EmprestimoRepository emprestimoRepository;
+    private final NotificacaoRepository notificacaoRepository;
 
-    UsuarioController(PasswordEncoder passwordEncoder, UsuarioRepository repository, EmprestimoRepository emprestimoRepository) {
+    UsuarioController(PasswordEncoder passwordEncoder, UsuarioRepository repository, EmprestimoRepository emprestimoRepository, NotificacaoRepository notificacaoRepository) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.emprestimoRepository = emprestimoRepository;
+        this.notificacaoRepository = notificacaoRepository;
     }
 
     // Rota para CADASTRAR um usuário (Método POST)
@@ -33,7 +35,19 @@ public class UsuarioController {
     public Usuario cadastrarUsuario(@RequestBody Usuario novoUsuario) {
         String senhaCriptografada = passwordEncoder.encode(novoUsuario.getSenha());
         novoUsuario.setSenha(senhaCriptografada);
-        return repository.save(novoUsuario);
+        Usuario usuarioSalvo = repository.save(novoUsuario);
+
+        // Gera notificação de Boas-vindas automática
+        if ("LEITOR".equalsIgnoreCase(usuarioSalvo.getTipo())) {
+            Notificacao boasVindas = new Notificacao();
+            boasVindas.setUsuario(usuarioSalvo);
+            boasVindas.setMensagem("Bem-vindo ao BiblioTech AI! Explore nosso catálogo e converse com a Lumina para receber recomendações personalizadas.");
+            boasVindas.setDataEnvio(LocalDateTime.now());
+            boasVindas.setLida(false);
+            notificacaoRepository.save(boasVindas);
+        }
+
+        return usuarioSalvo;
     }
 
     // Rota para LISTAR TODOS (GET)

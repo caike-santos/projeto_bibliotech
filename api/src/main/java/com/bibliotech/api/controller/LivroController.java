@@ -100,6 +100,16 @@ public class LivroController {
         if (livroAtualizado.getQuantidadeDisponivel() != null) {
             livroExistente.setQuantidadeDisponivel(livroAtualizado.getQuantidadeDisponivel());
         }
+
+        // Validação de coerência do estoque
+        if (livroExistente.getQuantidadeDisponivel() != null && livroExistente.getQuantidadeTotal() != null) {
+            if (livroExistente.getQuantidadeDisponivel() > livroExistente.getQuantidadeTotal()) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, 
+                    "A quantidade disponível não pode ser maior que a quantidade total."
+                );
+            }
+        }
         
         List<Tag> tagsProcessadas = new ArrayList<>();
         if (livroAtualizado.getTagsSecundarias() != null) {
