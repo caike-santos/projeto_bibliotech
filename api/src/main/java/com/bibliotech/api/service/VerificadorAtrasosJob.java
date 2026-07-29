@@ -36,9 +36,9 @@ public class VerificadorAtrasosJob {
             
             Notificacao notificacao = new Notificacao();
             notificacao.setUsuario(e.getUsuario());
-            notificacao.setTitulo("Atraso Detectado!");
             notificacao.setMensagem("O livro '" + e.getLivro().getTitulo() + "' passou do prazo de devolução. Sua conta está bloqueada para novos empréstimos até a regularização.");
             notificacao.setLida(false);
+            notificacao.setDataEnvio(java.time.LocalDateTime.now());
             notificacaoRepository.save(notificacao);
             
             count++;
