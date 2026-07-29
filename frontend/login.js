@@ -10,7 +10,7 @@ document.getElementById('formLogin').addEventListener('submit', async function(e
     btnSubmit.disabled = true;
 
     try {
-        const resposta = await fetch('http://localhost:8080/login', {
+        const resposta = await fetch('https://bibliotech-api-e9wg.onrender.com/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, senha })
@@ -29,7 +29,7 @@ document.getElementById('formLogin').addEventListener('submit', async function(e
 
             try {
                 // Busca no banco de dados para confirmar o role
-                const resUser = await fetch('http://localhost:8080/usuarios', {
+                const resUser = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', {
                     headers: { 'Authorization': `Bearer ${dados.token}` }
                 });
                 

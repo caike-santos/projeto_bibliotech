@@ -11,7 +11,7 @@ document.getElementById('formCadastro').addEventListener('submit', async functio
     btnSubmit.disabled = true;
 
     try {
-        const resposta = await fetch('http://localhost:8080/usuarios', {
+        const resposta = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nome, email, senha, tipo: 'LEITOR', status: 'ATIVO', enabled: true })

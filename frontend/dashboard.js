@@ -63,7 +63,7 @@ async function carregarDados() {
 
     try {
         // Fetch Livros
-        const resLivros = await fetch('http://localhost:8080/livros', { headers });
+        const resLivros = await fetch('https://bibliotech-api-e9wg.onrender.com/livros', { headers });
         if (resLivros.ok) {
             const data = await resLivros.json();
             livros = data.content || data; // Trata Pageable ou List
@@ -71,21 +71,21 @@ async function carregarDados() {
         }
 
         // Fetch Usuários
-        const resUsuarios = await fetch('http://localhost:8080/usuarios', { headers });
+        const resUsuarios = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', { headers });
         if (resUsuarios.ok) {
             usuarios = await resUsuarios.json();
             renderizarUsuarios();
         }
 
         // Fetch Empréstimos
-        const resEmprestimos = await fetch('http://localhost:8080/emprestimos', { headers });
+        const resEmprestimos = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos', { headers });
         if (resEmprestimos.ok) {
             emprestimos = await resEmprestimos.json();
             renderizarEmprestimos();
         }
 
         // Fetch Reservas
-        const resReservas = await fetch('http://localhost:8080/reservas', { headers });
+        const resReservas = await fetch('https://bibliotech-api-e9wg.onrender.com/reservas', { headers });
         if (resReservas.ok) {
             reservas = await resReservas.json();
             renderizarReservas();
@@ -171,7 +171,7 @@ async function buscarEcadastrarLivro() {
     btn.disabled = true;
 
     try {
-        const response = await fetch(`http://localhost:8080/livros/cadastrar-por-isbn/${isbn}`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/cadastrar-por-isbn/${isbn}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -211,7 +211,7 @@ async function confirmarRevisaoIA() {
 
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch(`http://localhost:8080/livros/${id}`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/${id}`, {
             method: 'PUT',
             headers: { 
                 'Authorization': `Bearer ${token}`,
@@ -236,7 +236,7 @@ async function inativarLivro(id) {
     if(!confirm('Tem certeza que deseja inativar este livro?')) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(`http://localhost:8080/livros/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
         carregarDados();
     } catch(e) {}
 }
@@ -284,7 +284,7 @@ async function salvarEdicaoLivro() {
 
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch(`http://localhost:8080/livros/${id}`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/${id}`, {
             method: 'PUT',
             headers: { 
                 'Authorization': `Bearer ${token}`,
@@ -362,7 +362,7 @@ async function cadastrarUsuarioInterno() {
 
     try {
         const token = localStorage.getItem('jwtToken');
-        const response = await fetch('http://localhost:8080/usuarios', {
+        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -390,7 +390,7 @@ async function inativarUsuario(id) {
     if(!confirm('Tem certeza que deseja bloquear este usuário?')) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(`http://localhost:8080/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
         carregarDados();
     } catch(e) {}
 }
@@ -422,7 +422,7 @@ async function forcarDevolucao(id) {
     if(!confirm('Confirmar devolução deste livro?')) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(`http://localhost:8080/emprestimos/${id}/devolver`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/${id}/devolver`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
         carregarDados();
     } catch(e) {}
 }
@@ -461,7 +461,7 @@ async function efetivarEmprestimoDaReserva(livroId, usuarioId) {
     
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch('http://localhost:8080/emprestimos', {
+        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -588,7 +588,7 @@ async function realizarEmprestimoBalcao() {
 
     try {
         const token = localStorage.getItem('jwtToken');
-        const response = await fetch('http://localhost:8080/emprestimos', {
+        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',

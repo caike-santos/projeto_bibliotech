@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (nomeSalvo) document.getElementById('perfilNome').innerText = nomeSalvo;
 
         // Buscar ID do usuário
-        const resUser = await fetch('http://localhost:8080/usuarios', {
+        const resUser = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -89,7 +89,7 @@ function configurarEdicaoPerfil() {
 
         try {
             const token = localStorage.getItem('jwtToken');
-            const res = await fetch(`http://localhost:8080/usuarios/${dadosUsuarioGlobal.id}`, {
+            const res = await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${dadosUsuarioGlobal.id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -131,7 +131,7 @@ function configurarEdicaoPerfil() {
 
 async function carregarGamificacao(usuarioId, token) {
     try {
-        const response = await fetch(`http://localhost:8080/usuarios/${usuarioId}/gamificacao`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${usuarioId}/gamificacao`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -149,7 +149,7 @@ async function carregarHistorico(usuarioId, token) {
     const corpoAtivos = document.getElementById('tabelaMeusEmprestimos');
     
     try {
-        const response = await fetch(`http://localhost:8080/emprestimos/usuario/${usuarioId}`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/usuario/${usuarioId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -213,7 +213,7 @@ async function carregarReservas(usuarioId, token) {
     if (!tbody) return;
 
     try {
-        const response = await fetch(`http://localhost:8080/reservas/usuario/${usuarioId}`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/reservas/usuario/${usuarioId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -238,7 +238,7 @@ async function carregarReservas(usuarioId, token) {
                     
                     // Descobrir a posição real batendo na fila do livro
                     try {
-                        const filaRes = await fetch(`http://localhost:8080/reservas/livro/${r.livro.id}`, { headers: { 'Authorization': `Bearer ${token}` }});
+                        const filaRes = await fetch(`https://bibliotech-api-e9wg.onrender.com/reservas/livro/${r.livro.id}`, { headers: { 'Authorization': `Bearer ${token}` }});
                         if (filaRes.ok) {
                             const fila = await filaRes.json();
                             const index = fila.findIndex(f => f.usuario.id === usuarioId);

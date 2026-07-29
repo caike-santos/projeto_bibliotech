@@ -31,7 +31,7 @@ async function carregarDadosDoUsuario() {
         const email = payload.sub;
         
         // Pega todos os usuários e filtra pelo email para achar o ID (fallback seguro)
-        const response = await fetch('http://localhost:8080/usuarios', {
+        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if(response.ok) {
@@ -66,7 +66,7 @@ async function carregarCatalogo() {
     const gridLivros = document.getElementById('gridLivros');
 
     try {
-        const response = await fetch('http://localhost:8080/livros', {
+        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/livros', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -216,7 +216,7 @@ async function realizarEmprestimo(livroId) {
     const token = localStorage.getItem('jwtToken');
     
     try {
-        const response = await fetch('http://localhost:8080/emprestimos', {
+        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -267,7 +267,7 @@ function configurarChatLumina() {
         
         try {
             const token = localStorage.getItem('jwtToken');
-            const res = await fetch(`http://localhost:8080/livros/recomendacoes/usuario/${usuarioLogadoId}`, {
+            const res = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/recomendacoes/usuario/${usuarioLogadoId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) throw new Error();
@@ -294,7 +294,7 @@ function configurarChatLumina() {
         const idTemp = adicionarMsg('Processando dados...', 'bot');
 
         try {
-            const res = await fetch('http://localhost:8080/assistente/chat', {
+            const res = await fetch('https://bibliotech-api-e9wg.onrender.com/assistente/chat', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -364,7 +364,7 @@ function exibirNomeUsuario() {
 async function entrarFilaEspera(livroId) {
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch(`http://localhost:8080/reservas?usuarioId=${usuarioLogadoId}&livroId=${livroId}`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/reservas?usuarioId=${usuarioLogadoId}&livroId=${livroId}`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -385,7 +385,7 @@ async function carregarGamificacao() {
     if(!usuarioLogadoId) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch(`http://localhost:8080/usuarios/${usuarioLogadoId}/gamificacao`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${usuarioLogadoId}/gamificacao`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if(response.ok) {
@@ -408,7 +408,7 @@ async function carregarRecomendacoes() {
     btnGerar.disabled = true;
 
     try {
-        const response = await fetch(`http://localhost:8080/livros/clustering/usuario/${usuarioLogadoId}`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/clustering/usuario/${usuarioLogadoId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if(response.ok) {
@@ -447,7 +447,7 @@ async function carregarMeusEmprestimos() {
     lista.innerHTML = '<p>Carregando...</p>';
 
     try {
-        const response = await fetch(`http://localhost:8080/emprestimos/usuario/${usuarioLogadoId}`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/usuario/${usuarioLogadoId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if(response.ok) {
@@ -482,7 +482,7 @@ async function carregarMeusEmprestimos() {
 async function renovarEmprestimo(emprestimoId) {
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch(`http://localhost:8080/emprestimos/${emprestimoId}/renovar`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/${emprestimoId}/renovar`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -510,7 +510,7 @@ async function carregarNotificacoes() {
     };
 
     try {
-        const response = await fetch(`http://localhost:8080/notificacoes/usuario/${usuarioLogadoId}`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/notificacoes/usuario/${usuarioLogadoId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if(response.ok) {
@@ -555,7 +555,7 @@ async function carregarNotificacoes() {
                         div.style.background = 'var(--bg-color)';
                         n.lida = true; // Atualiza o estado local
 
-                        await fetch(`http://localhost:8080/notificacoes/${n.id}/ler`, {
+                        await fetch(`https://bibliotech-api-e9wg.onrender.com/notificacoes/${n.id}/ler`, {
                             method: 'PUT',
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
