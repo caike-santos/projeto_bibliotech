@@ -323,9 +323,14 @@ function configurarChatLumina() {
             bubble.style.display = 'none';
             localStorage.setItem('luminaWelcomeSeen', 'true');
         }
-        modal.classList.add('active');
-        if(messages.children.length === 0) {
-            adicionarMsg('Olá! Eu sou a Lumina. Posso te ajudar a encontrar um livro, recomendar leituras ou tirar dúvidas sobre a biblioteca. O que deseja hoje?', 'bot');
+        
+        if (modal.classList.contains('active')) {
+            modal.classList.remove('active');
+        } else {
+            modal.classList.add('active');
+            if(messages.children.length === 0) {
+                adicionarMsg('Olá! Eu sou a Lumina. Posso te ajudar a encontrar um livro, recomendar leituras ou tirar dúvidas sobre a biblioteca. O que deseja hoje?', 'bot');
+            }
         }
     });
 

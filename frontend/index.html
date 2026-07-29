@@ -54,22 +54,8 @@
                     <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
                 </div>
 
-                <div id="g_id_onload"
-                     data-client_id="931451427463-9ejo8fhqk52f1cd9n73otq7fse7ruimv.apps.googleusercontent.com"
-                     data-context="signin"
-                     data-ux_mode="popup"
-                     data-callback="handleGoogleLogin"
-                     data-auto_prompt="false">
-                </div>
-                <div class="g_id_signin"
-                     data-type="standard"
-                     data-shape="rectangular"
-                     data-theme="outline"
-                     data-text="signin_with"
-                     data-size="large"
-                     data-logo_alignment="left"
-                     style="display: flex; justify-content: center; width: 100%;">
-                </div>
+                <!-- Container Dinâmico do Google Button -->
+                <div id="googleButtonContainer" style="display: flex; justify-content: center; width: 100%;"></div>
             </form>
 
             <div class="login-footer">
@@ -95,6 +81,36 @@
             }
         }
 
+        // Função para renderizar o botão do Google com o tema certo
+        function renderGoogleBtn(themeStr) {
+            const btnContainer = document.getElementById('googleButtonContainer');
+            if(!btnContainer || !window.google) return;
+            
+            google.accounts.id.initialize({
+                client_id: "931451427463-9ejo8fhqk52f1cd9n73otq7fse7ruimv.apps.googleusercontent.com",
+                callback: handleGoogleLogin,
+                context: "signin",
+                ux_mode: "popup"
+            });
+            
+            google.accounts.id.renderButton(
+                btnContainer,
+                { 
+                    theme: themeStr === 'dark' ? "filled_black" : "outline", 
+                    size: "large", 
+                    shape: "pill", 
+                    width: 320, 
+                    text: "signin_with",
+                    logo_alignment: "left"
+                }
+            );
+        }
+
+        // Callback invocado automaticamente quando a biblioteca do Google termina de carregar
+        window.onGoogleLibraryLoad = () => {
+            renderGoogleBtn(html.getAttribute('data-theme'));
+        };
+
         if (btnTheme) {
             btnTheme.addEventListener('click', () => {
                 const currentTheme = html.getAttribute('data-theme');
@@ -108,6 +124,9 @@
                 } else {
                     icon.classList.replace('ph-sun', 'ph-moon-stars');
                 }
+
+                // Atualiza o botão do Google instantaneamente!
+                renderGoogleBtn(newTheme);
             });
         }
     </script>
