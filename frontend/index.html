@@ -9,6 +9,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="toast.js" defer></script>
     <script src="login.js" defer></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="shortcut icon" href="imagens/icon.png" type="image/x-icon">
 </head>
 <body>
@@ -46,6 +47,29 @@
                 </div>
 
                 <button type="submit" class="btn-primary">Acessar Sistema</button>
+                
+                <div style="display: flex; align-items: center; margin: 1.5rem 0; gap: 0.5rem;">
+                    <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">OU</span>
+                    <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+                </div>
+
+                <div id="g_id_onload"
+                     data-client_id="931451427463-9ejo8fhqk52f1cd9n73otq7fse7ruimv.apps.googleusercontent.com"
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-size="large"
+                     data-logo_alignment="left"
+                     style="display: flex; justify-content: center; width: 100%;">
+                </div>
             </form>
 
             <div class="login-footer">
