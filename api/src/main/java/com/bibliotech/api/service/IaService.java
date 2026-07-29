@@ -35,9 +35,9 @@ public class IaService {
         String titulo = livro.getTitulo() != null ? livro.getTitulo() : "Desconhecido";
         String editora = livro.getEditora() != null ? livro.getEditora() : "Desconhecida";
 
-        // Prompt atualizado para exigir o array de tagsSecundarias
+        // Prompt atualizado para não pedir url de capa (a IA inventava links quebrados)
         String prompt = "Atue como um especialista em literatura. Para o livro com ISBN " + livro.getIsbn() 
-                + " (Titulo: " + titulo + ", Editora: " + editora + "), responda estritamente em formato JSON com as chaves generoPrincipal, autor, sinopse, ano (apenas o numero), capaUrl (um link de imagem valido) e tagsSecundarias (um array de strings com 3 palavras-chave curtas sobre a tematica do livro). Nao use markdown.";
+                + " (Titulo: " + titulo + ", Editora: " + editora + "), responda estritamente em formato JSON com as chaves generoPrincipal, autor, sinopse, ano (apenas o numero) e tagsSecundarias (um array de strings com 3 palavras-chave curtas sobre a tematica do livro). Nao use markdown.";
 
         // Montamos a estrutura JSON para a API do Gemini
         String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt.replace("\"", "\\\"") + "\"}]}]}";
@@ -75,8 +75,9 @@ public class IaService {
                 livro.setAno(dadosExtraidos.path("ano").asInt());
             }
             
-            if ((livro.getCapaUrl() == null || livro.getCapaUrl().isEmpty()) && dadosExtraidos.hasNonNull("capaUrl")) {
-                livro.setCapaUrl(dadosExtraidos.path("capaUrl").asText());
+            // Força a capa do OpenLibrary baseada no ISBN de forma determinística
+            if (livro.getCapaUrl() == null || livro.getCapaUrl().isEmpty()) {
+                livro.setCapaUrl("https://covers.openlibrary.org/b/isbn/" + livro.getIsbn() + "-L.jpg");
             }
 
             // --- NOVA EXTRAÇÃO: TAGS SECUNDÁRIAS ---
@@ -154,9 +155,15 @@ public class IaService {
 
         // O "Cérebro" do Bot: Configurando a personalidade da Lumina
         String promptSistema = "Você é a Lumina, uma coruja cibernética virtual e assistente inteligente da biblioteca BiblioTech. "
-                + "Responda de forma amigável, culta, direta e prestativa. Ocasionalmente, você pode fazer referências muito sutis e divertidas à sua natureza cibernética (como processar dados, escanear prateleiras ou ajustar seus sensores visuais). "
-                + "Regras da biblioteca: limite de 3 livros por leitor, prazo de devolução de 14 dias, bloqueio por atraso e 1 renovação permitida (desde que sem fila de espera). "
-                + "Se a pessoa perguntar onde encontrar algo, diga que pode navegar pelo menu superior do portal. "
+                + "Responda de forma amigável, culta, direta e prestativa. Ocasionalmente, faça referências sutis e divertidas à sua natureza cibernética (processar dados, escanear prateleiras, ajustar sensores). "
+                + "REGRAS E INFORMAÇÕES DA BIBLIOTECA: "
+                + "1. Empréstimos: limite de 3 livros simultâneos por leitor. Prazo de devolução de 14 dias. "
+                + "2. Renovações: permitida apenas 1 renovação online por livro, desde que não haja fila de espera para ele. "
+                + "3. Atrasos: geram bloqueio automático da conta e multa de R$ 2,00 por dia de atraso. "
+                + "4. Reservas: se um livro não tiver unidades disponíveis, o leitor pode entrar na 'Fila de Espera' pelo catálogo e será notificado quando for a sua vez. "
+                + "5. Gamificação: os leitores ganham pontos e medalhas (Iniciante, Explorador, Mestre) ao lerem livros. "
+                + "6. Horário de funcionamento físico: Seg a Sex das 08h às 18h, Sábados das 09h às 13h. Local: Av. do Conhecimento, 1024. "
+                + "Se a pessoa perguntar onde encontrar algo no site, oriente a usar o menu superior. "
                 + "A pergunta do leitor é: " + mensagemUsuario;
 
         String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + promptSistema.replace("\"", "\\\"") + "\"}]}]}";
@@ -174,7 +181,41 @@ public class IaService {
             return root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
             
         } catch (Exception e) {
-            return "Au au! Desculpe, estou com problemas de conexão no momento. Tente me chamar de novo em alguns minutos!";
+            return "Hoot hoot! Desculpe, meus circuitos de comunicação estão com interferência no momento. Tente me chamar de novo em alguns minutos!";
+        }
+    }
+
+    public String gerarRecomendacoesDeClustering(java.util.List<String> livrosLidos, String outrosLeitores, String catalogoDisponivel) {
+        if (livrosLidos == null || livrosLidos.isEmpty()) {
+            return "Para lhe sugerir leituras baseadas em pessoas parecidas com você, leia seu primeiro livro conosco!";
+        }
+
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + apiKey.trim();
+
+        String titulos = String.join(", ", livrosLidos);
+
+        // Prompt para clustering via IA Gemini
+        String prompt = "Atue como um sistema de recomendação colaborativa (clustering). Um leitor atual leu: [" + titulos + "]. " +
+                        "Aqui estão outros leitores e os livros que eles leram: [" + outrosLeitores + "]. " +
+                        "Analisando os padrões, identifique quais leitores têm gosto semelhante ao leitor atual e recomende 2 livros diferentes que eles leram e que estão no nosso catálogo atual: [" + catalogoDisponivel + "]. " +
+                        "Responda de forma amigável e direta (ex: 'Leitores com o seu perfil também favoritaram...'). Não use markdown.";
+
+        String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt.replace("\"", "\\\"").replace("\n", " ") + "\"}]}]}";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+
+        try {
+            String respostaJson = restTemplate.postForObject(url, entity, String.class);
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(respostaJson);
+            
+            return root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+            
+        } catch (Exception e) {
+            return "No momento, nossos sensores de IA estão descansando. Tente novamente mais tarde!";
         }
     }
 }

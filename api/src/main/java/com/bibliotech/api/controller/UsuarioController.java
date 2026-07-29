@@ -9,6 +9,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
+import com.bibliotech.api.repository.EmprestimoRepository;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/usuarios") // Todas as URLs dessa classe vão começar com /usuarios
@@ -17,10 +20,12 @@ public class UsuarioController {
     // Injeta o repository automaticamente (o Spring instancia para nós)
     private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final EmprestimoRepository emprestimoRepository;
 
-    UsuarioController(PasswordEncoder passwordEncoder, UsuarioRepository repository) {
+    UsuarioController(PasswordEncoder passwordEncoder, UsuarioRepository repository, EmprestimoRepository emprestimoRepository) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.emprestimoRepository = emprestimoRepository;
     }
 
     // Rota para CADASTRAR um usuário (Método POST)
@@ -79,7 +84,40 @@ public class UsuarioController {
         usuario.setStatus("INATIVO");
         usuario.setEnabled(false);
 
-        // Salva a alteração
         repository.save(usuario);
+    }
+
+    // Rota de Gamificação (Calcula o nível do usuário baseado em empréstimos)
+    @GetMapping("/{id}/gamificacao")
+    public ResponseEntity<Map<String, Object>> obterGamificacao(@PathVariable Long id) {
+        // Verifica se o usuário existe
+        repository.findById(id).orElseThrow(() -> new jakarta.persistence.EntityNotFoundException());
+
+        // Busca o número de empréstimos
+        int totalEmprestimos = emprestimoRepository.findByUsuarioId(id).size();
+
+        String nivel;
+        String selo;
+
+        if (totalEmprestimos >= 10) {
+            nivel = "Mestre da Leitura";
+            selo = "🏆";
+        } else if (totalEmprestimos >= 5) {
+            nivel = "Leitor Assíduo";
+            selo = "🥇";
+        } else if (totalEmprestimos >= 1) {
+            nivel = "Leitor Iniciante";
+            selo = "🥈";
+        } else {
+            nivel = "Visitante";
+            selo = "📚";
+        }
+
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("totalEmprestimos", totalEmprestimos);
+        resultado.put("nivel", nivel);
+        resultado.put("selo", selo);
+
+        return ResponseEntity.ok(resultado);
     }
 }

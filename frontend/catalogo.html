@@ -6,6 +6,7 @@
     <title>BiblioTech AI | Catálogo Inteligente</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="shortcut icon" href="imagens/icon.png" type="image/x-icon">
     <style>
         /* --- Layout Superior e Barra de Pesquisa --- */
         .navbar {
@@ -85,12 +86,13 @@
 
         /* Container Principal */
         .catalogo-container {
-    width: 100% !important;
-    max-width: 1200px !important;
-    margin: 2rem auto !important;
-    display: block !important;
-    margin-top: 2.5rem !important;
-}
+            width: 100% !important;
+            max-width: 1200px !important;
+            margin: 2rem auto !important;
+            display: block !important;
+            margin-top: 2.5rem !important;
+            padding: 0 1rem !important;
+        }
 
         .header-catalogo {
             margin-bottom: 2rem;
@@ -108,10 +110,38 @@
         }
 
         /* Botão Flutuante da Lumina */
-        .btn-lumina-floating {
+        .lumina-floating-container {
             position: fixed;
             bottom: 2rem;
             right: 2rem;
+            z-index: 99;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .lumina-tooltip {
+            background: var(--surface-color);
+            color: var(--text-color);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--primary-color);
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .lumina-floating-container:hover .lumina-tooltip {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .btn-lumina-floating {
             background-color: var(--primary-color);
             color: var(--bg-color);
             width: 60px;
@@ -122,14 +152,16 @@
             align-items: center;
             font-size: 2rem;
             cursor: pointer;
-            box-shadow: var(--shadow);
-            border: none;
-            transition: transform 0.3s ease;
-            z-index: 99;
+            box-shadow: 0 0 15px rgba(182, 255, 46, 0.4);
+            border: 2px solid var(--primary-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 0;
+            overflow: hidden;
         }
 
         .btn-lumina-floating:hover {
             transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(182, 255, 46, 0.6);
         }
 
         /* Modal do Chat */
@@ -238,7 +270,7 @@
             border-color: var(--primary-color);
         }
 
-        .lumina-input-area button {
+        .lumina-input-area #luminaSend {
             background-color: var(--primary-color);
             color: var(--bg-color);
             border: none;
@@ -250,6 +282,48 @@
             align-items: center;
             cursor: pointer;
             font-size: 1.125rem;
+        }
+        
+        .theme-toggle-nav {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .theme-toggle-nav:hover {
+            color: var(--primary-color);
+        }
+
+        /* Responsividade Catálogo */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column !important;
+                gap: 1rem;
+                padding: 1rem !important;
+            }
+            .user-menu {
+                flex-direction: column;
+                width: 100%;
+                gap: 0.5rem;
+            }
+            .search-container {
+                width: 100%;
+            }
+            .header-catalogo {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .btn-lumina-floating {
+                width: 50px;
+                height: 50px;
+                bottom: 1rem;
+                right: 1rem;
+            }
         }
     </style>
 </head>
@@ -269,13 +343,46 @@
         </div>
 
         <div class="user-menu">
-            <span class="user-badge" id="userInfo">Leitor Ativo</span>
+            <!-- Gamification Badge -->
+            <span class="user-badge" id="gamificacaoBadge" style="background: var(--primary-color); color: var(--bg-color); font-weight: bold; cursor: pointer;" title="Nível de Leitor"><i class="ph ph-medal"></i> Carregando...</span>
+            
+            <!-- Notificações -->
+            <div style="position: relative;">
+                <button id="btnNotificacoes" style="background:none; border:none; color:var(--text-color); font-size:1.5rem; cursor:pointer;"><i class="ph ph-bell"></i></button>
+                <div id="notificacoesDropdown" class="lumina-modal" style="width: 300px; height: auto; max-height: 300px; right: 0; bottom: auto; top: 100%; transform: scale(0); transform-origin: top right; padding: 1rem; overflow-y: auto;">
+                    <h4>Notificações</h4>
+                    <div id="listaNotificacoes" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;"></div>
+                </div>
+            </div>
+
+            <!-- Meus Empréstimos -->
+            <button class="btn-primary" id="btnMeusEmprestimos" style="padding: 0.5rem 1rem; font-size: 0.875rem; background-color: var(--surface-color); color: var(--text-color); border: 1px solid var(--border-color);">Meus Empréstimos</button>
+            
+            <a href="perfil.html" style="text-decoration: none; flex-shrink: 0;">
+                <span class="user-badge hover-profile" id="userInfo" style="cursor: pointer; white-space: nowrap;">Leitor Ativo</span>
+            </a>
+            
+            <button class="theme-toggle-nav" id="btnTheme" title="Alternar Tema">
+                <i class="ph ph-moon-stars"></i>
+            </button>
+            
             <button class="btn-primary" id="btnSair" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Sair</button>
         </div>
     </nav>
 
     <!-- Conteúdo Principal -->
     <main class="catalogo-container">
+        <!-- Recomendações da IA -->
+        <div style="background: linear-gradient(135deg, var(--surface-color), rgba(182, 255, 46, 0.1)); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--primary-color); margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--primary-color); font-weight: bold;">
+                    <i class="ph ph-sparkle"></i> IA Recomenda (Baseado em Outros Leitores)
+                </div>
+                <button id="btnGerarClustering" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; width: auto; flex-shrink: 0;"><i class="ph ph-magic-wand"></i> Gerar Recomendação</button>
+            </div>
+            <p id="textoRecomendacao" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-color);">Descubra novos livros baseados no que pessoas com gostos parecidos estão lendo. Clique no botão acima para gerar.</p>
+        </div>
+
         <div class="header-catalogo">
             <div>
                 <h2>Acervo Disponível</h2>
@@ -300,14 +407,22 @@
         </div>
         
         <div class="lumina-messages" id="luminaMessages">
-            <div class="lumina-msg bot">
-                Olá! Sou a Lumina, sua assistente cibernética. Como posso ajudar com o acervo hoje?
+            <div class="lumina-msg-wrapper bot" style="display: flex; align-items: flex-end; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <img src="imagens/lumina.png" alt="Lumina" style="width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--primary-color); object-fit: cover; flex-shrink: 0; background: var(--surface-color);">
+                <div class="lumina-msg bot">
+                    Olá! Sou a Lumina, sua assistente cibernética. Como posso ajudar com o acervo hoje?
+                </div>
             </div>
         </div>
 
-        <div class="lumina-input-area">
-            <input type="text" id="luminaInput" placeholder="Digite sua dúvida..." autocomplete="off">
-            <button id="luminaSend"><i class="ph ph-paper-plane-right"></i></button>
+        <div class="lumina-input-area" style="flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem;">
+                <button id="btnLuminaRecomendar" style="background: rgba(182, 255, 46, 0.1); border: 1px solid var(--primary-color); color: var(--primary-color); padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; cursor: pointer; white-space: nowrap;">Me recomende um livro</button>
+            </div>
+            <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <input type="text" id="luminaInput" placeholder="Digite sua dúvida..." autocomplete="off">
+                <button id="luminaSend"><i class="ph ph-paper-plane-right"></i></button>
+            </div>
         </div>
     </div>
 
@@ -354,14 +469,48 @@
 
             <!-- Botão de Ação -->
             <button class="btn-primary" id="btnEmprestarModal" style="width: 100%; padding: 0.75rem; margin-top: 0.25rem;">Solicitar Empréstimo</button>
+            <button class="btn-primary btn-warning" id="btnReservarModal" style="width: 100%; padding: 0.75rem; margin-top: 0.25rem; display: none;">Entrar na Fila de Espera</button>
+        </div>
+    </div>
+
+    <!-- Modal de Meus Empréstimos -->
+    <div id="modalMeusEmprestimos" class="lumina-modal" style="width: 500px; height: auto; max-height: 80vh; overflow-y: auto; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0); transform-origin: center;">
+        <div class="lumina-header">
+            <div class="lumina-title">
+                <i class="ph ph-books"></i>
+                <span>Meus Empréstimos Ativos</span>
+            </div>
+            <button id="btnCloseMeusEmprestimos" class="lumina-close"><i class="ph ph-x"></i></button>
+        </div>
+        <div id="listaMeusEmprestimos" style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Carregado via JS -->
         </div>
     </div>
 
     <!-- Botão Flutuante da Lumina -->
-    <button class="btn-lumina-floating" id="btnLuminaToggle" title="Falar com a Lumina">
-        <i class="ph ph-owl"></i>
-    </button>
-
+    <div class="lumina-floating-container">
+        <div class="lumina-tooltip">Fale comigo!</div>
+        <button class="btn-lumina-floating" id="btnLuminaToggle" title="Falar com a Lumina">
+            <img src="imagens/lumina.png" alt="Lumina" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+        </button>
+    </div>
+    <!-- Scripts -->
+    <script src="toast.js"></script>
     <script src="catalogo.js"></script>
+    <script>
+        const btnTheme = document.getElementById('btnTheme');
+        const html = document.documentElement;
+        const icon = btnTheme.querySelector('i');
+
+        btnTheme.addEventListener('click', () => {
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                icon.classList.replace('ph-moon-stars', 'ph-sun');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.classList.replace('ph-sun', 'ph-moon-stars');
+            }
+        });
+    </script>
 </body>
 </html>

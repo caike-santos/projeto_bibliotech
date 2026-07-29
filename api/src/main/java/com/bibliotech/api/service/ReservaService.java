@@ -54,4 +54,12 @@ public class ReservaService {
     public List<Reserva> consultarFilaDoLivro(Long livroId) {
         return reservaRepository.findByLivroIdAndStatusOrderByDataSolicitacaoAsc(livroId, "AGUARDANDO");
     }
+
+    public List<Reserva> listarTodas() {
+        return reservaRepository.findAll();
+    }
+
+    public List<Reserva> listarPorUsuario(Long usuarioId) {
+        return reservaRepository.findByUsuarioIdOrderByDataSolicitacaoDesc(usuarioId);
+    }
 }

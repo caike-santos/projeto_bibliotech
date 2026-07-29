@@ -53,8 +53,13 @@ public class EmprestimoService {
         Livro livro = livroRepository.findById(novoEmprestimo.getLivro().getId())
                 .orElseThrow(() -> new RuntimeException("Livro não encontrado no sistema."));
 
+        if (emprestimoRepository.existsByUsuarioIdAndLivroIdAndStatusIn(usuarioId, livro.getId(), java.util.Arrays.asList("ATIVO", "ATRASADO"))) {
+            throw new RuntimeException("Operação negada: Você já possui um exemplar deste livro em seus empréstimos ativos.");
+        }
+
         // --- NOVA REGRA: VERIFICA SE O USUÁRIO É O DONO DA RESERVA ---
         java.util.Optional<Reserva> reservaNotificada = reservaRepository.findFirstByUsuarioIdAndLivroIdAndStatus(usuarioId, livro.getId(), "NOTIFICADO");
+        java.util.Optional<Reserva> reservaAguardando = reservaRepository.findFirstByUsuarioIdAndLivroIdAndStatus(usuarioId, livro.getId(), "AGUARDANDO");
 
         if (reservaNotificada.isPresent()) {
             // É a pessoa da fila! Libera o empréstimo e conclui a reserva.
@@ -62,11 +67,25 @@ public class EmprestimoService {
             reserva.setStatus("CONCLUIDA");
             reservaRepository.save(reserva);
             
+            // Marca a notificação como lida automaticamente
+            List<Notificacao> notifs = notificacaoRepository.findByUsuarioIdOrderByDataEnvioDesc(usuarioId);
+            for (Notificacao n : notifs) {
+                if (!n.isLida() && n.getMensagem().contains(livro.getTitulo())) {
+                    n.setLida(true);
+                    notificacaoRepository.save(n);
+                }
+            }
             // Atenção: Não diminuímos o estoque aqui porque ele já foi "congelado" na devolução!
         } else {
             // É um usuário comum tentando pegar o livro
             if (livro.getQuantidadeDisponivel() <= 0) {
                 throw new RuntimeException("Operação negada: O livro '" + livro.getTitulo() + "' está sem estoque no momento.");
+            }
+            // Se ele estava só aguardando, mas pegou o livro (alguém devolveu outra cópia, por ex), resolvemos a fila.
+            if (reservaAguardando.isPresent()) {
+                Reserva r = reservaAguardando.get();
+                r.setStatus("CONCLUIDA");
+                reservaRepository.save(r);
             }
             // Fluxo normal: diminui 1 do estoque e salva
             livro.setQuantidadeDisponivel(livro.getQuantidadeDisponivel() - 1);

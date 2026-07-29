@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark"> <!-- Iniciando no modo escuro pela estética sci-fi -->
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BiblioTech AI | Login</title>
+    <title>BiblioTech AI | Cadastro</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Ícones do Phosphor Icons para um visual moderno -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="toast.js" defer></script>
-    <script src="login.js" defer></script>
+    <script src="cadastro.js" defer></script>
     <link rel="shortcut icon" href="imagens/icon.png" type="image/x-icon">
 </head>
 <body>
@@ -19,42 +18,45 @@
     <main class="login-container">
         <div class="login-card">
             <div class="logo-area">
-                <!-- Espaço provisório para a Lumina -->
                 <div class="lumina-icon">
-                    <i class="ph ph-owl"></i> 
+                    <i class="ph ph-user-plus"></i> 
                 </div>
-                <h1>BiblioTech <span>AI</span></h1>
-                <p>O conhecimento do futuro, hoje.</p>
+                <h1>Crie sua <span>Conta</span></h1>
+                <p>Junte-se ao futuro do conhecimento.</p>
             </div>
 
-            <form id="formLogin" class="login-form">
+            <form id="formCadastro" class="login-form">
                 <div class="input-group">
-                    <label for="email">E-mail</label>
+                    <label for="cadNome">Nome Completo</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-user"></i>
+                        <input type="text" id="cadNome" placeholder="Seu nome" required>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="cadEmail">E-mail</label>
                     <div class="input-wrapper">
                         <i class="ph ph-envelope-simple"></i>
-                        <input type="email" id="email" placeholder="caike@email.com" required>
+                        <input type="email" id="cadEmail" placeholder="seu@email.com" required>
                     </div>
                 </div>
-
                 <div class="input-group">
-                    <label for="senha">Senha</label>
+                    <label for="cadSenha">Senha</label>
                     <div class="input-wrapper">
                         <i class="ph ph-lock-key"></i>
-                        <input type="password" id="senha" placeholder="••••••••" required>
+                        <input type="password" id="cadSenha" placeholder="••••••••" required>
                     </div>
                 </div>
-
-                <button type="submit" class="btn-primary">Acessar Sistema</button>
+                <button type="submit" class="btn-primary">Criar Conta</button>
             </form>
 
             <div class="login-footer">
-                <p id="toggleText">Ainda não é leitor? <a href="cadastro.html">Cadastre-se</a></p>
+                <p>Já possui conta? <a href="index.html">Entrar</a></p>
             </div>
         </div>
     </main>
 
     <script>
-        // Lógica simples para alternar entre Claro e Escuro
         const btnTheme = document.getElementById('btnTheme');
         const html = document.documentElement;
         const icon = btnTheme.querySelector('i');

@@ -11,6 +11,10 @@ import com.bibliotech.api.service.LivroApiService;
 import com.bibliotech.api.service.IaService;
 import com.bibliotech.api.repository.EmprestimoRepository;
 import com.bibliotech.api.repository.LivroRepository; // Importante para SALVAR no final
+import com.bibliotech.api.repository.TagRepository;
+import com.bibliotech.api.model.Tag;
+import java.util.Optional;
+import java.util.ArrayList;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springdoc.core.annotations.ParameterObject;
@@ -23,12 +27,14 @@ public class LivroController {
     private final IaService iaService;
     private final LivroRepository livroRepository;
     private final EmprestimoRepository emprestimoRepository;
+    private final TagRepository tagRepository;
 
-    public LivroController(LivroApiService livroApiService, IaService iaService, LivroRepository livroRepository, EmprestimoRepository emprestimoRepository) {
+    public LivroController(LivroApiService livroApiService, IaService iaService, LivroRepository livroRepository, EmprestimoRepository emprestimoRepository, TagRepository tagRepository) {
         this.livroApiService = livroApiService;
         this.iaService = iaService;
         this.livroRepository = livroRepository;
         this.emprestimoRepository = emprestimoRepository;
+        this.tagRepository = tagRepository;
     }
 
     // A mágica completa acontece aqui!
@@ -93,7 +99,24 @@ public Livro cadastrarLivroAutomaticamente(
         livroExistente.setCapaUrl(livroAtualizado.getCapaUrl());
         livroExistente.setSinopse(livroAtualizado.getSinopse());
         livroExistente.setGeneroPrincipal(livroAtualizado.getGeneroPrincipal());
-        livroExistente.setTagsSecundarias(livroAtualizado.getTagsSecundarias());
+        
+        List<Tag> tagsProcessadas = new ArrayList<>();
+        if (livroAtualizado.getTagsSecundarias() != null) {
+            for (Tag tagEnviada : livroAtualizado.getTagsSecundarias()) {
+                if (tagEnviada.getNome() != null && !tagEnviada.getNome().trim().isEmpty()) {
+                    String nomeTag = tagEnviada.getNome().trim();
+                    Optional<Tag> tagExistente = tagRepository.findByNomeIgnoreCase(nomeTag);
+                    if (tagExistente.isPresent()) {
+                        tagsProcessadas.add(tagExistente.get());
+                    } else {
+                        Tag novaTag = new Tag(nomeTag);
+                        novaTag = tagRepository.save(novaTag);
+                        tagsProcessadas.add(novaTag);
+                    }
+                }
+            }
+        }
+        livroExistente.setTagsSecundarias(tagsProcessadas);
 
         // 3. Salva a versão atualizada por cima da antiga
         return livroRepository.save(livroExistente);
@@ -136,6 +159,45 @@ public Livro cadastrarLivroAutomaticamente(
                 
         // 4. Manda o histórico e o catálogo real para o Gemini trabalhar
         String recomendacao = iaService.gerarRecomendacoesParaUsuario(livrosLidos, catalogoDisponivel);
+        
+        return ResponseEntity.ok(recomendacao);
+    }
+
+    // Rota de IA: Gera recomendações usando Clustering (Agrupamento de Leitores Similares)
+    @GetMapping("/clustering/usuario/{usuarioId}")
+    public ResponseEntity<String> recomendacaoClustering(@PathVariable Long usuarioId) {
+        // 1. Busca os livros lidos do usuário atual
+        List<com.bibliotech.api.model.Emprestimo> historicoUsuario = emprestimoRepository.findByUsuarioId(usuarioId);
+        List<String> livrosLidos = historicoUsuario.stream()
+                .map(emprestimo -> emprestimo.getLivro().getTitulo())
+                .distinct()
+                .toList();
+
+        // 2. Busca histórico de todos os outros usuários
+        List<com.bibliotech.api.model.Emprestimo> todosEmprestimos = emprestimoRepository.findAll();
+        
+        java.util.Map<Long, java.util.List<String>> agrupamentoLeitores = todosEmprestimos.stream()
+            .filter(e -> !e.getUsuario().getId().equals(usuarioId))
+            .collect(
+                java.util.stream.Collectors.groupingBy(
+                    e -> e.getUsuario().getId(),
+                    java.util.stream.Collectors.mapping(e -> e.getLivro().getTitulo(), java.util.stream.Collectors.toList())
+                )
+            );
+            
+        // Formata string de outros leitores: "Leitor 2: [Livro A, Livro B]; Leitor 3: [Livro C]"
+        String outrosLeitores = agrupamentoLeitores.entrySet().stream()
+            .map(entry -> "Leitor " + entry.getKey() + ": " + entry.getValue())
+            .collect(java.util.stream.Collectors.joining("; "));
+
+        // 3. Busca catálogo disponível
+        String catalogoDisponivel = livroRepository.findAll().stream()
+                .filter(com.bibliotech.api.model.Livro::isAtivo)
+                .map(livro -> livro.getTitulo() + " (" + livro.getGeneroPrincipal() + ")")
+                .collect(java.util.stream.Collectors.joining(", "));
+
+        // 4. Manda pra IA gerar o clustering
+        String recomendacao = iaService.gerarRecomendacoesDeClustering(livrosLidos, outrosLeitores, catalogoDisponivel);
         
         return ResponseEntity.ok(recomendacao);
     }

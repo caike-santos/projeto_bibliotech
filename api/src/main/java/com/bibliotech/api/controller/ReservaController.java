@@ -30,4 +30,16 @@ public class ReservaController {
         List<Reserva> fila = service.consultarFilaDoLivro(livroId);
         return ResponseEntity.ok(fila);
     }
+
+    // Rota GET para o painel de gestão (todas as reservas)
+    @GetMapping
+    public ResponseEntity<List<Reserva>> listarTodasReservas() {
+        return ResponseEntity.ok(service.listarTodas());
+    }
+
+    // Rota GET para o perfil do usuário
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<Reserva>> listarReservasDoUsuario(@PathVariable Long usuarioId) {
+        return ResponseEntity.ok(service.listarPorUsuario(usuarioId));
+    }
 }

@@ -31,11 +31,25 @@ public class TratadorDeErros {
         return ResponseEntity.badRequest().body(listaDeErros);
     }
 
+    // Erro 400: Regras de negócio (ex: Limite de empréstimos, sem estoque)
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity tratarErroRegraDeNegocio(RuntimeException ex) {
+        // Se for um erro técnico como NullPointerException, deixamos cair pro genérico
+        if (ex instanceof NullPointerException || ex instanceof IllegalArgumentException && ex.getMessage() == null) {
+            return tratarErro500(ex);
+        }
+        return ResponseEntity.status(400).body(new DadosErroCustomizado(
+                ex.getMessage(), 
+                400, 
+                LocalDateTime.now()
+        ));
+    }
+
     // Erro 500: Qualquer exceção genérica não prevista que venha a ocorrer
     @ExceptionHandler(Exception.class)
     public ResponseEntity tratarErro500(Exception ex) {
         return ResponseEntity.status(500).body(new DadosErroCustomizado(
-                "Erro interno no servidor: " + ex.getLocalizedMessage(), 
+                "Erro interno no servidor: " + ex.getMessage(), 
                 500, 
                 LocalDateTime.now()
         ));

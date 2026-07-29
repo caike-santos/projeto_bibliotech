@@ -20,4 +20,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
     // Busca uma reserva específica de um usuário para um livro com um determinado status
     java.util.Optional<Reserva> findFirstByUsuarioIdAndLivroIdAndStatus(Long usuarioId, Long livroId, String status);
+
+    // Busca o histórico de reservas de um usuário, da mais recente para a mais antiga
+    List<Reserva> findByUsuarioIdOrderByDataSolicitacaoDesc(Long usuarioId);
 }
