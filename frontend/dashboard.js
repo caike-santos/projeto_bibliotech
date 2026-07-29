@@ -77,8 +77,8 @@ async function carregarDados() {
     if(tabReservas) tabReservas.innerHTML = trLoaderReservas;
 
     try {
-        // Fetch Livros
-        const resLivros = await fetch('https://bibliotech-api-e9wg.onrender.com/livros', { headers, skipLoader: true });
+        // Fetch Livros (Trazendo ativos e inativos com limite alto)
+        const resLivros = await fetch('https://bibliotech-api-e9wg.onrender.com/livros?todos=true&size=500', { headers, skipLoader: true });
         if (resLivros.ok) {
             const data = await resLivros.json();
             livros = data.content || data; // Trata Pageable ou List
@@ -164,7 +164,10 @@ function renderizarAcervo() {
             <tr>
                 <td data-label="ID">${l.id}</td>
                 <td data-label="ISBN">${l.isbn || 'N/A'}</td>
-                <td data-label="Título">${l.titulo}</td>
+                <td data-label="Título">
+                    ${l.titulo} 
+                    ${!l.ativo ? '<span style="color: var(--error-color, #ef4444); font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">(Inativo)</span>' : ''}
+                </td>
                 <td data-label="Autor">${l.autor}</td>
                 <td data-label="Estoque">${l.quantidadeDisponivel}/${l.quantidadeTotal}</td>
                 <td data-label="Ações">
@@ -202,17 +205,16 @@ async function buscarEcadastrarLivro() {
         });
 
         if (response.ok) {
-            livroSendoRevisado = await response.json();
+            const livroCadastrado = await response.json();
             
-            // Abre o modal de revisão
-            fecharModais();
-            document.getElementById('modalOverlay').classList.add('active');
-            document.getElementById('modalRevisaoIA').classList.add('active');
+            // Coloca o novo livro temporariamente na lista local para que a função abrirEdicaoLivro ache ele
+            livros.push(livroCadastrado);
             
-            // Preenche os dados sugeridos pela IA
-            document.getElementById('revLivroId').value = livroSendoRevisado.id;
-            document.getElementById('revGenero').value = livroSendoRevisado.generoPrincipal || '';
-            document.getElementById('revTags').value = (livroSendoRevisado.tagsSecundarias || []).map(t => t.nome).join(', ');
+            // Abre o modal universal de edição para a revisão final
+            abrirEdicaoLivro(livroCadastrado.id);
+            document.getElementById('tituloModalLivro').innerText = 'IA: Revise e Salve';
+            
+            showToast('Livro importado! Revise os dados.', 'info');
 
         } else {
             await handleApiError(response, 'Falha ao catalogar o livro. Verifique o ISBN.');
@@ -225,14 +227,6 @@ async function buscarEcadastrarLivro() {
         btn.disabled = false;
     }
 }
-
-async function confirmarRevisaoIA() {
-    const id = document.getElementById('revLivroId').value;
-    const genero = document.getElementById('revGenero').value;
-    const tagsArray = document.getElementById('revTags').value.split(',').map(t => ({ nome: t.trim() }));
-    
-    livroSendoRevisado.generoPrincipal = genero;
-    livroSendoRevisado.tagsSecundarias = tagsArray;
 
     const token = localStorage.getItem('jwtToken');
     try {
@@ -294,20 +288,38 @@ async function excluirLivroDefinitivo(id) {
 let livroParaEdicao = null;
 
 function abrirEdicaoLivro(id) {
-    livroParaEdicao = livros.find(l => l.id === id);
-    if(!livroParaEdicao) return;
-
-    document.getElementById('editLivroId').value = livroParaEdicao.id;
-    document.getElementById('editLivroTitulo').value = livroParaEdicao.titulo || '';
-    document.getElementById('editLivroAutor').value = livroParaEdicao.autor || '';
-    document.getElementById('editLivroEditora').value = livroParaEdicao.editora || '';
-    document.getElementById('editLivroAno').value = livroParaEdicao.ano || '';
-    document.getElementById('editLivroCapaUrl').value = livroParaEdicao.capaUrl || '';
-    document.getElementById('editLivroGenero').value = livroParaEdicao.generoPrincipal || '';
-    document.getElementById('editLivroTags').value = (livroParaEdicao.tagsSecundarias || []).map(t => t.nome).join(', ');
-    document.getElementById('editLivroSinopse').value = livroParaEdicao.sinopse || '';
-    document.getElementById('editLivroQtdTotal').value = livroParaEdicao.quantidadeTotal !== undefined ? livroParaEdicao.quantidadeTotal : '';
-    document.getElementById('editLivroQtdDisponivel').value = livroParaEdicao.quantidadeDisponivel !== undefined ? livroParaEdicao.quantidadeDisponivel : '';
+    if (id === null) {
+        // Modo Cadastro Manual
+        livroParaEdicao = { tagsSecundarias: [] };
+        document.getElementById('tituloModalLivro').innerText = 'Cadastrar Manualmente';
+        document.getElementById('editLivroId').value = '';
+        document.getElementById('editLivroTitulo').value = '';
+        document.getElementById('editLivroAutor').value = '';
+        document.getElementById('editLivroEditora').value = '';
+        document.getElementById('editLivroAno').value = '';
+        document.getElementById('editLivroCapaUrl').value = '';
+        document.getElementById('editLivroGenero').value = '';
+        document.getElementById('editLivroTags').value = '';
+        document.getElementById('editLivroSinopse').value = '';
+        document.getElementById('editLivroQtdTotal').value = 1;
+        document.getElementById('editLivroQtdDisponivel').value = 1;
+    } else {
+        // Modo Edição
+        livroParaEdicao = livros.find(l => l.id === id);
+        if(!livroParaEdicao) return;
+        document.getElementById('tituloModalLivro').innerText = 'Editar Livro';
+        document.getElementById('editLivroId').value = livroParaEdicao.id;
+        document.getElementById('editLivroTitulo').value = livroParaEdicao.titulo || '';
+        document.getElementById('editLivroAutor').value = livroParaEdicao.autor || '';
+        document.getElementById('editLivroEditora').value = livroParaEdicao.editora || '';
+        document.getElementById('editLivroAno').value = livroParaEdicao.ano || '';
+        document.getElementById('editLivroCapaUrl').value = livroParaEdicao.capaUrl || '';
+        document.getElementById('editLivroGenero').value = livroParaEdicao.generoPrincipal || '';
+        document.getElementById('editLivroTags').value = (livroParaEdicao.tagsSecundarias || []).map(t => t.nome).join(', ');
+        document.getElementById('editLivroSinopse').value = livroParaEdicao.sinopse || '';
+        document.getElementById('editLivroQtdTotal').value = livroParaEdicao.quantidadeTotal !== undefined ? livroParaEdicao.quantidadeTotal : '';
+        document.getElementById('editLivroQtdDisponivel').value = livroParaEdicao.quantidadeDisponivel !== undefined ? livroParaEdicao.quantidadeDisponivel : '';
+    }
 
     fecharModais();
     document.getElementById('modalOverlay').classList.add('active');
@@ -329,25 +341,28 @@ async function salvarEdicaoLivro() {
         return;
     }
 
-    // O PUT no backend atualiza apenas os campos cadastrais
     const payload = {
-        ...livroParaEdicao, // Mantemos os dados originais como base
+        ...livroParaEdicao, // Mantemos os dados originais como base (pode estar vazio se for manual)
         titulo: document.getElementById('editLivroTitulo').value.trim(),
         autor: document.getElementById('editLivroAutor').value.trim(),
         editora: document.getElementById('editLivroEditora').value.trim(),
         ano: document.getElementById('editLivroAno').value ? parseInt(document.getElementById('editLivroAno').value) : null,
         capaUrl: document.getElementById('editLivroCapaUrl').value.trim(),
         generoPrincipal: document.getElementById('editLivroGenero').value.trim(),
-        tagsSecundarias: tagsArray,
         sinopse: document.getElementById('editLivroSinopse').value.trim(),
         quantidadeTotal: qtdTotal,
-        quantidadeDisponivel: qtdDisp
+        quantidadeDisponivel: qtdDisp,
+        tagsSecundarias: tagsArray
     };
 
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/${id}`, {
-            method: 'PUT',
+        const isNew = !id;
+        const url = isNew ? `https://bibliotech-api-e9wg.onrender.com/livros` : `https://bibliotech-api-e9wg.onrender.com/livros/${id}`;
+        const method = isNew ? 'POST' : 'PUT';
+
+        const response = await fetch(url, {
+            method: method,
             headers: { 
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -356,11 +371,11 @@ async function salvarEdicaoLivro() {
         });
 
         if (response.ok) {
-            showToast('Livro atualizado com sucesso!', 'success');
+            showToast(isNew ? 'Livro cadastrado manualmente com sucesso!' : 'Livro atualizado com sucesso!', 'success');
             fecharModais();
             carregarDados();
         } else {
-            await handleApiError(response, 'Erro ao atualizar livro.');
+            await handleApiError(response, isNew ? 'Erro ao cadastrar.' : 'Erro ao atualizar.');
         }
     } catch (e) {
         showToast('Erro de rede ao salvar edição.', 'error');

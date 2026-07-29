@@ -283,9 +283,12 @@
 
             <!-- ACERVO -->
             <section id="acervo" class="section">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <h2>Gestão de Acervo</h2>
-                    <button class="btn-primary" onclick="abrirModalCadastroLivro()" style="width: auto; padding: 0.5rem 1rem;">+ Cadastrar via ISBN</button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn-primary" onclick="abrirModalCadastroLivro()" style="width: auto; padding: 0.5rem 1rem;">+ Via ISBN (IA)</button>
+                        <button class="btn-primary" onclick="abrirEdicaoLivro(null)" style="width: auto; padding: 0.5rem 1rem; background: var(--success-color, #10b981);">+ Cadastro Manual</button>
+                    </div>
                 </div>
                 <div class="card table-container">
                     <table>
@@ -395,29 +398,12 @@
         <button class="btn-primary" onclick="fecharModais()" style="margin-top:0.5rem; background:transparent; color:var(--text-color); border:1px solid var(--border-color);">Cancelar</button>
     </div>
 
-    <!-- Modal de Validação da IA -->
-    <div class="modal" id="modalRevisaoIA">
-        <h3 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="ph ph-sparkle"></i> Revisão da Inteligência Artificial</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">O livro foi importado. A IA gerou a seguinte classificação, revise antes de salvar definitivamente (RNF04).</p>
-        
-        <input type="hidden" id="revLivroId">
-        
-        <div class="input-group">
-            <label>Gênero Principal</label>
-            <input type="text" id="revGenero" style="width: 100%; padding: 0.5rem; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 0.25rem;">
-        </div>
-
-        <div class="input-group">
-            <label>Tags Secundárias (separadas por vírgula)</label>
-            <input type="text" id="revTags" style="width: 100%; padding: 0.5rem; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 0.25rem;">
-        </div>
-
-        <button class="btn-primary" onclick="confirmarRevisaoIA()">Confirmar e Salvar</button>
-    </div>
-
     <!-- Modal Editar Livro -->
     <div class="modal" id="modalEditarLivro" style="max-height: 90vh; overflow-y: auto;">
-        <h3 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="ph ph-pencil-simple"></i> Editar Livro</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 id="tituloModalLivro" style="color: var(--primary-color);">Editar Livro</h2>
+            <i class="ph ph-x" style="font-size: 1.5rem; cursor: pointer; color: var(--text-color);" onclick="fecharModais()"></i>
+        </div>
         
         <input type="hidden" id="editLivroId">
         

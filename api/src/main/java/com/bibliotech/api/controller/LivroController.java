@@ -51,10 +51,49 @@ public class LivroController {
         return livroRepository.save(livro);
     }
 
+    // Rota POST (Manual) para cadastrar livro sem passar pela IA
+    @PostMapping
+    public Livro cadastrarLivroManual(@RequestBody Livro livroManual) {
+        // Validação de coerência do estoque
+        if (livroManual.getQuantidadeDisponivel() != null && livroManual.getQuantidadeTotal() != null) {
+            if (livroManual.getQuantidadeDisponivel() > livroManual.getQuantidadeTotal()) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, 
+                    "A quantidade disponível não pode ser maior que a quantidade total."
+                );
+            }
+        }
+
+        // Processamento de Tags
+        List<Tag> tagsProcessadas = new ArrayList<>();
+        if (livroManual.getTagsSecundarias() != null) {
+            for (Tag tagEnviada : livroManual.getTagsSecundarias()) {
+                if (tagEnviada.getNome() != null && !tagEnviada.getNome().trim().isEmpty()) {
+                    String nomeTag = tagEnviada.getNome().trim();
+                    Optional<Tag> tagExistente = tagRepository.findByNomeIgnoreCase(nomeTag);
+                    if (tagExistente.isPresent()) {
+                        tagsProcessadas.add(tagExistente.get());
+                    } else {
+                        Tag novaTag = new Tag(nomeTag);
+                        novaTag = tagRepository.save(novaTag);
+                        tagsProcessadas.add(novaTag);
+                    }
+                }
+            }
+        }
+        livroManual.setTagsSecundarias(tagsProcessadas);
+
+        return livroRepository.save(livroManual);
+    }
+
     // 1. Rota clássica para listar TODOS os livros do banco
    
     @GetMapping
-    public Page<Livro> listarLivros(@ParameterObject @PageableDefault(size = 10, sort = {"titulo"}) Pageable paginacao) {
+    public Page<Livro> listarLivros(@ParameterObject @PageableDefault(size = 100, sort = {"titulo"}) Pageable paginacao, 
+                                    @RequestParam(required = false, defaultValue = "false") boolean todos) {
+        if (todos) {
+            return livroRepository.findAll(paginacao);
+        }
         return livroRepository.findByAtivoTrue(paginacao);
     }
 
