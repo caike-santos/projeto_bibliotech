@@ -33,7 +33,10 @@ public class IaService {
        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + apiKey.trim();
 
         String prompt = "Atue como um especialista em literatura. Para o livro com ISBN " + isbn 
-                + ", responda estritamente em formato JSON com as chaves: titulo, autor, editora, sinopse, ano (apenas o numero), generoPrincipal, tagsSecundarias (array de strings com 3 palavras-chave curtas) e capaUrl (se souber uma URL direta real da capa do livro, forneca. Se não souber, retorne null). Não use markdown, retorne apenas o objeto JSON puro.";
+                + ", responda estritamente em formato JSON puro (sem markdown). "
+                + "REGRA 1: Se você não encontrar nenhum livro real com este exato ISBN, retorne APENAS o JSON: {\"erro\": \"ISBN não encontrado\"}. Não invente dados! "
+                + "REGRA 2: Se encontrar, traga as informações da versão em Português do Brasil (PT-BR). "
+                + "As chaves do JSON devem ser: titulo, autor, editora, sinopse, ano (apenas o numero), generoPrincipal, tagsSecundarias (array de 3 strings) e capaUrl (se tiver uma URL real da capa, se não, null).";
 
         // Montamos a estrutura JSON para a API do Gemini
         String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt.replace("\"", "\\\"") + "\"}]}]}";
@@ -58,6 +61,10 @@ public class IaService {
             respostaIA = respostaIA.replace("```json", "").replace("```", "").trim();
 
             JsonNode dadosExtraidos = mapper.readTree(respostaIA);
+
+            if (dadosExtraidos.has("erro")) {
+                throw new RuntimeException("ISBN não encontrado ou inválido: " + dadosExtraidos.path("erro").asText());
+            }
 
             if (dadosExtraidos.hasNonNull("titulo")) livro.setTitulo(dadosExtraidos.path("titulo").asText());
             if (dadosExtraidos.hasNonNull("autor")) livro.setAutor(dadosExtraidos.path("autor").asText());
