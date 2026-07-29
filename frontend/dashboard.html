@@ -383,6 +383,13 @@
                 <input type="text" id="inputIsbn" placeholder="Ex: 9788532530783">
             </div>
         </div>
+        <div class="input-group" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+            <label>Quantidade em Estoque</label>
+            <div class="input-wrapper">
+                <i class="ph ph-stack"></i>
+                <input type="number" id="inputQuantidade" value="1" min="1">
+            </div>
+        </div>
         <button class="btn-primary" id="btnBuscarIsbn" onclick="buscarEcadastrarLivro()">Buscar e Validar via IA</button>
         <button class="btn-primary" onclick="fecharModais()" style="margin-top:0.5rem; background:transparent; color:var(--text-color); border:1px solid var(--border-color);">Cancelar</button>
     </div>

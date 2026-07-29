@@ -159,6 +159,7 @@ let livroSendoRevisado = null;
 
 async function buscarEcadastrarLivro() {
     const isbn = document.getElementById('inputIsbn').value;
+    const qtd = document.getElementById('inputQuantidade').value || 1;
     const btn = document.getElementById('btnBuscarIsbn');
     const token = localStorage.getItem('jwtToken');
     
@@ -171,7 +172,7 @@ async function buscarEcadastrarLivro() {
     btn.disabled = true;
 
     try {
-        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/cadastrar-por-isbn/${isbn}`, {
+        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/cadastrar-por-isbn/${isbn}?quantidade=${qtd}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });

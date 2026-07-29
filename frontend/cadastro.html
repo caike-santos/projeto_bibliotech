@@ -11,6 +11,7 @@
     <link rel="shortcut icon" href="imagens/icon.png" type="image/x-icon">
 </head>
 <body>
+    <canvas id="kinetic-canvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:-1; pointer-events:none;"></canvas>
     <button class="theme-toggle" id="btnTheme" title="Alternar Tema">
         <i class="ph ph-moon-stars"></i>
     </button>
@@ -71,5 +72,6 @@
             }
         });
     </script>
+    <script src="kinetic-grid.js"></script>
 </body>
 </html>
