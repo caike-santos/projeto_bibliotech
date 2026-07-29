@@ -32,6 +32,7 @@ public class SecurityConfigurations {
 
                     // NOVO: Libera a rota de login para qualquer pessoa tentar entrar
                     req.requestMatchers(org.springframework.http.HttpMethod.POST, "/login").permitAll();
+                    req.requestMatchers(org.springframework.http.HttpMethod.POST, "/login/google").permitAll();
 
                     // --- ADICIONE ESTA LINHA ABAIXO ---
                     // Libera temporariamente os empréstimos para testarmos as regras de negócio no Swagger
