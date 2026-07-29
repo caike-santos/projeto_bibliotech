@@ -303,7 +303,7 @@ async function realizarEmprestimo(livroId) {
 function configurarChatLumina() {
     const btnToggle = document.getElementById('btnLuminaToggle');
     const modal = document.getElementById('luminaChatModal');
-    const closeBtn = document.getElementById('luminaClose');
+    const closeBtn = document.getElementById('btnCloseChat');
     const btnSend = document.getElementById('luminaSend');
     const input = document.getElementById('luminaInput');
     const messages = document.getElementById('luminaMessages');
