@@ -174,13 +174,24 @@ async function carregarHistorico(usuarioId, token) {
                 let badgeClass = isAtrasado ? 'status-atrasado' : 'status-ativo';
                 const devolucaoTexto = new Date(emp.dataDevolucaoPrevista).toLocaleDateString();
 
+                let acoes = '-';
+                if (emp.status === 'ATIVO') {
+                    if (emp.renovacoesFeitas === 0) {
+                        acoes = `<button class="btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="renovarEmprestimo(${emp.id})">Renovar</button>`;
+                    } else {
+                        acoes = '<span style="font-size: 0.75rem; color: var(--text-muted);">Já renovado</span>';
+                    }
+                } else if (isAtrasado) {
+                    acoes = '<span style="font-size: 0.75rem; color: #EF4444;">Bloqueado</span>';
+                }
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td data-label="Livro"><strong>${emp.livro.titulo}</strong></td>
                     <td data-label="Data Retirada">${new Date(emp.dataRetirada).toLocaleDateString()}</td>
                     <td data-label="Devolução Prevista" style="${isAtrasado ? 'color: #EF4444; font-weight: bold;' : ''}">${devolucaoTexto}</td>
                     <td data-label="Status"><span class="status-badge ${badgeClass}">${emp.status}</span></td>
-                    <td data-label="Ações">-</td>
+                    <td data-label="Ações">${acoes}</td>
                 `;
                 corpoAtivos.appendChild(tr);
             });
@@ -262,5 +273,36 @@ async function carregarReservas(usuarioId, token) {
     } catch (e) {
         console.error('Erro ao carregar reservas', e);
         tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Erro ao carregar histórico de reservas.</td></tr>';
+    }
+}
+
+window.renovarEmprestimo = async function(emprestimoId) {
+    if(!confirm("Deseja renovar este empréstimo por mais 14 dias? (Regra: Apenas 1 renovação permitida por livro)")) return;
+    
+    const token = localStorage.getItem('jwtToken');
+    try {
+        const res = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/${emprestimoId}/renovar`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+            showToast('Empréstimo renovado com sucesso!', 'success');
+            if (dadosUsuarioGlobal) {
+                carregarHistorico(dadosUsuarioGlobal.id, token);
+            }
+        } else {
+            const err = await res.text();
+            let msgErro = 'Não foi possível renovar.';
+            try {
+                const parsed = JSON.parse(err);
+                msgErro = parsed.message || parsed.error || err;
+            } catch(e) {
+                msgErro = err;
+            }
+            showToast(msgErro, 'error');
+        }
+    } catch(e) {
+        showToast('Falha na comunicação com o servidor.', 'error');
     }
 }
