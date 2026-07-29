@@ -92,9 +92,9 @@ public class EmprestimoService {
             livroRepository.save(livro);
         }
 
-        novoEmprestimo.setDataRetirada(LocalDate.now());
-        novoEmprestimo.setDataDevolucaoPrevista(LocalDate.now().plusDays(14));
-        novoEmprestimo.setStatus("ATIVO");
+        novoEmprestimo.setDataRetirada(LocalDate.now()); // Data do pedido
+        novoEmprestimo.setDataDevolucaoPrevista(LocalDate.now().plusDays(2)); // Prazo de 48h para buscar
+        novoEmprestimo.setStatus("AGUARDANDO_RETIRADA");
         novoEmprestimo.setRenovacoesFeitas(0);
         novoEmprestimo.setLivro(livro); 
 
@@ -176,6 +176,21 @@ public class EmprestimoService {
             System.out.println("Alerta de Atraso: " + diasAtraso + " dias. Multa gerada: R$ " + valorDaMulta);
         }
 
+        return emprestimoRepository.save(emprestimo);
+    }
+
+    @Transactional
+    public Emprestimo confirmarRetirada(Long emprestimoId) {
+        Emprestimo emprestimo = emprestimoRepository.findById(emprestimoId)
+                .orElseThrow(() -> new RuntimeException("Empréstimo não encontrado."));
+
+        if (!"AGUARDANDO_RETIRADA".equals(emprestimo.getStatus())) {
+            throw new RuntimeException("Este empréstimo não está aguardando retirada.");
+        }
+
+        emprestimo.setStatus("ATIVO");
+        emprestimo.setDataRetirada(LocalDate.now());
+        emprestimo.setDataDevolucaoPrevista(LocalDate.now().plusDays(14));
         return emprestimoRepository.save(emprestimo);
     }
 }

@@ -57,5 +57,9 @@ public class EmprestimoController {
     public Emprestimo realizarDevolucao(@PathVariable Long id) {
         return service.devolverLivro(id);
     }
-    
+
+    @PutMapping("/{id}/confirmar-retirada")
+    public Emprestimo confirmarRetirada(@PathVariable Long id) {
+        return service.confirmarRetirada(id);
+    }
 }

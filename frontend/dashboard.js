@@ -433,11 +433,17 @@ function renderizarEmprestimos() {
                 <td data-label="ID">${e.id}</td>
                 <td data-label="Livro">${e.livro.titulo}</td>
                 <td data-label="Leitor">${e.usuario.nome}</td>
-                <td data-label="Devolução">${dataDev}</td>
-                <td data-label="Status" style="color: ${e.status === 'ATRASADO' ? 'red' : 'inherit'}">${e.status}</td>
+                <td data-label="Devolução">${e.status === 'AGUARDANDO_RETIRADA' ? 'Buscar até ' + dataDev : dataDev}</td>
+                <td data-label="Status" style="color: ${e.status === 'ATRASADO' ? 'red' : (e.status === 'AGUARDANDO_RETIRADA' ? 'var(--warning-color)' : 'inherit')}">${e.status}</td>
                 <td data-label="Ações">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                        ${e.status !== 'DEVOLVIDO' ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto;" onclick="forcarDevolucao(${e.id})">Forçar Devolução</button>` : 'Resolvido'}
+                        ${e.status === 'AGUARDANDO_RETIRADA' ? 
+                            `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--success-color, #10B981);" onclick="confirmarRetirada(${e.id})">Entregar Livro</button>` : 
+                            (e.status !== 'DEVOLVIDO' && e.status !== 'CANCELADO' ? 
+                                `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto;" onclick="forcarDevolucao(${e.id})">Devolver</button>` : 
+                                'Resolvido'
+                            )
+                        }
                     </div>
                 </td>
             </tr>
@@ -454,6 +460,22 @@ async function forcarDevolucao(id) {
         carregarDados();
     } catch(e) {
         showToast('Erro ao confirmar devolução.', 'error');
+    }
+}
+
+async function confirmarRetirada(id) {
+    if(!confirm('O leitor está no balcão e você entregará o livro agora? (Isso iniciará o prazo de 14 dias)')) return;
+    const token = localStorage.getItem('jwtToken');
+    try {
+        const res = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/${id}/confirmar-retirada`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        if(res.ok) {
+            showToast('Retirada confirmada! Prazo iniciado.', 'success');
+            carregarDados();
+        } else {
+            showToast('Erro ao confirmar retirada.', 'error');
+        }
+    } catch(e) {
+        showToast('Erro de conexão.', 'error');
     }
 }
 

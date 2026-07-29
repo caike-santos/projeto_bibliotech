@@ -171,8 +171,15 @@ async function carregarHistorico(usuarioId, token) {
             ativos.forEach(emp => {
                 if(!corpoAtivos) return;
                 const isAtrasado = emp.status === 'ATRASADO';
-                let badgeClass = isAtrasado ? 'status-atrasado' : 'status-ativo';
-                const devolucaoTexto = new Date(emp.dataDevolucaoPrevista).toLocaleDateString();
+                const isAguardando = emp.status === 'AGUARDANDO_RETIRADA';
+                let badgeClass = 'status-ativo';
+                if (isAtrasado) badgeClass = 'status-atrasado';
+                else if (isAguardando) badgeClass = 'status-atrasado'; // Vamos usar a cor laranja/atrasado por enquanto, ou criar uma nova classe. O status-atrasado é vermelho, melhor colocar um style inline ou classe nova
+
+                let devolucaoTexto = new Date(emp.dataDevolucaoPrevista).toLocaleDateString();
+                if (isAguardando) {
+                    devolucaoTexto = `Buscar até: ${devolucaoTexto}`;
+                }
 
                 let acoes = '-';
                 if (emp.status === 'ATIVO') {
@@ -183,14 +190,21 @@ async function carregarHistorico(usuarioId, token) {
                     }
                 } else if (isAtrasado) {
                     acoes = '<span style="font-size: 0.75rem; color: #EF4444;">Bloqueado</span>';
+                } else if (isAguardando) {
+                    acoes = '<span style="font-size: 0.75rem; color: var(--warning-color);">Retirada Pendente</span>';
+                    badgeClass = ''; // Remover classe padrão pra usar style custom
                 }
+
+                const statusHtml = isAguardando ? 
+                    `<span class="status-badge" style="background: rgba(234, 179, 8, 0.1); color: var(--warning-color); border-color: var(--warning-color);">AGUARDANDO RETIRADA</span>` : 
+                    `<span class="status-badge ${badgeClass}">${emp.status}</span>`;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td data-label="Livro"><strong>${emp.livro.titulo}</strong></td>
-                    <td data-label="Data Retirada">${new Date(emp.dataRetirada).toLocaleDateString()}</td>
-                    <td data-label="Devolução Prevista" style="${isAtrasado ? 'color: #EF4444; font-weight: bold;' : ''}">${devolucaoTexto}</td>
-                    <td data-label="Status"><span class="status-badge ${badgeClass}">${emp.status}</span></td>
+                    <td data-label="Data Retirada">${isAguardando ? '-' : new Date(emp.dataRetirada).toLocaleDateString()}</td>
+                    <td data-label="Devolução Prevista" style="${isAtrasado ? 'color: #EF4444; font-weight: bold;' : (isAguardando ? 'color: var(--warning-color); font-weight: bold;' : '')}">${devolucaoTexto}</td>
+                    <td data-label="Status">${statusHtml}</td>
                     <td data-label="Ações">${acoes}</td>
                 `;
                 corpoAtivos.appendChild(tr);
