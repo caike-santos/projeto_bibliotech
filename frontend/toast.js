@@ -129,6 +129,11 @@ let activeRequests = 0;
 const originalFetch = window.fetch;
 
 window.fetch = async function(...args) {
+    const options = args[1] || {};
+    if (options.skipLoader) {
+        return originalFetch.apply(this, args);
+    }
+
     activeRequests++;
     
     // Determina a mensagem baseada na URL

@@ -61,9 +61,24 @@ async function carregarDados() {
     const token = localStorage.getItem('jwtToken');
     const headers = { 'Authorization': `Bearer ${token}` };
 
+    const trLoaderAcervo = '<tr><td colspan="6"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
+    const trLoaderUsuarios = '<tr><td colspan="5"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
+    const trLoaderEmprestimos = '<tr><td colspan="6"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
+    const trLoaderReservas = '<tr><td colspan="6"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
+
+    const tabAcervo = document.getElementById('tabelaAcervo');
+    const tabUsuarios = document.getElementById('tabelaUsuarios');
+    const tabEmprestimos = document.getElementById('tabelaEmprestimos');
+    const tabReservas = document.getElementById('tabelaReservas');
+
+    if(tabAcervo) tabAcervo.innerHTML = trLoaderAcervo;
+    if(tabUsuarios) tabUsuarios.innerHTML = trLoaderUsuarios;
+    if(tabEmprestimos) tabEmprestimos.innerHTML = trLoaderEmprestimos;
+    if(tabReservas) tabReservas.innerHTML = trLoaderReservas;
+
     try {
         // Fetch Livros
-        const resLivros = await fetch('https://bibliotech-api-e9wg.onrender.com/livros', { headers });
+        const resLivros = await fetch('https://bibliotech-api-e9wg.onrender.com/livros', { headers, skipLoader: true });
         if (resLivros.ok) {
             const data = await resLivros.json();
             livros = data.content || data; // Trata Pageable ou List
@@ -71,21 +86,21 @@ async function carregarDados() {
         }
 
         // Fetch Usuários
-        const resUsuarios = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', { headers });
+        const resUsuarios = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', { headers, skipLoader: true });
         if (resUsuarios.ok) {
             usuarios = await resUsuarios.json();
             renderizarUsuarios();
         }
 
         // Fetch Empréstimos
-        const resEmprestimos = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos', { headers });
+        const resEmprestimos = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos', { headers, skipLoader: true });
         if (resEmprestimos.ok) {
             emprestimos = await resEmprestimos.json();
             renderizarEmprestimos();
         }
 
         // Fetch Reservas
-        const resReservas = await fetch('https://bibliotech-api-e9wg.onrender.com/reservas', { headers });
+        const resReservas = await fetch('https://bibliotech-api-e9wg.onrender.com/reservas', { headers, skipLoader: true });
         if (resReservas.ok) {
             reservas = await resReservas.json();
             renderizarReservas();

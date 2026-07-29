@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Buscar ID do usuário
         const resUser = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            skipLoader: true
         });
         
         if (!resUser.ok) throw new Error('Falha ao buscar usuários');
@@ -132,7 +133,8 @@ function configurarEdicaoPerfil() {
 async function carregarGamificacao(usuarioId, token) {
     try {
         const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${usuarioId}/gamificacao`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            skipLoader: true
         });
         if (response.ok) {
             const data = await response.json();
@@ -148,9 +150,13 @@ async function carregarHistorico(usuarioId, token) {
     const corpoHistorico = document.getElementById('tabelaCorpo');
     const corpoAtivos = document.getElementById('tabelaMeusEmprestimos');
     
+    if(corpoHistorico) corpoHistorico.innerHTML = '<tr><td colspan="5"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
+    if(corpoAtivos) corpoAtivos.innerHTML = '<tr><td colspan="5"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
+    
     try {
         const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/usuario/${usuarioId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            skipLoader: true
         });
         if (response.ok) {
             const historico = await response.json();
@@ -237,9 +243,12 @@ async function carregarReservas(usuarioId, token) {
     const tbody = document.getElementById('tabelaMinhasReservas');
     if (!tbody) return;
 
+    tbody.innerHTML = '<tr><td colspan="4"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
+
     try {
         const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/reservas/usuario/${usuarioId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            skipLoader: true
         });
 
         if (response.ok) {
@@ -263,7 +272,7 @@ async function carregarReservas(usuarioId, token) {
                     
                     // Descobrir a posição real batendo na fila do livro
                     try {
-                        const filaRes = await fetch(`https://bibliotech-api-e9wg.onrender.com/reservas/livro/${r.livro.id}`, { headers: { 'Authorization': `Bearer ${token}` }});
+                        const filaRes = await fetch(`https://bibliotech-api-e9wg.onrender.com/reservas/livro/${r.livro.id}`, { headers: { 'Authorization': `Bearer ${token}` }, skipLoader: true });
                         if (filaRes.ok) {
                             const fila = await filaRes.json();
                             const index = fila.findIndex(f => f.usuario.id === usuarioId);

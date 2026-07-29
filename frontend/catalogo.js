@@ -64,6 +64,7 @@ function verificarAutenticacao() {
 async function carregarCatalogo() {
     const token = localStorage.getItem('jwtToken');
     const gridLivros = document.getElementById('gridLivros');
+    gridLivros.innerHTML = '<div style="display:flex; justify-content:center; width:100%; padding:3rem;"><div class="loader-spinner"></div></div>';
 
     try {
         const response = await fetch('https://bibliotech-api-e9wg.onrender.com/livros', {
@@ -71,7 +72,8 @@ async function carregarCatalogo() {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            skipLoader: true
         });
 
         if (!response.ok) {
@@ -347,7 +349,8 @@ function configurarChatLumina() {
         try {
             const token = localStorage.getItem('jwtToken');
             const res = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/recomendacoes/usuario/${usuarioLogadoId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${token}` },
+                skipLoader: true
             });
             if (!res.ok) throw new Error();
             const respostaIa = await res.text();
@@ -379,6 +382,7 @@ function configurarChatLumina() {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
+                skipLoader: true,
                 body: JSON.stringify({ mensagem: texto })
             });
 
@@ -465,7 +469,8 @@ async function carregarGamificacao() {
     const token = localStorage.getItem('jwtToken');
     try {
         const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${usuarioLogadoId}/gamificacao`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            skipLoader: true
         });
         if(response.ok) {
             const data = await response.json();
@@ -488,7 +493,8 @@ async function carregarRecomendacoes() {
 
     try {
         const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/clustering/usuario/${usuarioLogadoId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            skipLoader: true
         });
         if(response.ok) {
             const texto = await response.text();
@@ -523,15 +529,16 @@ async function carregarMeusEmprestimos() {
     if(!usuarioLogadoId) return;
     const token = localStorage.getItem('jwtToken');
     const lista = document.getElementById('listaMeusEmprestimos');
-    lista.innerHTML = '<p>Carregando...</p>';
+    lista.innerHTML = '<div style="display:flex; justify-content:center; width:100%; padding:1rem;"><div class="loader-spinner"></div></div>';
 
     try {
         const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/usuario/${usuarioLogadoId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            skipLoader: true
         });
         if(response.ok) {
             const historico = await response.json();
-            const emprestimos = historico.filter(emp => emp.status === 'ATIVO' || emp.status === 'ATRASADO');
+            const emprestimos = historico.filter(emp => emp.status !== 'DEVOLVIDO');
 
             if(emprestimos.length === 0) {
                 lista.innerHTML = '<p style="color: var(--text-muted);">Nenhum empréstimo ativo no momento.</p>';
@@ -541,14 +548,28 @@ async function carregarMeusEmprestimos() {
             lista.innerHTML = '';
             emprestimos.forEach(emp => {
                 const isAtrasado = emp.status === 'ATRASADO';
+                const isAguardando = emp.status === 'AGUARDANDO_RETIRADA';
                 const div = document.createElement('div');
                 div.style = 'border: 1px solid var(--border-color); padding: 1rem; border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center;';
+                
+                let dataDesc = `Devolver até: ${new Date(emp.dataDevolucaoPrevista).toLocaleDateString()} ${isAtrasado ? '(ATRASADO!)' : ''}`;
+                let colorDesc = isAtrasado ? '#EF4444' : 'var(--text-muted)';
+                let actionHtml = '';
+
+                if (isAguardando) {
+                    dataDesc = `Você tem 48h para retirar o livro presencialmente.`;
+                    colorDesc = '#F59E0B';
+                    actionHtml = `<span style="font-size: 0.75rem; color: #F59E0B; font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 0.25rem 0.5rem; border-radius: 0.5rem; flex-shrink: 0;">Aguardando Retirada</span>`;
+                } else {
+                    actionHtml = (emp.renovacoesFeitas < 1 && !isAtrasado) ? `<button class="btn-primary" onclick="renovarEmprestimo(${emp.id})" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; flex-shrink: 0;">Renovar</button>` : '<span style="font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0;">Não renovável</span>';
+                }
+
                 div.innerHTML = `
                     <div>
                         <strong style="color: var(--text-color);">${emp.livro.titulo}</strong>
-                        <p style="font-size: 0.8rem; color: ${isAtrasado ? '#EF4444' : 'var(--text-muted)'}; margin-top: 0.25rem;">Devolver até: ${new Date(emp.dataDevolucaoPrevista).toLocaleDateString()} ${isAtrasado ? '(ATRASADO!)' : ''}</p>
+                        <p style="font-size: 0.8rem; color: ${colorDesc}; margin-top: 0.25rem;">${dataDesc}</p>
                     </div>
-                    ${emp.renovacoesFeitas < 1 && !isAtrasado ? `<button class="btn-primary" onclick="renovarEmprestimo(${emp.id})" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; flex-shrink: 0;">Renovar</button>` : '<span style="font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0;">Não renovável</span>'}
+                    ${actionHtml}
                 `;
                 lista.appendChild(div);
             });
@@ -590,7 +611,8 @@ async function carregarNotificacoes() {
 
     try {
         const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/notificacoes/usuario/${usuarioLogadoId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            skipLoader: true
         });
         if(response.ok) {
             const notifs = await response.json();
