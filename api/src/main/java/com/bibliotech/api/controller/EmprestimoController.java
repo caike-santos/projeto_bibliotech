@@ -22,9 +22,13 @@ public class EmprestimoController {
     }
 
     @PostMapping
-    public Emprestimo cadastrarEmprestimo(@RequestBody Emprestimo novoEmprestimo) {
+    public Emprestimo cadastrarEmprestimo(@RequestBody Emprestimo novoEmprestimo, @RequestParam(defaultValue = "false") boolean balcao) {
        // Agora quem cuida de salvar é o Service, que vai rodar as regras antes!
-        return service.realizarEmprestimo(novoEmprestimo);
+       Emprestimo emprestimo = service.realizarEmprestimo(novoEmprestimo);
+       if (balcao) {
+           return service.confirmarRetirada(emprestimo.getId());
+       }
+       return emprestimo;
     }
 
     @GetMapping

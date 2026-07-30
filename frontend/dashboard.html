@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiblioTech AI | Painel de Gestão</title>
+    <link rel="shortcut icon" href="imagens/icon.png" type="image/x-icon">
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -269,15 +270,16 @@
             <section id="analytics" class="section active">
                 <h2 style="margin-bottom: 1.5rem;">Dashboard Interativo</h2>
                 <div class="stats-grid">
-                    <div class="stat-card"><h3>Total de Livros</h3><span id="statLivros">0</span></div>
-                    <div class="stat-card"><h3>Leitores Ativos</h3><span id="statUsuarios">0</span></div>
-                    <div class="stat-card"><h3>Equipe (Admin/Biblio)</h3><span id="statEquipe">0</span></div>
-                    <div class="stat-card"><h3>Empréstimos</h3><span id="statEmprestimos">0</span></div>
+                    <div class="stat-card"><h3>Total de Livros</h3><span id="statLivros"><div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; display: inline-block;"></div></span></div>
+                    <div class="stat-card"><h3>Leitores Ativos</h3><span id="statUsuarios"><div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; display: inline-block;"></div></span></div>
+                    <div class="stat-card"><h3>Equipe (Admin/Biblio)</h3><span id="statEquipe"><div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; display: inline-block;"></div></span></div>
+                    <div class="stat-card"><h3>Empréstimos</h3><span id="statEmprestimos"><div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; display: inline-block;"></div></span></div>
                 </div>
                 
-                <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <div class="card" style="max-width: 600px; margin: 0 auto; min-height: 250px;">
                     <h3>Gêneros Mais Populares</h3>
-                    <canvas id="chartGeneros" width="400" height="200"></canvas>
+                    <div id="loaderChart" style="display:flex; justify-content:center; align-items:center; height: 200px;"><div class="loader-spinner"></div></div>
+                    <canvas id="chartGeneros" width="400" height="200" style="display:none;"></canvas>
                 </div>
             </section>
 

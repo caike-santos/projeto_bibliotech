@@ -146,6 +146,9 @@ function atualizarDashboard() {
 
     const ctx = document.getElementById('chartGeneros').getContext('2d');
     if(chartInstancia) chartInstancia.destroy();
+    
+    document.getElementById('loaderChart').style.display = 'none';
+    document.getElementById('chartGeneros').style.display = 'block';
 
     chartInstancia = new Chart(ctx, {
         type: 'doughnut',
@@ -618,7 +621,7 @@ async function efetivarEmprestimoDaReserva(livroId, usuarioId) {
     
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos', {
+        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos?balcao=true', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -745,7 +748,7 @@ async function realizarEmprestimoBalcao() {
 
     try {
         const token = localStorage.getItem('jwtToken');
-        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos', {
+        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos?balcao=true', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
