@@ -228,29 +228,6 @@ async function buscarEcadastrarLivro() {
     }
 }
 
-    const token = localStorage.getItem('jwtToken');
-    try {
-        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/${id}`, {
-            method: 'PUT',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(livroSendoRevisado)
-        });
-
-        if (response.ok) {
-            showToast('Classificação atualizada e livro salvo com sucesso!', 'success');
-            fecharModais();
-            carregarDados();
-        } else {
-            await handleApiError(response, 'Erro ao atualizar livro.');
-        }
-    } catch (e) {
-        showToast('Erro de rede.', 'error');
-    }
-}
-
 async function inativarLivro(id) {
     if(!confirm('Tem certeza que deseja inativar este livro? (Ele sairá do catálogo, mas o ISBN continuará reservado)')) return;
     const token = localStorage.getItem('jwtToken');
