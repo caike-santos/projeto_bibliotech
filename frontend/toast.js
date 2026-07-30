@@ -81,6 +81,145 @@ function showToast(message, type = 'info') {
 }
 
 /**
+ * Exibe um alert personalizado
+ * @param {string} title - O título do modal
+ * @param {string} message - A mensagem
+ * @param {string} type - 'info', 'warning', 'error', 'success'
+ * @returns {Promise<void>}
+ */
+function showCustomAlert(title, message, type = 'info') {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            z-index: 10000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        `;
+
+        let iconClass = 'ph-info';
+        let colorVar = 'var(--primary-color)';
+        
+        if (type === 'error') {
+            iconClass = 'ph-x-circle';
+            colorVar = '#EF4444';
+        } else if (type === 'warning') {
+            iconClass = 'ph-warning';
+            colorVar = 'var(--warning-color)';
+        } else if (type === 'success') {
+            iconClass = 'ph-check-circle';
+            colorVar = '#10B981';
+        }
+
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: var(--surface-color); padding: 2rem; border-radius: 12px;
+            max-width: 400px; width: 90%; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-top: 4px solid ${colorVar};
+        `;
+
+        modal.innerHTML = `
+            <i class="ph ${iconClass}" style="font-size: 3.5rem; color: ${colorVar}; margin-bottom: 1rem;"></i>
+            <h3 style="color: var(--text-color); margin-bottom: 0.5rem; font-size: 1.25rem;">${title}</h3>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5;">${message}</p>
+            <div style="display: flex; justify-content: center;">
+                <button id="btnOkAlert" class="btn-primary" style="background: ${colorVar}; border-color: ${colorVar}; color: #fff; width: 100%;">OK</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            modal.style.transform = 'scale(1)';
+        });
+
+        const fechar = () => {
+            overlay.style.opacity = '0';
+            modal.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                if (document.body.contains(overlay)) document.body.removeChild(overlay);
+                resolve();
+            }, 300);
+        };
+
+        modal.querySelector('#btnOkAlert').addEventListener('click', fechar);
+    });
+}
+
+/**
+ * Exibe um confirm personalizado
+ * @param {string} title - O título do modal
+ * @param {string} message - A mensagem
+ * @param {string} type - 'warning', 'danger', 'info'
+ * @returns {Promise<boolean>}
+ */
+function showCustomConfirm(title, message, type = 'warning') {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            z-index: 10000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        `;
+
+        let iconClass = 'ph-warning';
+        let colorVar = 'var(--warning-color)';
+        
+        if (type === 'danger') {
+            iconClass = 'ph-warning-circle';
+            colorVar = '#EF4444';
+        } else if (type === 'info') {
+            iconClass = 'ph-question';
+            colorVar = 'var(--primary-color)';
+        }
+
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: var(--surface-color); padding: 2rem; border-radius: 12px;
+            max-width: 400px; width: 90%; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-top: 4px solid ${colorVar};
+        `;
+
+        modal.innerHTML = `
+            <i class="ph ${iconClass}" style="font-size: 3.5rem; color: ${colorVar}; margin-bottom: 1rem;"></i>
+            <h3 style="color: var(--text-color); margin-bottom: 0.5rem; font-size: 1.25rem;">${title}</h3>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5;">${message}</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button id="btnCancelConfirm" class="btn-primary" style="flex: 1; background: transparent; color: var(--text-color); border: 1px solid var(--border-color);">Cancelar</button>
+                <button id="btnOkConfirm" class="btn-primary" style="flex: 1; background: ${colorVar}; border-color: ${colorVar}; color: #fff;">Confirmar</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            modal.style.transform = 'scale(1)';
+        });
+
+        const fechar = (resultado) => {
+            overlay.style.opacity = '0';
+            modal.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                if (document.body.contains(overlay)) document.body.removeChild(overlay);
+                resolve(resultado);
+            }, 300);
+        };
+
+        modal.querySelector('#btnCancelConfirm').addEventListener('click', () => fechar(false));
+        modal.querySelector('#btnOkConfirm').addEventListener('click', () => fechar(true));
+    });
+}
+
+/**
  * Trata erros de API de forma elegante, decodificando JSON caso exista.
  * @param {Response} response - O objeto de resposta do Fetch
  * @param {string} defaultMessage - Mensagem padrão caso não consiga extrair erro

@@ -246,7 +246,8 @@ async function buscarEcadastrarLivro() {
 }
 
 async function inativarLivro(id) {
-    if(!confirm('Tem certeza que deseja inativar este livro? (Ele sairá do catálogo, mas o ISBN continuará reservado)')) return;
+    const confirmed = await showCustomConfirm('Atenção', 'Tem certeza que deseja inativar este livro? (Ele sairá do catálogo, mas o ISBN continuará reservado)', 'warning');
+    if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
         await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
@@ -258,7 +259,8 @@ async function inativarLivro(id) {
 }
 
 async function excluirLivroDefinitivo(id) {
-    if(!confirm('CUIDADO: Tem certeza que deseja EXCLUIR DEFINITIVAMENTE este livro? O ISBN será liberado. Esta ação não pode ser desfeita.')) return;
+    const confirmed = await showCustomConfirm('Cuidado', 'Tem certeza que deseja EXCLUIR DEFINITIVAMENTE este livro? O ISBN será liberado. Esta ação não pode ser desfeita.', 'danger');
+    if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
         const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/hard/${id}`, { 
@@ -519,7 +521,8 @@ async function cadastrarUsuarioInterno() {
 }
 
 async function inativarUsuario(id) {
-    if(!confirm('Tem certeza que deseja inativar/bloquear este usuário?')) return;
+    const confirmed = await showCustomConfirm('Bloquear Usuário', 'Tem certeza que deseja inativar/bloquear este usuário?', 'warning');
+    if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
         await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
@@ -560,7 +563,8 @@ function renderizarEmprestimos() {
 }
 
 async function forcarDevolucao(id) {
-    if(!confirm('Confirmar devolução deste empréstimo?')) return;
+    const confirmed = await showCustomConfirm('Devolução', 'Confirmar devolução deste empréstimo?', 'info');
+    if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
         await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/${id}/devolver`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
@@ -572,7 +576,8 @@ async function forcarDevolucao(id) {
 }
 
 async function confirmarRetirada(id) {
-    if(!confirm('O leitor está no balcão e você entregará o livro agora? (Isso iniciará o prazo de 14 dias)')) return;
+    const confirmed = await showCustomConfirm('Confirmar Retirada', 'O leitor está no balcão e você entregará o livro agora? (Isso iniciará o prazo de 14 dias)', 'info');
+    if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
         const res = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/${id}/confirmar-retirada`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
@@ -617,7 +622,8 @@ function renderizarReservas() {
 }
 
 async function efetivarEmprestimoDaReserva(livroId, usuarioId) {
-    if(!confirm('Deseja registrar o empréstimo para este usuário que estava na fila?')) return;
+    const confirmed = await showCustomConfirm('Efetivar Empréstimo', 'Deseja registrar o empréstimo para este usuário que estava na fila?', 'info');
+    if(!confirmed) return;
     
     const token = localStorage.getItem('jwtToken');
     try {

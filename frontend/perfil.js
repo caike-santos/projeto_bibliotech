@@ -300,7 +300,8 @@ async function carregarReservas(usuarioId, token) {
 }
 
 window.renovarEmprestimo = async function(emprestimoId) {
-    if(!confirm("Deseja renovar este empréstimo por mais 14 dias? (Regra: Apenas 1 renovação permitida por livro)")) return;
+    const confirmed = await showCustomConfirm('Renovar Empréstimo', 'Deseja renovar este empréstimo por mais 14 dias? (Regra: Apenas 1 renovação permitida por livro)', 'info');
+    if(!confirmed) return;
     
     const token = localStorage.getItem('jwtToken');
     try {
