@@ -175,7 +175,10 @@ public class IaService {
                 + "3. Atrasos: geram bloqueio automático da conta e multa de R$ 2,00 por dia de atraso. "
                 + "4. Reservas: se um livro não tiver unidades disponíveis, o leitor pode entrar na 'Fila de Espera' pelo catálogo e será notificado quando for a sua vez. "
                 + "5. Gamificação: os leitores ganham pontos e medalhas (Iniciante, Explorador, Mestre) ao lerem livros. "
-                + "6. Horário de funcionamento físico: Seg a Sex das 08h às 18h, Sábados das 09h às 13h. Local: Av. do Conhecimento, 1024. "
+                + "6. Localização: Rua Fictícia da Leitura, 1024 - Centro, Cidade do Saber. "
+                + "7. Contato: Telefone e WhatsApp (11) 98765-4321. E-mail: contato@bibliotech.com.br. "
+                + "8. Horário de funcionamento físico: Segunda a Sexta das 08h às 18h, Sábados das 09h às 13h. "
+                + "9. História e Equipe: A BiblioTech foi fundada em 2015 por Dr. Armando Saber. A diretora atual é a Dra. Helena Livramento. "
                 + "Se a pessoa perguntar onde encontrar algo no site, oriente a usar o menu superior. "
                 + "A pergunta do leitor é: " + mensagemUsuario;
 
