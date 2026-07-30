@@ -390,9 +390,16 @@ function configurarChatLumina() {
     const messages = document.getElementById('luminaMessages');
     const bubble = document.getElementById('luminaBubble');
 
-    // Mostra o balão se for a primeira vez para este usuário específico
+    // Mostra o balão com um pequeno atraso para chamar a atenção
     if (bubble && !localStorage.getItem(`luminaWelcomeSeen_${usuarioLogadoId}`)) {
-        bubble.style.display = 'block';
+        setTimeout(() => {
+            bubble.style.display = 'block';
+            bubble.style.opacity = '0';
+            bubble.style.transition = 'opacity 0.5s ease-in-out';
+            setTimeout(() => {
+                bubble.style.opacity = '1';
+            }, 50);
+        }, 1500);
     }
 
     btnToggle.addEventListener('click', () => {
