@@ -29,12 +29,21 @@ public class IaService {
         this.tagRepository = tagRepository;
     }
 
-    public Livro buscarLivroCompletoPorIsbn(String isbn) {
+    public Livro buscarLivroCompletoPorIsbn(String isbn, String tituloHint, String autorHint) {
        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + apiKey.trim();
+
+        String dicas = "";
+        if (tituloHint != null && !tituloHint.trim().isEmpty()) {
+            dicas += " O usuário sugeriu que o título pode ser ou conter: '" + tituloHint + "'.";
+        }
+        if (autorHint != null && !autorHint.trim().isEmpty()) {
+            dicas += " O usuário sugeriu que o autor pode ser ou conter: '" + autorHint + "'.";
+        }
 
         String prompt = "Atue como um bibliotecário especialista em catalogação. "
                 + "Sua tarefa é encontrar os metadados do livro que possui EXATAMENTE o ISBN: " + isbn + ". "
-                + "CRÍTICO: ISBN é um identificador único universal. Pesquise no seu banco de dados com extrema precisão. Não tente adivinhar, aproximar ou associar a outro livro aleatório. Se você não tem certeza absoluta sobre a qual livro esse ISBN pertence, aborte a missão. "
+                + dicas
+                + " CRÍTICO: ISBN é um identificador único universal. Pesquise no seu banco de dados com extrema precisão. Não tente adivinhar, aproximar ou associar a outro livro aleatório. Se você não tem certeza absoluta sobre a qual livro esse ISBN pertence (levando as dicas em consideração), aborte a missão. "
                 + "Responda estritamente em formato JSON puro (sem markdown). "
                 + "REGRA 1: Se você não tiver 100% de certeza, retorne APENAS o JSON: {\"erro\": \"ISBN não encontrado\"}. É terminantemente proibido alucinar dados ou retornar o livro errado. "
                 + "REGRA 2: Se encontrar o livro correto, traduza as informações para Português do Brasil (PT-BR). "

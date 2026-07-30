@@ -185,8 +185,11 @@ function renderizarAcervo() {
 let livroSendoRevisado = null;
 
 async function buscarEcadastrarLivro() {
-    const isbn = document.getElementById('inputIsbn').value;
+    const isbn = document.getElementById('inputIsbn').value.trim();
     const qtd = document.getElementById('inputQuantidade').value || 1;
+    const tituloHint = document.getElementById('inputTituloHint') ? document.getElementById('inputTituloHint').value.trim() : '';
+    const autorHint = document.getElementById('inputAutorHint') ? document.getElementById('inputAutorHint').value.trim() : '';
+
     const btn = document.getElementById('btnBuscarIsbn');
     const token = localStorage.getItem('jwtToken');
     
@@ -199,7 +202,11 @@ async function buscarEcadastrarLivro() {
     btn.disabled = true;
 
     try {
-        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/cadastrar-por-isbn/${isbn}?quantidade=${qtd}`, {
+        let url = `https://bibliotech-api-e9wg.onrender.com/livros/cadastrar-por-isbn/${isbn}?quantidade=${qtd}`;
+        if (tituloHint) url += `&tituloHint=${encodeURIComponent(tituloHint)}`;
+        if (autorHint) url += `&autorHint=${encodeURIComponent(autorHint)}`;
+
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });

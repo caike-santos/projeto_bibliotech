@@ -38,10 +38,12 @@ public class LivroController {
    @PostMapping("/cadastrar-por-isbn/{isbn}")
     public Livro cadastrarLivroAutomaticamente(
             @PathVariable String isbn, 
-            @RequestParam(defaultValue = "1") Integer quantidade) { 
+            @RequestParam(defaultValue = "1") Integer quantidade,
+            @RequestParam(required = false) String tituloHint,
+            @RequestParam(required = false) String autorHint) { 
         
         // 1. Busca todos os dados do livro, gênero e capa usando EXCLUSIVAMENTE a Inteligência Artificial Gemini
-        Livro livro = iaService.buscarLivroCompletoPorIsbn(isbn);
+        Livro livro = iaService.buscarLivroCompletoPorIsbn(isbn, tituloHint, autorHint);
 
         // 2. Aplica a sua regra de negócio de estoque
         livro.setQuantidadeTotal(quantidade);
