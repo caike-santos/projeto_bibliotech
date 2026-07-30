@@ -310,12 +310,12 @@ async function carregarReservas(usuarioId, token) {
                 `;
                 tbody.appendChild(tr);
             }
+        } else {
+            showToast('Falha na comunicação com o servidor.', 'error');
         }
     } catch (e) {
         console.error('Erro ao carregar reservas', e);
         tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Erro ao carregar histórico de reservas.</td></tr>';
-    }
-        showToast('Falha na comunicação com o servidor.', 'error');
     }
 }
 
