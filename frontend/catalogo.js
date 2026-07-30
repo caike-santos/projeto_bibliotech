@@ -390,15 +390,15 @@ function configurarChatLumina() {
     const messages = document.getElementById('luminaMessages');
     const bubble = document.getElementById('luminaBubble');
 
-    // Mostra o balão se for a primeira vez
-    if (bubble && !localStorage.getItem('luminaWelcomeSeen')) {
+    // Mostra o balão se for a primeira vez para este usuário específico
+    if (bubble && !localStorage.getItem(`luminaWelcomeSeen_${usuarioLogadoId}`)) {
         bubble.style.display = 'block';
     }
 
     btnToggle.addEventListener('click', () => {
         if (bubble) {
             bubble.style.display = 'none';
-            localStorage.setItem('luminaWelcomeSeen', 'true');
+            localStorage.setItem(`luminaWelcomeSeen_${usuarioLogadoId}`, 'true');
         }
         
         if (modal.classList.contains('active')) {
