@@ -551,24 +551,6 @@ async function carregarGamificacao() {
             const data = await response.json();
             const badge = document.getElementById('gamificacaoBadge');
             badge.innerHTML = `${data.selo} ${data.nivel} (${data.totalEmprestimos} lidos)`;
-
-            const bubble = document.getElementById('luminaBubble');
-            if (data.totalEmprestimos === 0 && bubble && !localStorage.getItem('luminaWelcomeSeen')) {
-                bubble.innerText = "Lumina está digitando...";
-                try {
-                    const resIa = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/recomendacoes/usuario/${usuarioLogadoId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` },
-                        skipLoader: true
-                    });
-                    if (resIa.ok) {
-                        bubble.innerText = await resIa.text();
-                    } else {
-                        bubble.innerText = "Oi! Sou a Lumina, sua assistente virtual. Clique aqui para falar comigo! ✨";
-                    }
-                } catch(e) {
-                    bubble.innerText = "Oi! Sou a Lumina, sua assistente virtual. Clique aqui para falar comigo! ✨";
-                }
-            }
         }
     } catch(e) {
         console.error('Gamificação falhou', e);
