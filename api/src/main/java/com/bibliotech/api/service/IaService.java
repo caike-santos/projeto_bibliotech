@@ -56,19 +56,17 @@ public class IaService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
-
         Livro livro = new Livro();
         livro.setIsbn(isbn);
 
         try {
-            String respostaJson = restTemplate.postForObject(url, entity, String.class);
-
+            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+            
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(respostaJson);
-
+            JsonNode root = mapper.readTree(response.getBody());
             String respostaIA = root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
-
-            // Limpa formatações markdown se a IA enviar
+            
+            // Remove as marcações de bloco de código JSON, se a IA retornar com elas
             respostaIA = respostaIA.replace("```json", "").replace("```", "").trim();
 
             JsonNode dadosExtraidos = mapper.readTree(respostaIA);

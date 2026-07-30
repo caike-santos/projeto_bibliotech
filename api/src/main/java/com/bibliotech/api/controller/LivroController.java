@@ -49,13 +49,22 @@ public class LivroController {
         livro.setQuantidadeTotal(quantidade);
         livro.setQuantidadeDisponivel(quantidade);
 
-        // 3. Salva no banco de dados
-        return livroRepository.save(livro);
+        // Retorna o livro sem salvar no banco de dados para que o usuário revise no Frontend
+        return livro;
     }
 
-    // Rota POST (Manual) para cadastrar livro sem passar pela IA
+    // Rota POST (Manual) para cadastrar livro sem passar pela IA ou salvar definitivamente após a IA
     @PostMapping
     public Livro cadastrarLivroManual(@RequestBody Livro livroManual) {
+        // Validação de ISBN Duplicado
+        if (livroManual.getIsbn() != null && !livroManual.getIsbn().trim().isEmpty()) {
+            if (livroRepository.existsByIsbn(livroManual.getIsbn().trim())) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT, 
+                    "O ISBN informado já está cadastrado no acervo."
+                );
+            }
+        }
         // Validação de coerência do estoque
         if (livroManual.getQuantidadeDisponivel() != null && livroManual.getQuantidadeTotal() != null) {
             if (livroManual.getQuantidadeDisponivel() > livroManual.getQuantidadeTotal()) {

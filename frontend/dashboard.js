@@ -35,6 +35,14 @@ function fecharModais() {
 
 function abrirModalCadastroLivro() {
     fecharModais();
+    // Limpa os campos do modal de IA
+    document.getElementById('inputIsbn').value = '';
+    document.getElementById('inputQuantidade').value = '1';
+    const tituloHint = document.getElementById('inputTituloHint');
+    if (tituloHint) tituloHint.value = '';
+    const autorHint = document.getElementById('inputAutorHint');
+    if (autorHint) autorHint.value = '';
+
     document.getElementById('modalOverlay').classList.add('active');
     document.getElementById('modalLivroISBN').classList.add('active');
 }
@@ -214,14 +222,12 @@ async function buscarEcadastrarLivro() {
         if (response.ok) {
             const livroCadastrado = await response.json();
             
-            // Coloca o novo livro temporariamente na lista local para que a função abrirEdicaoLivro ache ele
-            livros.push(livroCadastrado);
-            
-            // Abre o modal universal de edição para a revisão final
-            abrirEdicaoLivro(livroCadastrado.id);
+            // Abre o modal universal de edição para a revisão final, 
+            // repassando os dados que a IA encontrou (mas que AINDA NÃO estão no banco)
+            abrirEdicaoLivro(null, livroCadastrado);
             document.getElementById('tituloModalLivro').innerText = 'IA: Revise e Salve';
             
-            showToast('Livro importado! Revise os dados.', 'info');
+            showToast('Livro importado! Revise os dados e clique em Salvar.', 'info');
 
         } else {
             await handleApiError(response, 'Falha ao catalogar o livro. Verifique o ISBN.');
@@ -271,28 +277,46 @@ async function excluirLivroDefinitivo(id) {
 
 let livroParaEdicao = null;
 
-function abrirEdicaoLivro(id) {
+function abrirEdicaoLivro(id, livroIA = null) {
     if (id === null) {
-        // Modo Cadastro Manual
-        livroParaEdicao = { tagsSecundarias: [] };
-        document.getElementById('tituloModalLivro').innerText = 'Cadastrar Manualmente';
+        if (livroIA) {
+            // Modo Revisão de IA (Preenche com dados recebidos mas sem ID)
+            livroParaEdicao = { tagsSecundarias: livroIA.tagsSecundarias || [] };
+            document.getElementById('editLivroIsbn').value = livroIA.isbn || '';
+            document.getElementById('editLivroTitulo').value = livroIA.titulo || '';
+            document.getElementById('editLivroAutor').value = livroIA.autor || '';
+            document.getElementById('editLivroEditora').value = livroIA.editora || '';
+            document.getElementById('editLivroAno').value = livroIA.ano || '';
+            document.getElementById('editLivroCapaUrl').value = livroIA.capaUrl || '';
+            document.getElementById('editLivroGenero').value = livroIA.generoPrincipal || '';
+            document.getElementById('editLivroTags').value = (livroIA.tagsSecundarias || []).map(t => t.nome).join(', ');
+            document.getElementById('editLivroSinopse').value = livroIA.sinopse || '';
+            document.getElementById('editLivroQtdTotal').value = livroIA.quantidadeTotal || 1;
+            document.getElementById('editLivroQtdDisponivel').value = livroIA.quantidadeDisponivel || 1;
+        } else {
+            // Modo Cadastro Manual 100% Branco
+            livroParaEdicao = { tagsSecundarias: [] };
+            document.getElementById('tituloModalLivro').innerText = 'Cadastrar Manualmente';
+            document.getElementById('editLivroIsbn').value = '';
+            document.getElementById('editLivroTitulo').value = '';
+            document.getElementById('editLivroAutor').value = '';
+            document.getElementById('editLivroEditora').value = '';
+            document.getElementById('editLivroAno').value = '';
+            document.getElementById('editLivroCapaUrl').value = '';
+            document.getElementById('editLivroGenero').value = '';
+            document.getElementById('editLivroTags').value = '';
+            document.getElementById('editLivroSinopse').value = '';
+            document.getElementById('editLivroQtdTotal').value = 1;
+            document.getElementById('editLivroQtdDisponivel').value = 1;
+        }
         document.getElementById('editLivroId').value = '';
-        document.getElementById('editLivroTitulo').value = '';
-        document.getElementById('editLivroAutor').value = '';
-        document.getElementById('editLivroEditora').value = '';
-        document.getElementById('editLivroAno').value = '';
-        document.getElementById('editLivroCapaUrl').value = '';
-        document.getElementById('editLivroGenero').value = '';
-        document.getElementById('editLivroTags').value = '';
-        document.getElementById('editLivroSinopse').value = '';
-        document.getElementById('editLivroQtdTotal').value = 1;
-        document.getElementById('editLivroQtdDisponivel').value = 1;
     } else {
-        // Modo Edição
+        // Modo Edição (Livro já existe no banco)
         livroParaEdicao = livros.find(l => l.id === id);
         if(!livroParaEdicao) return;
         document.getElementById('tituloModalLivro').innerText = 'Editar Livro';
         document.getElementById('editLivroId').value = livroParaEdicao.id;
+        document.getElementById('editLivroIsbn').value = livroParaEdicao.isbn || '';
         document.getElementById('editLivroTitulo').value = livroParaEdicao.titulo || '';
         document.getElementById('editLivroAutor').value = livroParaEdicao.autor || '';
         document.getElementById('editLivroEditora').value = livroParaEdicao.editora || '';
@@ -327,6 +351,7 @@ async function salvarEdicaoLivro() {
 
     const payload = {
         ...livroParaEdicao, // Mantemos os dados originais como base (pode estar vazio se for manual)
+        isbn: document.getElementById('editLivroIsbn').value.trim(),
         titulo: document.getElementById('editLivroTitulo').value.trim(),
         autor: document.getElementById('editLivroAutor').value.trim(),
         editora: document.getElementById('editLivroEditora').value.trim(),
@@ -355,13 +380,18 @@ async function salvarEdicaoLivro() {
         });
 
         if (response.ok) {
-            showToast(isNew ? 'Livro cadastrado manualmente com sucesso!' : 'Livro atualizado com sucesso!', 'success');
+            showToast(isNew ? 'Livro salvo com sucesso no acervo!' : 'Livro atualizado com sucesso!', 'success');
             fecharModais();
             carregarDados();
         } else {
-            await handleApiError(response, isNew ? 'Erro ao cadastrar.' : 'Erro ao atualizar.');
+            // Se o backend retornar status 409 (Conflict), é pq o ISBN duplicou
+            if (response.status === 409) {
+                showToast('Erro: Este ISBN já está cadastrado no sistema!', 'error');
+            } else {
+                await handleApiError(response, isNew ? 'Erro ao cadastrar.' : 'Erro ao atualizar.');
+            }
         }
-    } catch (e) {
+    } catch(e) {
         showToast('Erro de rede ao salvar edição.', 'error');
     }
 }
