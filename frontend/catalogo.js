@@ -64,10 +64,10 @@ async function carregarDadosDoUsuario() {
         if (!response.ok) return;
         const user = await response.json();
         if (user) {
-            window.usuarioLogadoId = user.id;
-                usuarioLogadoNome = user.nome;
-                localStorage.setItem('userName', user.nome);
-            }
+            usuarioLogadoId = user.id;
+            usuarioLogadoNome = user.nome;
+            localStorage.setItem('userName', user.nome);
+        }
     } catch(e) {
         console.error('Erro ao buscar dados do usuário logado', e);
     }
