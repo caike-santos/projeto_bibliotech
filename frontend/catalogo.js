@@ -106,16 +106,28 @@ async function carregarCatalogo() {
     }
 }
 
-function renderizarLivros(livros) {
-    const gridLivros = document.getElementById('gridLivros');
-    gridLivros.innerHTML = '';
+let paginaAtual = 1;
+const itensPorPagina = 8;
 
-    if (livros.length === 0) {
+function renderizarLivros(livrosLista, resetPagina = true) {
+    if (resetPagina) paginaAtual = 1;
+    const gridLivros = document.getElementById('gridLivros');
+    const containerPaginacao = document.getElementById('paginacaoCatalogo');
+    
+    gridLivros.innerHTML = '';
+    if(containerPaginacao) containerPaginacao.innerHTML = '';
+
+    if (livrosLista.length === 0) {
         gridLivros.innerHTML = '<p style="color: var(--text-muted);">Nenhum livro encontrado com esse termo.</p>';
         return;
     }
 
-    livros.forEach(livro => {
+    const totalPaginas = Math.ceil(livrosLista.length / itensPorPagina);
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const livrosPagina = livrosLista.slice(inicio, fim);
+
+    livrosPagina.forEach(livro => {
         const card = document.createElement('div');
         card.className = 'livro-card';
         card.style.cursor = 'pointer';
@@ -141,6 +153,60 @@ function renderizarLivros(livros) {
         
         gridLivros.appendChild(card);
     });
+
+    renderizarControlesPaginacao(livrosLista, totalPaginas);
+}
+
+function renderizarControlesPaginacao(livrosLista, totalPaginas) {
+    const container = document.getElementById('paginacaoCatalogo');
+    if (!container || totalPaginas <= 1) return;
+
+    // Estilos base para os botões
+    const btnStyle = "padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; background: var(--surface-color); color: var(--text-color); cursor: pointer; transition: all 0.2s;";
+    const activeStyle = "background: var(--primary-color); color: var(--bg-color); border-color: var(--primary-color);";
+
+    // Botão Anterior
+    const btnPrev = document.createElement('button');
+    btnPrev.innerHTML = '<i class="ph ph-caret-left"></i>';
+    btnPrev.style.cssText = btnStyle;
+    btnPrev.disabled = paginaAtual === 1;
+    if(btnPrev.disabled) btnPrev.style.opacity = '0.5';
+    btnPrev.onclick = () => {
+        if(paginaAtual > 1) {
+            paginaAtual--;
+            renderizarLivros(livrosLista, false);
+            window.scrollTo({ top: document.getElementById('gridLivros').offsetTop - 100, behavior: 'smooth' });
+        }
+    };
+    container.appendChild(btnPrev);
+
+    // Botões de Páginas
+    for (let i = 1; i <= totalPaginas; i++) {
+        const btnPage = document.createElement('button');
+        btnPage.innerText = i;
+        btnPage.style.cssText = btnStyle + (paginaAtual === i ? activeStyle : '');
+        btnPage.onclick = () => {
+            paginaAtual = i;
+            renderizarLivros(livrosLista, false);
+            window.scrollTo({ top: document.getElementById('gridLivros').offsetTop - 100, behavior: 'smooth' });
+        };
+        container.appendChild(btnPage);
+    }
+
+    // Botão Próximo
+    const btnNext = document.createElement('button');
+    btnNext.innerHTML = '<i class="ph ph-caret-right"></i>';
+    btnNext.style.cssText = btnStyle;
+    btnNext.disabled = paginaAtual === totalPaginas;
+    if(btnNext.disabled) btnNext.style.opacity = '0.5';
+    btnNext.onclick = () => {
+        if(paginaAtual < totalPaginas) {
+            paginaAtual++;
+            renderizarLivros(livrosLista, false);
+            window.scrollTo({ top: document.getElementById('gridLivros').offsetTop - 100, behavior: 'smooth' });
+        }
+    };
+    container.appendChild(btnNext);
 }
 
 function abrirDetalhesLivro(livro) {

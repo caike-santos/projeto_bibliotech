@@ -433,7 +433,33 @@
         <div class="grid-livros" id="gridLivros">
             <p style="color: var(--text-muted);">Conectando aos servidores da biblioteca...</p>
         </div>
+        <!-- Paginação -->
+        <div id="paginacaoCatalogo" style="display:flex; justify-content:center; gap:0.5rem; margin-top:2rem; align-items: center; flex-wrap: wrap;"></div>
     </main>
+
+    <!-- Footer -->
+    <footer class="bibliotech-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <i class="ph ph-book-open footer-logo-icon"></i>
+                <span class="footer-logo-text">BiblioTech</span>
+                <p class="footer-desc">Transformando a gestão de bibliotecas com tecnologia e inteligência.</p>
+            </div>
+            <div class="footer-info">
+                <h4>Contato</h4>
+                <p><i class="ph ph-map-pin"></i> Rua Fictícia da Leitura, 1024 - Centro</p>
+                <p><i class="ph ph-phone"></i> (11) 98765-4321</p>
+            </div>
+            <div class="footer-scroll">
+                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="btn-scroll-top" title="Voltar ao topo">
+                    <i class="ph ph-caret-up"></i>
+                </button>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 BiblioTech. Todos os direitos reservados.</p>
+        </div>
+    </footer>
 
     <!-- Chat Modal da Lumina -->
     <div id="luminaChatModal" class="lumina-modal">
