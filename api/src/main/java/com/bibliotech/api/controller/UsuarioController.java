@@ -164,16 +164,16 @@ public class UsuarioController {
 
         if (totalEmprestimos >= 10) {
             nivel = "Mestre da Leitura";
-            selo = "🏆";
+            selo = "\uD83C\uDFC6"; // 🏆
         } else if (totalEmprestimos >= 5) {
-            nivel = "Leitor Assíduo";
-            selo = "🥇";
+            nivel = "Leitor Ass\u00EDduo";
+            selo = "\uD83E\uDD47"; // 🥇
         } else if (totalEmprestimos >= 1) {
             nivel = "Leitor Iniciante";
-            selo = "🥈";
+            selo = "\uD83E\uDD48"; // 🥈
         } else {
             nivel = "Visitante";
-            selo = "📚";
+            selo = "\uD83D\uDCDA"; // 📚
         }
 
         Map<String, Object> resultado = new HashMap<>();

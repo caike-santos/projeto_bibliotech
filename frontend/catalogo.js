@@ -46,7 +46,12 @@ async function carregarDadosDoUsuario() {
     if (!token) return;
     
     try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        const payload = JSON.parse(jsonPayload);
         const email = payload.sub;
         
         const response = await fetch(API_BASE_URL + '/usuarios/me', {
@@ -456,7 +461,7 @@ function configurarChatLumina() {
         
         try {
             const token = localStorage.getItem('jwtToken');
-            const res = await fetch(`/livros/recomendacoes/usuario/${usuarioLogadoId}`, {
+            const res = await fetch(API_BASE_URL + `/livros/recomendacoes/usuario/${usuarioLogadoId}`, {
                 headers: { 'Authorization': `Bearer ${token}` },
                 skipLoader: true
             });
@@ -537,8 +542,12 @@ function exibirNomeUsuario() {
     const token = localStorage.getItem('jwtToken');
     if (!token) return;
     try {
-        const base64Payload = token.split('.')[1];
-        const dadosUsuario = JSON.parse(atob(base64Payload));
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        const dadosUsuario = JSON.parse(jsonPayload);
         
         // Usa o nome salvo no localStorage ou cai para o email (sub)
         const nomeParaExibir = localStorage.getItem('userName') || dadosUsuario.sub || 'Usuário';
@@ -555,7 +564,7 @@ function exibirNomeUsuario() {
 async function entrarFilaEspera(livroId) {
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch(`/reservas?usuarioId=${usuarioLogadoId}&livroId=${livroId}`, {
+        const response = await fetch(API_BASE_URL + `/reservas?usuarioId=${usuarioLogadoId}&livroId=${livroId}`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -576,7 +585,7 @@ async function carregarGamificacao() {
     if(!usuarioLogadoId) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch(`/usuarios/${usuarioLogadoId}/gamificacao`, {
+        const response = await fetch(API_BASE_URL + `/usuarios/${usuarioLogadoId}/gamificacao`, {
             headers: { 'Authorization': `Bearer ${token}` },
             skipLoader: true
         });
@@ -600,7 +609,7 @@ async function carregarRecomendacoes() {
     btnGerar.disabled = true;
 
     try {
-        const response = await fetch(`/livros/clustering/usuario/${usuarioLogadoId}`, {
+        const response = await fetch(API_BASE_URL + `/livros/clustering/usuario/${usuarioLogadoId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
             skipLoader: true
         });
@@ -640,7 +649,7 @@ async function carregarMeusEmprestimos() {
     lista.innerHTML = '<div style="display:flex; justify-content:center; width:100%; padding:1rem;"><div class="loader-spinner"></div></div>';
 
     try {
-        const response = await fetch(`/emprestimos/usuario/${usuarioLogadoId}`, {
+        const response = await fetch(API_BASE_URL + `/emprestimos/usuario/${usuarioLogadoId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
             skipLoader: true
         });
@@ -703,7 +712,7 @@ async function carregarNotificacoes() {
     }
 
     try {
-        const response = await fetch(`/notificacoes/usuario/${usuarioLogadoId}`, {
+        const response = await fetch(API_BASE_URL + `/notificacoes/usuario/${usuarioLogadoId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
             skipLoader: true
         });
@@ -761,7 +770,7 @@ async function carregarNotificacoes() {
                         div.style.borderLeft = '1px solid var(--border-color)';
                         n.lida = true; // Atualiza o estado local
 
-                        await fetch(`/notificacoes/${n.id}/ler`, {
+                        await fetch(API_BASE_URL + `/notificacoes/${n.id}/ler`, {
                             method: 'PUT',
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
