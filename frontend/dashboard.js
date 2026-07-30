@@ -180,6 +180,7 @@ function renderizarAcervo() {
                 <td data-label="Estoque">${l.quantidadeDisponivel}/${l.quantidadeTotal}</td>
                 <td data-label="Ações">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
+                        <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--secondary-color, #10B981);" onclick="abrirVisualizacaoLivro(${l.id})">Ver</button>
                         <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: #3B82F6;" onclick="abrirEdicaoLivro(${l.id})">Editar</button>
                         <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--warning-color);" onclick="inativarLivro(${l.id})">Inativar</button>
                         <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--error-color, #ef4444);" onclick="excluirLivroDefinitivo(${l.id})">Excluir</button>
@@ -274,6 +275,43 @@ async function excluirLivroDefinitivo(id) {
     }
 }
 
+
+// ---------------- MODAL DE VISUALIZAÇÃO DE LIVRO ---------------- //
+function abrirVisualizacaoLivro(id) {
+    const livro = livros.find(l => l.id === id);
+    if (!livro) return;
+
+    document.getElementById('visTitulo').innerText = livro.titulo || 'Sem Título';
+    document.getElementById('visAutor').innerText = livro.autor || 'Desconhecido';
+    document.getElementById('visEditora').innerText = livro.editora || 'Desconhecida';
+    document.getElementById('visAno').innerText = livro.ano || 'N/A';
+    document.getElementById('visIsbn').innerText = livro.isbn || 'N/A';
+    document.getElementById('visGenero').innerText = livro.generoPrincipal || 'N/A';
+    document.getElementById('visSinopse').innerText = livro.sinopse || 'Nenhuma sinopse disponível.';
+    document.getElementById('visEstoque').innerText = `${livro.quantidadeDisponivel} / ${livro.quantidadeTotal}`;
+    
+    const capaDiv = document.getElementById('visCapa');
+    if (livro.capaUrl) {
+        capaDiv.style.backgroundImage = `url('${livro.capaUrl}')`;
+    } else {
+        capaDiv.style.backgroundImage = 'none';
+        capaDiv.style.backgroundColor = '#ccc';
+    }
+
+    const tagsDiv = document.getElementById('visTags');
+    tagsDiv.innerHTML = '';
+    if (livro.tagsSecundarias && livro.tagsSecundarias.length > 0) {
+        livro.tagsSecundarias.forEach(t => {
+            tagsDiv.innerHTML += `<span style="font-size: 0.7rem; padding: 0.2rem 0.5rem; background: var(--border-color); border-radius: 1rem; color: var(--text-color);">${t.nome}</span>`;
+        });
+    } else {
+        tagsDiv.innerHTML = '<span style="font-size: 0.7rem; color: var(--text-muted);">Nenhuma tag</span>';
+    }
+
+    fecharModais();
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('modalVisualizarLivro').classList.add('active');
+}
 
 let livroParaEdicao = null;
 
