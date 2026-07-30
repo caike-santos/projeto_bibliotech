@@ -1,3 +1,13 @@
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     verificarAcesso();
     carregarDados();
@@ -14,7 +24,7 @@ function verificarAcesso() {
     const token = localStorage.getItem('jwtToken');
     const role = localStorage.getItem('userRole');
     if (!token || (role !== 'BIBLIOTECARIO' && role !== 'ADMIN')) {
-        showToast('Acesso negado. Apenas administradores e bibliotecários podem acessar este painel.', 'error');
+        showToast('Acesso negado. Apenas administradores e bibliotecÃ¡rios podem acessar este painel.', 'error');
         setTimeout(() => { window.location.href = 'index.html'; }, 2000);
     }
 }
@@ -27,7 +37,7 @@ function showSection(sectionId) {
     event.currentTarget.classList.add('active');
 }
 
-// Lógica de Modais
+// LÃ³gica de Modais
 function fecharModais() {
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
     document.getElementById('modalOverlay').classList.remove('active');
@@ -59,7 +69,7 @@ function abrirModalCadastroUsuario() {
     document.getElementById('modalCadastroUsuario').classList.add('active');
 }
 
-// Variáveis Globais de Dados
+// VariÃ¡veis Globais de Dados
 let livros = [];
 let usuarios = [];
 let emprestimos = [];
@@ -86,29 +96,29 @@ async function carregarDados() {
 
     try {
         // Fetch Livros (Trazendo ativos e inativos com limite alto)
-        const resLivros = await fetch('https://bibliotech-api-e9wg.onrender.com/livros?todos=true&size=500', { headers, skipLoader: true });
+        const resLivros = await fetch(API_BASE_URL + '/livros?todos=true&size=500', { headers, skipLoader: true });
         if (resLivros.ok) {
             const data = await resLivros.json();
             livros = data.content || data; // Trata Pageable ou List
             renderizarAcervo();
         }
 
-        // Fetch Usuários
-        const resUsuarios = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', { headers, skipLoader: true });
+        // Fetch UsuÃ¡rios
+        const resUsuarios = await fetch(API_BASE_URL + '/usuarios', { headers, skipLoader: true });
         if (resUsuarios.ok) {
             usuarios = await resUsuarios.json();
             renderizarUsuarios();
         }
 
-        // Fetch Empréstimos
-        const resEmprestimos = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos', { headers, skipLoader: true });
+        // Fetch EmprÃ©stimos
+        const resEmprestimos = await fetch(API_BASE_URL + '/emprestimos', { headers, skipLoader: true });
         if (resEmprestimos.ok) {
             emprestimos = await resEmprestimos.json();
             renderizarEmprestimos();
         }
 
         // Fetch Reservas
-        const resReservas = await fetch('https://bibliotech-api-e9wg.onrender.com/reservas', { headers, skipLoader: true });
+        const resReservas = await fetch(API_BASE_URL + '/reservas', { headers, skipLoader: true });
         if (resReservas.ok) {
             reservas = await resReservas.json();
             renderizarReservas();
@@ -137,7 +147,7 @@ function atualizarDashboard() {
     if (statEquipe) statEquipe.innerText = equipe.length;
     document.getElementById('statEmprestimos').innerText = emprestimos.length;
 
-    // Gráfico de Gêneros
+    // GrÃ¡fico de GÃªneros
     const contagemGeneros = {};
     livros.forEach(l => {
         const genero = l.generoPrincipal || 'Outros';
@@ -175,13 +185,13 @@ function renderizarAcervo() {
             <tr>
                 <td data-label="ID">${l.id}</td>
                 <td data-label="ISBN">${l.isbn || 'N/A'}</td>
-                <td data-label="Título">
+                <td data-label="TÃ­tulo">
                     ${l.titulo} 
                     ${!l.ativo ? '<span style="color: var(--error-color, #ef4444); font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">(Inativo)</span>' : ''}
                 </td>
                 <td data-label="Autor">${l.autor}</td>
                 <td data-label="Estoque">${l.quantidadeDisponivel}/${l.quantidadeTotal}</td>
-                <td data-label="Ações">
+                <td data-label="AÃ§Ãµes">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
                         <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--secondary-color, #10B981);" onclick="abrirVisualizacaoLivro(${l.id})">Ver</button>
                         <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: #3B82F6;" onclick="abrirEdicaoLivro(${l.id})">Editar</button>
@@ -214,7 +224,7 @@ async function buscarEcadastrarLivro() {
     btn.disabled = true;
 
     try {
-        let url = `https://bibliotech-api-e9wg.onrender.com/livros/cadastrar-por-isbn/${isbn}?quantidade=${qtd}`;
+        let url = `/livros/cadastrar-por-isbn/${isbn}?quantidade=${qtd}`;
         if (tituloHint) url += `&tituloHint=${encodeURIComponent(tituloHint)}`;
         if (autorHint) url += `&autorHint=${encodeURIComponent(autorHint)}`;
 
@@ -226,8 +236,8 @@ async function buscarEcadastrarLivro() {
         if (response.ok) {
             const livroCadastrado = await response.json();
             
-            // Abre o modal universal de edição para a revisão final, 
-            // repassando os dados que a IA encontrou (mas que AINDA NÃO estão no banco)
+            // Abre o modal universal de ediÃ§Ã£o para a revisÃ£o final, 
+            // repassando os dados que a IA encontrou (mas que AINDA NÃƒO estÃ£o no banco)
             abrirEdicaoLivro(null, livroCadastrado);
             document.getElementById('tituloModalLivro').innerText = 'IA: Revise e Salve';
             
@@ -238,7 +248,7 @@ async function buscarEcadastrarLivro() {
         }
     } catch (e) {
         console.error(e);
-        showToast('Erro de comunicação.', 'error');
+        showToast('Erro de comunicaÃ§Ã£o.', 'error');
     } finally {
         btn.innerText = 'Buscar e Validar via IA';
         btn.disabled = false;
@@ -246,11 +256,11 @@ async function buscarEcadastrarLivro() {
 }
 
 async function inativarLivro(id) {
-    const confirmed = await showCustomConfirm('Atenção', 'Tem certeza que deseja inativar este livro? (Ele sairá do catálogo, mas o ISBN continuará reservado)', 'warning');
+    const confirmed = await showCustomConfirm('AtenÃ§Ã£o', 'Tem certeza que deseja inativar este livro? (Ele sairÃ¡ do catÃ¡logo, mas o ISBN continuarÃ¡ reservado)', 'warning');
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(`/livros/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
         showToast('Livro inativado com sucesso.', 'info');
         carregarDados();
     } catch(e) {
@@ -259,40 +269,40 @@ async function inativarLivro(id) {
 }
 
 async function excluirLivroDefinitivo(id) {
-    const confirmed = await showCustomConfirm('Cuidado', 'Tem certeza que deseja EXCLUIR DEFINITIVAMENTE este livro? O ISBN será liberado. Esta ação não pode ser desfeita.', 'danger');
+    const confirmed = await showCustomConfirm('Cuidado', 'Tem certeza que deseja EXCLUIR DEFINITIVAMENTE este livro? O ISBN serÃ¡ liberado. Esta aÃ§Ã£o nÃ£o pode ser desfeita.', 'danger');
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/livros/hard/${id}`, { 
+        const response = await fetch(`/livros/hard/${id}`, { 
             method: 'DELETE', 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
 
         if (response.ok) {
-            showToast('Livro excluído definitivamente com sucesso!', 'success');
+            showToast('Livro excluÃ­do definitivamente com sucesso!', 'success');
             carregarDados();
         } else {
             const errorData = await response.json().catch(() => ({}));
-            showToast(errorData.message || 'Erro: O livro não pode ser excluído pois possui histórico de empréstimos.', 'error');
+            showToast(errorData.message || 'Erro: O livro nÃ£o pode ser excluÃ­do pois possui histÃ³rico de emprÃ©stimos.', 'error');
         }
     } catch(e) {
-        showToast('Erro ao se conectar com o servidor para exclusão.', 'error');
+        showToast('Erro ao se conectar com o servidor para exclusÃ£o.', 'error');
     }
 }
 
 
-// ---------------- MODAL DE VISUALIZAÇÃO DE LIVRO ---------------- //
+// ---------------- MODAL DE VISUALIZAÃ‡ÃƒO DE LIVRO ---------------- //
 function abrirVisualizacaoLivro(id) {
     const livro = livros.find(l => l.id === id);
     if (!livro) return;
 
-    document.getElementById('visTitulo').innerText = livro.titulo || 'Sem Título';
+    document.getElementById('visTitulo').innerText = livro.titulo || 'Sem TÃ­tulo';
     document.getElementById('visAutor').innerText = livro.autor || 'Desconhecido';
     document.getElementById('visEditora').innerText = livro.editora || 'Desconhecida';
     document.getElementById('visAno').innerText = livro.ano || 'N/A';
     document.getElementById('visIsbn').innerText = livro.isbn || 'N/A';
     document.getElementById('visGenero').innerText = livro.generoPrincipal || 'N/A';
-    document.getElementById('visSinopse').innerText = livro.sinopse || 'Nenhuma sinopse disponível.';
+    document.getElementById('visSinopse').innerText = livro.sinopse || 'Nenhuma sinopse disponÃ­vel.';
     document.getElementById('visEstoque').innerText = `${livro.quantidadeDisponivel} / ${livro.quantidadeTotal}`;
     
     const capaDiv = document.getElementById('visCapa');
@@ -323,7 +333,7 @@ let livroParaEdicao = null;
 function abrirEdicaoLivro(id, livroIA = null) {
     if (id === null) {
         if (livroIA) {
-            // Modo Revisão de IA (Preenche com dados recebidos mas sem ID)
+            // Modo RevisÃ£o de IA (Preenche com dados recebidos mas sem ID)
             livroParaEdicao = { tagsSecundarias: livroIA.tagsSecundarias || [] };
             document.getElementById('editLivroIsbn').value = livroIA.isbn || '';
             document.getElementById('editLivroTitulo').value = livroIA.titulo || '';
@@ -354,7 +364,7 @@ function abrirEdicaoLivro(id, livroIA = null) {
         }
         document.getElementById('editLivroId').value = '';
     } else {
-        // Modo Edição (Livro já existe no banco)
+        // Modo EdiÃ§Ã£o (Livro jÃ¡ existe no banco)
         livroParaEdicao = livros.find(l => l.id === id);
         if(!livroParaEdicao) return;
         document.getElementById('tituloModalLivro').innerText = 'Editar Livro';
@@ -388,7 +398,7 @@ async function salvarEdicaoLivro() {
     const qtdDisp = document.getElementById('editLivroQtdDisponivel').value ? parseInt(document.getElementById('editLivroQtdDisponivel').value) : 0;
 
     if (qtdDisp > qtdTotal) {
-        showToast('A quantidade disponível não pode ser maior que a quantidade total.', 'warning');
+        showToast('A quantidade disponÃ­vel nÃ£o pode ser maior que a quantidade total.', 'warning');
         return;
     }
 
@@ -410,7 +420,7 @@ async function salvarEdicaoLivro() {
     const token = localStorage.getItem('jwtToken');
     try {
         const isNew = !id;
-        const url = isNew ? `https://bibliotech-api-e9wg.onrender.com/livros` : `https://bibliotech-api-e9wg.onrender.com/livros/${id}`;
+        const url = isNew ? `/livros` : `/livros/${id}`;
         const method = isNew ? 'POST' : 'PUT';
 
         const response = await fetch(url, {
@@ -427,39 +437,39 @@ async function salvarEdicaoLivro() {
             fecharModais();
             carregarDados();
         } else {
-            // Se o backend retornar status 409 (Conflict), é pq o ISBN duplicou
+            // Se o backend retornar status 409 (Conflict), Ã© pq o ISBN duplicou
             if (response.status === 409) {
-                showToast('Erro: Este ISBN já está cadastrado no sistema!', 'error');
+                showToast('Erro: Este ISBN jÃ¡ estÃ¡ cadastrado no sistema!', 'error');
             } else {
                 await handleApiError(response, isNew ? 'Erro ao cadastrar.' : 'Erro ao atualizar.');
             }
         }
     } catch(e) {
-        showToast('Erro de rede ao salvar edição.', 'error');
+        showToast('Erro de rede ao salvar ediÃ§Ã£o.', 'error');
     }
 }
 
-// ---------------- USUÁRIOS ---------------- //
+// ---------------- USUÃRIOS ---------------- //
 function renderizarUsuarios() {
     const currentUserRole = localStorage.getItem('userRole') || 'LEITOR';
     const tbody = document.getElementById('tabelaUsuarios');
     tbody.innerHTML = '';
     
-    // Bibliotecário não vê admins
+    // BibliotecÃ¡rio nÃ£o vÃª admins
     const usuariosFiltrados = usuarios.filter(u => {
         if (currentUserRole === 'BIBLIOTECARIO' && u.tipo === 'ADMIN') return false;
         return true;
     });
 
-    // Se for bibliotecário, oculta o botão de "Novo Usuário" (ou restringe)
-    // Conforme pedido: "só admin tenha a função de cadastrar funcionarios e admin"
+    // Se for bibliotecÃ¡rio, oculta o botÃ£o de "Novo UsuÃ¡rio" (ou restringe)
+    // Conforme pedido: "sÃ³ admin tenha a funÃ§Ã£o de cadastrar funcionarios e admin"
     const btnNovoUser = document.getElementById('btnNovoUsuario');
     if (btnNovoUser) {
         btnNovoUser.style.display = currentUserRole === 'ADMIN' ? 'inline-block' : 'none';
     }
 
     usuariosFiltrados.forEach(u => {
-        // Bibliotecário não bloqueia outros bibliotecários
+        // BibliotecÃ¡rio nÃ£o bloqueia outros bibliotecÃ¡rios
         let showBlockBtn = true;
         if (currentUserRole === 'BIBLIOTECARIO' && u.tipo !== 'LEITOR') showBlockBtn = false;
         
@@ -469,9 +479,9 @@ function renderizarUsuarios() {
                 <td data-label="Nome">${u.nome} <span style="font-size:0.7rem; color:var(--text-muted);">(${u.tipo || 'LEITOR'})</span></td>
                 <td data-label="E-mail">${u.email}</td>
                 <td data-label="Status"><span style="color: ${u.status === 'INATIVO' || !u.enabled ? 'red' : 'var(--primary-color)'}">${u.status}</span></td>
-                <td data-label="Ações">
+                <td data-label="AÃ§Ãµes">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                        ${showBlockBtn ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: red;" onclick="inativarUsuario(${u.id})">Bloquear</button>` : '<span style="font-size:0.8rem; color:var(--text-muted);">Sem permissão</span>'}
+                        ${showBlockBtn ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: red;" onclick="inativarUsuario(${u.id})">Bloquear</button>` : '<span style="font-size:0.8rem; color:var(--text-muted);">Sem permissÃ£o</span>'}
                     </div>
                 </td>
             </tr>
@@ -496,57 +506,57 @@ async function cadastrarUsuarioInterno() {
 
     try {
         const token = localStorage.getItem('jwtToken');
-        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', {
+        const response = await fetch(API_BASE_URL + '/usuarios', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // Embora a rota talvez seja pública, enviamos mesmo assim
+                'Authorization': `Bearer ${token}` // Embora a rota talvez seja pÃºblica, enviamos mesmo assim
             },
             body: JSON.stringify({ nome, email, senha, tipo, status: 'ATIVO', enabled: true })
         });
 
         if (response.ok) {
-            showToast('Usuário cadastrado com sucesso!', 'success');
+            showToast('UsuÃ¡rio cadastrado com sucesso!', 'success');
             fecharModais();
             carregarDados();
         } else {
             await handleApiError(response, 'Falha ao cadastrar.');
         }
     } catch(e) {
-        showToast('Erro de conexão.', 'error');
+        showToast('Erro de conexÃ£o.', 'error');
     } finally {
-        btn.innerText = 'Criar Usuário';
+        btn.innerText = 'Criar UsuÃ¡rio';
         btn.disabled = false;
     }
 }
 
 async function inativarUsuario(id) {
-    const confirmed = await showCustomConfirm('Bloquear Usuário', 'Tem certeza que deseja inativar/bloquear este usuário?', 'warning');
+    const confirmed = await showCustomConfirm('Bloquear UsuÃ¡rio', 'Tem certeza que deseja inativar/bloquear este usuÃ¡rio?', 'warning');
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-        showToast('Usuário inativado com sucesso.', 'info');
+        await fetch(`/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        showToast('UsuÃ¡rio inativado com sucesso.', 'info');
         carregarDados();
     } catch(e) {
-        showToast('Erro ao inativar usuário.', 'error');
+        showToast('Erro ao inativar usuÃ¡rio.', 'error');
     }
 }
 
-// ---------------- EMPRÉSTIMOS ---------------- //
+// ---------------- EMPRÃ‰STIMOS ---------------- //
 function renderizarEmprestimos() {
     const tbody = document.getElementById('tabelaEmprestimos');
     tbody.innerHTML = '';
     emprestimos.forEach(e => {
-        const dataDev = new Date(e.dataDevolucaoPrevista).toLocaleDateString();
+        const dataDev = formatarDataLocal(e.dataDevolucaoPrevista);
         tbody.innerHTML += `
             <tr>
                 <td data-label="ID">${e.id}</td>
-                <td data-label="Livro">${e.livro.titulo}</td>
-                <td data-label="Leitor">${e.usuario.nome}</td>
-                <td data-label="Devolução">${e.status === 'AGUARDANDO_RETIRADA' ? 'Buscar até ' + dataDev : dataDev}</td>
+                <td data-label="Livro">${escapeHTML(e.livro.titulo)}</td>
+                <td data-label="Leitor">${escapeHTML(e.usuario.nome)}</td>
+                <td data-label="DevoluÃ§Ã£o">${e.status === 'AGUARDANDO_RETIRADA' ? 'Buscar atÃ© ' + dataDev : dataDev}</td>
                 <td data-label="Status" style="color: ${e.status === 'ATRASADO' ? 'red' : (e.status === 'AGUARDANDO_RETIRADA' ? 'var(--warning-color)' : 'inherit')}">${e.status}</td>
-                <td data-label="Ações">
+                <td data-label="AÃ§Ãµes">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
                         ${e.status === 'AGUARDANDO_RETIRADA' ? 
                             `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--success-color, #10B981);" onclick="confirmarRetirada(${e.id})">Entregar Livro</button>` : 
@@ -563,24 +573,24 @@ function renderizarEmprestimos() {
 }
 
 async function forcarDevolucao(id) {
-    const confirmed = await showCustomConfirm('Devolução', 'Confirmar devolução deste empréstimo?', 'info');
+    const confirmed = await showCustomConfirm('DevoluÃ§Ã£o', 'Confirmar devoluÃ§Ã£o deste emprÃ©stimo?', 'info');
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/${id}/devolver`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
-        showToast('Devolução confirmada com sucesso.', 'success');
+        await fetch(`/emprestimos/${id}/devolver`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        showToast('DevoluÃ§Ã£o confirmada com sucesso.', 'success');
         carregarDados();
     } catch(e) {
-        showToast('Erro ao confirmar devolução.', 'error');
+        showToast('Erro ao confirmar devoluÃ§Ã£o.', 'error');
     }
 }
 
 async function confirmarRetirada(id) {
-    const confirmed = await showCustomConfirm('Confirmar Retirada', 'O leitor está no balcão e você entregará o livro agora? (Isso iniciará o prazo de 14 dias)', 'info');
+    const confirmed = await showCustomConfirm('Confirmar Retirada', 'O leitor estÃ¡ no balcÃ£o e vocÃª entregarÃ¡ o livro agora? (Isso iniciarÃ¡ o prazo de 14 dias)', 'info');
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        const res = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/${id}/confirmar-retirada`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(`/emprestimos/${id}/confirmar-retirada`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
         if(res.ok) {
             showToast('Retirada confirmada! Prazo iniciado.', 'success');
             carregarDados();
@@ -588,7 +598,7 @@ async function confirmarRetirada(id) {
             showToast('Erro ao confirmar retirada.', 'error');
         }
     } catch(e) {
-        showToast('Erro de conexão.', 'error');
+        showToast('Erro de conexÃ£o.', 'error');
     }
 }
 
@@ -599,20 +609,20 @@ function renderizarReservas() {
     tbody.innerHTML = '';
     
     reservas.forEach(r => {
-        const dataSol = new Date(r.dataSolicitacao).toLocaleDateString();
+        const dataSol = formatarDataLocal(r.dataSolicitacao);
         const podeEfetivar = r.status === 'NOTIFICADO';
         
         tbody.innerHTML += `
             <tr>
                 <td data-label="ID">${r.id}</td>
-                <td data-label="Livro">${r.livro.titulo}</td>
-                <td data-label="Leitor">${r.usuario.nome}</td>
+                <td data-label="Livro">${escapeHTML(r.livro.titulo)}</td>
+                <td data-label="Leitor">${escapeHTML(r.usuario.nome)}</td>
                 <td data-label="Solicitado">${dataSol}</td>
                 <td data-label="Status"><span style="color: ${podeEfetivar ? 'var(--primary-color)' : 'var(--warning-color)'}">${r.status}</span></td>
-                <td data-label="Ações">
+                <td data-label="AÃ§Ãµes">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
                         ${podeEfetivar 
-                            ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto;" onclick="efetivarEmprestimoDaReserva(${r.livro.id}, ${r.usuario.id})">Efetivar Empréstimo</button>` 
+                            ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto;" onclick="efetivarEmprestimoDaReserva(${r.livro.id}, ${r.usuario.id})">Efetivar EmprÃ©stimo</button>` 
                             : '<span style="font-size:0.8rem; color:var(--text-muted);">Aguardando</span>'}
                     </div>
                 </td>
@@ -622,12 +632,12 @@ function renderizarReservas() {
 }
 
 async function efetivarEmprestimoDaReserva(livroId, usuarioId) {
-    const confirmed = await showCustomConfirm('Efetivar Empréstimo', 'Deseja registrar o empréstimo para este usuário que estava na fila?', 'info');
+    const confirmed = await showCustomConfirm('Efetivar EmprÃ©stimo', 'Deseja registrar o emprÃ©stimo para este usuÃ¡rio que estava na fila?', 'info');
     if(!confirmed) return;
     
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos?balcao=true', {
+        const response = await fetch(API_BASE_URL + '/emprestimos?balcao=true', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -640,17 +650,17 @@ async function efetivarEmprestimoDaReserva(livroId, usuarioId) {
         });
 
         if (response.ok) {
-            showToast('Empréstimo efetivado a partir da reserva!', 'success');
+            showToast('EmprÃ©stimo efetivado a partir da reserva!', 'success');
             carregarDados();
         } else {
-            await handleApiError(response, 'Falha ao efetivar empréstimo da reserva.');
+            await handleApiError(response, 'Falha ao efetivar emprÃ©stimo da reserva.');
         }
     } catch(e) {
-        showToast('Erro de conexão.', 'error');
+        showToast('Erro de conexÃ£o.', 'error');
     }
 }
 
-// ---------------- BALCÃO (AUTOCOMPLETE & EMPRÉSTIMO) ---------------- //
+// ---------------- BALCÃƒO (AUTOCOMPLETE & EMPRÃ‰STIMO) ---------------- //
 function setupAutocomplete() {
     const userSearch = document.getElementById('balcaoUserSearch');
     const userDropdown = document.getElementById('balcaoUserDropdown');
@@ -675,7 +685,7 @@ function setupAutocomplete() {
     // Autocomplete Leitor
     userSearch.addEventListener('input', (e) => {
         const termo = e.target.value.toLowerCase();
-        userIdInput.value = ''; // reseta seleção
+        userIdInput.value = ''; // reseta seleÃ§Ã£o
         userSelected.style.display = 'none';
         
         if (termo.length < 2) {
@@ -708,7 +718,7 @@ function setupAutocomplete() {
     // Autocomplete Livro
     bookSearch.addEventListener('input', (e) => {
         const termo = e.target.value.toLowerCase();
-        bookIdInput.value = ''; // reseta seleção
+        bookIdInput.value = ''; // reseta seleÃ§Ã£o
         bookSelected.style.display = 'none';
         
         if (termo.length < 2) {
@@ -720,7 +730,7 @@ function setupAutocomplete() {
         
         bookDropdown.innerHTML = '';
         if (filtrados.length === 0) {
-            bookDropdown.innerHTML = '<div class="autocomplete-item" style="color:var(--text-muted)">Nenhum livro disponível encontrado</div>';
+            bookDropdown.innerHTML = '<div class="autocomplete-item" style="color:var(--text-muted)">Nenhum livro disponÃ­vel encontrado</div>';
         } else {
             filtrados.forEach(l => {
                 const item = document.createElement('div');
@@ -745,7 +755,7 @@ async function realizarEmprestimoBalcao() {
     const btn = document.getElementById('btnRealizarEmprestimoBalcao');
 
     if (!usuarioId || !livroId) {
-        showToast('Selecione um Leitor e um Livro usando as sugestões.', 'warning');
+        showToast('Selecione um Leitor e um Livro usando as sugestÃµes.', 'warning');
         return;
     }
 
@@ -754,7 +764,7 @@ async function realizarEmprestimoBalcao() {
 
     try {
         const token = localStorage.getItem('jwtToken');
-        const response = await fetch('https://bibliotech-api-e9wg.onrender.com/emprestimos?balcao=true', {
+        const response = await fetch(API_BASE_URL + '/emprestimos?balcao=true', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -767,9 +777,9 @@ async function realizarEmprestimoBalcao() {
         });
 
         if (response.ok) {
-            showToast('Empréstimo registrado com sucesso!', 'success');
+            showToast('EmprÃ©stimo registrado com sucesso!', 'success');
             
-            // Limpa o formulário
+            // Limpa o formulÃ¡rio
             document.getElementById('balcaoUserSearch').value = '';
             document.getElementById('balcaoUserId').value = '';
             document.getElementById('balcaoUserSelected').style.display = 'none';
@@ -780,12 +790,14 @@ async function realizarEmprestimoBalcao() {
 
             carregarDados(); // Atualiza listas globais
         } else {
-            await handleApiError(response, 'Falha ao registrar empréstimo no balcão.');
+            await handleApiError(response, 'Falha ao registrar emprÃ©stimo no balcÃ£o.');
         }
     } catch(e) {
-        showToast('Erro de conexão.', 'error');
+        showToast('Erro de conexÃ£o.', 'error');
     } finally {
-        btn.innerText = 'Confirmar Empréstimo';
+        btn.innerText = 'Confirmar EmprÃ©stimo';
         btn.disabled = false;
     }
 }
+
+

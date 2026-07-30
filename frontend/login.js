@@ -10,7 +10,7 @@ document.getElementById('formLogin').addEventListener('submit', async function(e
     btnSubmit.disabled = true;
 
     try {
-        const resposta = await fetch('https://bibliotech-api-e9wg.onrender.com/login', {
+        const resposta = await fetch(API_BASE_URL + '/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, senha })
@@ -20,29 +20,8 @@ document.getElementById('formLogin').addEventListener('submit', async function(e
             const dados = await resposta.json();
             localStorage.setItem('jwtToken', dados.token);
             
-            // Decodifica o JWT para ver o email (sub)
-            const base64Payload = dados.token.split('.')[1];
-            const payload = JSON.parse(atob(base64Payload));
-            const email = payload.sub;
-
-            let role = 'LEITOR'; // fallback padrão
-
-            try {
-                // Busca no banco de dados para confirmar o role
-                const resUser = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', {
-                    headers: { 'Authorization': `Bearer ${dados.token}` }
-                });
-                
-                if (resUser.ok) {
-                    const usuarios = await resUser.json();
-                    const userLogado = usuarios.find(u => u.email === email);
-                    if (userLogado && userLogado.tipo) {
-                        role = userLogado.tipo;
-                    }
-                }
-            } catch (err) {
-                console.error("Erro ao buscar role no banco, usando fallback.", err);
-            }
+            // O backend agora jÃ¡ devolve o role na resposta do login (dados.role)
+            let role = dados.role || 'LEITOR';
 
             localStorage.setItem('userRole', role);
 
@@ -56,13 +35,13 @@ document.getElementById('formLogin').addEventListener('submit', async function(e
             restaurarBotao(btnSubmit, textoOriginal);
         }
     } catch (error) {
-        console.error('Erro na requisição:', error);
+        console.error('Erro na requisiÃ§Ã£o:', error);
         showToast('Erro ao conectar com o servidor.', 'error');
         restaurarBotao(btnSubmit, textoOriginal);
     }
 });
 
-// Callback chamado pelo Google após o usuário selecionar a conta
+// Callback chamado pelo Google apÃ³s o usuÃ¡rio selecionar a conta
 async function handleGoogleLogin(response) {
     if (!response.credential) {
         showToast('Erro ao obter credenciais do Google', 'error');
@@ -70,7 +49,7 @@ async function handleGoogleLogin(response) {
     }
 
     try {
-        const res = await fetch('https://bibliotech-api-e9wg.onrender.com/login/google', {
+        const res = await fetch(API_BASE_URL + '/login/google', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -82,7 +61,7 @@ async function handleGoogleLogin(response) {
             const data = await res.json();
             localStorage.setItem('jwtToken', data.token);
             
-            // Decodifica o token JWT para pegar os dados do usuário (se precisar) e salva no localStorage
+            // Decodifica o token JWT para pegar os dados do usuÃ¡rio (se precisar) e salva no localStorage
             try {
                 const base64Url = data.token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -120,9 +99,10 @@ async function handleGoogleLogin(response) {
     }
 }
 
-// Função auxiliar para voltar o botão ao normal em caso de erro
+// FunÃ§Ã£o auxiliar para voltar o botÃ£o ao normal em caso de erro
 function restaurarBotao(botao, texto) {
     botao.innerText = texto;
     botao.disabled = false;
     botao.style.opacity = '1';
 }
+

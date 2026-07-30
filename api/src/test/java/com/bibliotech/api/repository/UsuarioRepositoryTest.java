@@ -1,6 +1,8 @@
 package com.bibliotech.api.repository;
 
 import com.bibliotech.api.model.Usuario;
+import com.bibliotech.api.model.UsuarioStatus;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +32,7 @@ class UsuarioRepositoryTest {
         usuario.setNome("Caike");
         // Ajuste os campos abaixo caso sua entidade exija mais dados obrigatórios no banco:
         usuario.setTipo("CLIENTE"); 
-        usuario.setStatus("ATIVO");
+        usuario.setStatus(UsuarioStatus.ATIVO);
         usuario.setPontosGamificacao(0);
         
         usuarioRepository.save(usuario);

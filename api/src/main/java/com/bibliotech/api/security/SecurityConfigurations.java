@@ -33,11 +33,15 @@ public class SecurityConfigurations {
                     // NOVO: Libera a rota de login para qualquer pessoa tentar entrar
                     req.requestMatchers(org.springframework.http.HttpMethod.POST, "/login").permitAll();
                     req.requestMatchers(org.springframework.http.HttpMethod.POST, "/login/google").permitAll();
-
-                    // --- ADICIONE ESTA LINHA ABAIXO ---
-                    // Libera temporariamente os empréstimos para testarmos as regras de negócio no Swagger
-                    req.requestMatchers("/emprestimos/**").permitAll();
                     
+                    // Restrições baseadas em ROLE (ADMIN e BIBLIOTECARIO) para o painel de controle
+                    req.requestMatchers(org.springframework.http.HttpMethod.POST, "/livros/**").hasAnyRole("ADMIN", "BIBLIOTECARIO");
+                    req.requestMatchers(org.springframework.http.HttpMethod.PUT, "/livros/**").hasAnyRole("ADMIN", "BIBLIOTECARIO");
+                    req.requestMatchers(org.springframework.http.HttpMethod.DELETE, "/livros/**").hasAnyRole("ADMIN", "BIBLIOTECARIO");
+                    req.requestMatchers(org.springframework.http.HttpMethod.GET, "/usuarios").hasAnyRole("ADMIN", "BIBLIOTECARIO");
+                    req.requestMatchers(org.springframework.http.HttpMethod.GET, "/emprestimos").hasAnyRole("ADMIN", "BIBLIOTECARIO");
+                    req.requestMatchers(org.springframework.http.HttpMethod.GET, "/reservas").hasAnyRole("ADMIN", "BIBLIOTECARIO");
+
                     // Qualquer outra rota (livros, empréstimos) fica trancada exigindo autenticação
                     req.anyRequest().authenticated();
                 })
@@ -61,8 +65,12 @@ public class SecurityConfigurations {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        // Permitimos qualquer origem (*) para que o frontend funcione no GitHub Pages
-        configuration.setAllowedOrigins(java.util.Arrays.asList("*"));
+        // Permitimos apenas as origens confiáveis (Frontend no GitHub Pages e ambiente de desenvolvimento local)
+        configuration.setAllowedOrigins(java.util.Arrays.asList(
+            "https://caike-santos.github.io", 
+            "http://127.0.0.1:5500", 
+            "http://localhost:5500"
+        ));
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         
         // Alteramos para "*" para aceitar qualquer cabeçalho que o navegador mandar no Preflight

@@ -21,6 +21,7 @@ public class Usuario implements org.springframework.security.core.userdetails.Us
     @Column(nullable = false, unique = true, length = 100) // E-mail único para cada usuário
     private String email;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @Column(nullable = false)
     private String senha;
 
@@ -28,7 +29,8 @@ public class Usuario implements org.springframework.security.core.userdetails.Us
     private String tipo; // ADMIN, BIBLIOTECARIO ou LEITOR
 
     @Column(nullable = false)
-    private String status; // ATIVO ou BLOQUEADO
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    private UsuarioStatus status; // Ex: ATIVO, INATIVO
 
     private int pontosGamificacao = 0; // Inicia com 0 pontos
 
@@ -54,8 +56,12 @@ public class Usuario implements org.springframework.security.core.userdetails.Us
     public String getTipo() { return tipo; }
     public void setTipo(String tipo) { this.tipo = tipo; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public UsuarioStatus getStatus() {
+        return status;
+    }
+    public void setStatus(UsuarioStatus status) {
+        this.status = status;
+    }
 
     public int getPontosGamificacao() { return pontosGamificacao; }
     public void setPontosGamificacao(int pontosGamificacao) { this.pontosGamificacao = pontosGamificacao; }
@@ -72,7 +78,8 @@ public class Usuario implements org.springframework.security.core.userdetails.Us
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return java.util.List.of(); // Devolve uma lista vazia (sem restrição de perfis por enquanto)
+        if (this.tipo == null) return java.util.List.of();
+        return java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + this.tipo.toUpperCase()));
     }
 
     @Override

@@ -30,7 +30,8 @@ public class Emprestimo {
     private LocalDate dataDevolucaoReal;
 
     @Column(nullable = false)
-    private String status; // Ex: "ATIVO", "DEVOLVIDO", "ATRASADO"
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    private EmprestimoStatus status; // Ex: ATIVO, DEVOLVIDO, ATRASADO, AGUARDANDO_RETIRADA
 
     private int renovacoesFeitas = 0; // Inicia com 0
 
@@ -60,8 +61,12 @@ public class Emprestimo {
     public LocalDate getDataDevolucaoReal() { return dataDevolucaoReal; }
     public void setDataDevolucaoReal(LocalDate dataDevolucaoReal) { this.dataDevolucaoReal = dataDevolucaoReal; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public EmprestimoStatus getStatus() {
+        return status;
+    }
+    public void setStatus(EmprestimoStatus status) {
+        this.status = status;
+    }
 
     public int getRenovacoesFeitas() { return renovacoesFeitas; }
     public void setRenovacoesFeitas(int renovacoesFeitas) { this.renovacoesFeitas = renovacoesFeitas; }

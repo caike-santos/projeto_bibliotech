@@ -23,4 +23,5 @@ public interface LivroRepository extends JpaRepository<Livro, Long> {
     
     // Busca livros cujo autor contenha o termo pesquisado APENAS DE LIVROS ATIVOS
     List<Livro> findByAutorContainingIgnoreCaseAndAtivoTrue(String autor);
+    List<Livro> findByAtivoTrue();
 }

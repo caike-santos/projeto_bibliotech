@@ -1,5 +1,15 @@
 let dadosUsuarioGlobal = null;
 
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('jwtToken');
     if (!token) {
@@ -11,23 +21,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         const payload = JSON.parse(atob(token.split('.')[1]));
         const email = payload.sub;
         
-        // Exibe nome/email básicos enquanto carrega
+        // Exibe nome/email bÃ¡sicos enquanto carrega
         document.getElementById('perfilEmail').innerText = email;
         const nomeSalvo = localStorage.getItem('userName');
         if (nomeSalvo) document.getElementById('perfilNome').innerText = nomeSalvo;
 
-        // Buscar ID do usuário
-        const resUser = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', {
-            headers: { 'Authorization': `Bearer ${token}` },
+        // Busca os dados APENAS do usuÃ¡rio logado
+        const resUser = await fetch(API_BASE_URL + '/usuarios/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
             skipLoader: true
         });
-        
-        if (!resUser.ok) throw new Error('Falha ao buscar usuários');
-        const usuarios = await resUser.json();
-        const user = usuarios.find(u => u.email === email);
+
+        if (!resUser.ok) {
+            console.error('Falha ao carregar dados do usuÃ¡rio logado (Status ' + resUser.status + ')');
+            return;
+        }
+
+        const user = await resUser.json();
         
         if (user) {
-            dadosUsuarioGlobal = user;
+            window.dadosUsuarioGlobal = user;
             document.getElementById('perfilNome').innerText = user.nome;
             localStorage.setItem('userName', user.nome);
             await carregarGamificacao(user.id, token);
@@ -70,7 +85,7 @@ function configurarEdicaoPerfil() {
         const novaSenha = document.getElementById('editSenha').value.trim();
 
         if(!novoNome || !novoEmail) {
-            showToast('Nome e e-mail são obrigatórios!', 'warning');
+            showToast('Nome e e-mail sÃ£o obrigatÃ³rios!', 'warning');
             return;
         }
 
@@ -90,7 +105,7 @@ function configurarEdicaoPerfil() {
 
         try {
             const token = localStorage.getItem('jwtToken');
-            const res = await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${dadosUsuarioGlobal.id}`, {
+            const res = await fetch(`/usuarios/${dadosUsuarioGlobal.id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -111,7 +126,7 @@ function configurarEdicaoPerfil() {
                 modal.style.transform = 'translate(-50%, -50%) scale(0)';
                 
                 if (credenciaisMudaram) {
-                    showToast('Credenciais alteradas. Faça login novamente.', 'info');
+                    showToast('Credenciais alteradas. FaÃ§a login novamente.', 'info');
                     setTimeout(() => {
                         localStorage.removeItem('jwtToken');
                         window.location.href = 'index.html';
@@ -122,17 +137,17 @@ function configurarEdicaoPerfil() {
             }
         } catch(e) {
             console.error(e);
-            showToast('Falha na comunicação com o servidor', 'error');
+            showToast('Falha na comunicaÃ§Ã£o com o servidor', 'error');
         } finally {
             btnSalvar.disabled = false;
-            btnSalvar.innerText = "Salvar Alterações";
+            btnSalvar.innerText = "Salvar AlteraÃ§Ãµes";
         }
     });
 }
 
 async function carregarGamificacao(usuarioId, token) {
     try {
-        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/usuarios/${usuarioId}/gamificacao`, {
+        const response = await fetch(`/usuarios/${usuarioId}/gamificacao`, {
             headers: { 'Authorization': `Bearer ${token}` },
             skipLoader: true
         });
@@ -142,7 +157,7 @@ async function carregarGamificacao(usuarioId, token) {
             document.getElementById('perfilPontos').innerText = data.totalEmprestimos;
         }
     } catch(e) {
-        console.error('Erro na gamificação', e);
+        console.error('Erro na gamificaÃ§Ã£o', e);
     }
 }
 
@@ -154,7 +169,7 @@ async function carregarHistorico(usuarioId, token) {
     if(corpoAtivos) corpoAtivos.innerHTML = '<tr><td colspan="5"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
     
     try {
-        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/usuario/${usuarioId}`, {
+        const response = await fetch(`/emprestimos/usuario/${usuarioId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
             skipLoader: true
         });
@@ -167,11 +182,11 @@ async function carregarHistorico(usuarioId, token) {
             const inativos = historico.filter(e => e.status === 'DEVOLVIDO');
 
             if (ativos.length === 0 && corpoAtivos) {
-                corpoAtivos.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum empréstimo ativo no momento.</td></tr>';
+                corpoAtivos.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum emprÃ©stimo ativo no momento.</td></tr>';
             }
 
             if (inativos.length === 0 && corpoHistorico) {
-                corpoHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum empréstimo encontrado no seu histórico.</td></tr>';
+                corpoHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum emprÃ©stimo encontrado no seu histÃ³rico.</td></tr>';
             }
 
             ativos.forEach(emp => {
@@ -180,11 +195,11 @@ async function carregarHistorico(usuarioId, token) {
                 const isAguardando = emp.status === 'AGUARDANDO_RETIRADA';
                 let badgeClass = 'status-ativo';
                 if (isAtrasado) badgeClass = 'status-atrasado';
-                else if (isAguardando) badgeClass = 'status-atrasado'; // Vamos usar a cor laranja/atrasado por enquanto, ou criar uma nova classe. O status-atrasado é vermelho, melhor colocar um style inline ou classe nova
+                else if (isAguardando) badgeClass = 'status-atrasado'; 
 
-                let devolucaoTexto = new Date(emp.dataDevolucaoPrevista).toLocaleDateString();
+                let devolucaoTexto = formatarDataLocal(emp.dataDevolucaoPrevista);
                 if (isAguardando) {
-                    devolucaoTexto = `Buscar até: ${devolucaoTexto}`;
+                    devolucaoTexto = `Buscar atÃ©: ${devolucaoTexto}`;
                 }
 
                 let acoes = '-';
@@ -192,13 +207,13 @@ async function carregarHistorico(usuarioId, token) {
                     if (emp.renovacoesFeitas === 0) {
                         acoes = `<button class="btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="renovarEmprestimo(${emp.id})">Renovar</button>`;
                     } else {
-                        acoes = '<span style="font-size: 0.75rem; color: var(--text-muted);">Já renovado</span>';
+                        acoes = '<span style="font-size: 0.75rem; color: var(--text-muted);">JÃ¡ renovado</span>';
                     }
                 } else if (isAtrasado) {
                     acoes = '<span style="font-size: 0.75rem; color: #EF4444;">Bloqueado</span>';
                 } else if (isAguardando) {
                     acoes = '<span style="font-size: 0.75rem; color: var(--warning-color);">Retirada Pendente</span>';
-                    badgeClass = ''; // Remover classe padrão pra usar style custom
+                    badgeClass = ''; 
                 }
 
                 const statusHtml = isAguardando ? 
@@ -207,11 +222,11 @@ async function carregarHistorico(usuarioId, token) {
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td data-label="Livro"><strong>${emp.livro.titulo}</strong></td>
-                    <td data-label="Data Retirada">${isAguardando ? '-' : new Date(emp.dataRetirada).toLocaleDateString()}</td>
-                    <td data-label="Devolução Prevista" style="${isAtrasado ? 'color: #EF4444; font-weight: bold;' : (isAguardando ? 'color: var(--warning-color); font-weight: bold;' : '')}">${devolucaoTexto}</td>
+                    <td data-label="Livro"><strong>${escapeHTML(emp.livro.titulo)}</strong></td>
+                    <td data-label="Data Retirada">${isAguardando ? '-' : formatarDataLocal(emp.dataRetirada)}</td>
+                    <td data-label="DevoluÃ§Ã£o Prevista" style="${isAtrasado ? 'color: #EF4444; font-weight: bold;' : (isAguardando ? 'color: var(--warning-color); font-weight: bold;' : '')}">${devolucaoTexto}</td>
                     <td data-label="Status">${statusHtml}</td>
-                    <td data-label="Ações">${acoes}</td>
+                    <td data-label="AÃ§Ãµes">${acoes}</td>
                 `;
                 corpoAtivos.appendChild(tr);
             });
@@ -219,14 +234,14 @@ async function carregarHistorico(usuarioId, token) {
             inativos.forEach(emp => {
                 if(!corpoHistorico) return;
                 const badgeClass = 'status-devolvido';
-                const devolucaoTexto = emp.dataDevolucaoReal ? `Devolvido em: ${new Date(emp.dataDevolucaoReal).toLocaleDateString()}` : new Date(emp.dataDevolucaoPrevista).toLocaleDateString();
+                const devolucaoTexto = emp.dataDevolucaoReal ? `Devolvido em: ${formatarDataLocal(emp.dataDevolucaoReal)}` : formatarDataLocal(emp.dataDevolucaoPrevista);
                 const multaTexto = emp.valorMulta > 0 ? `R$ ${emp.valorMulta.toFixed(2).replace('.', ',')}` : '-';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td data-label="Livro"><strong>${emp.livro.titulo}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${emp.livro.autor}</span></td>
-                    <td data-label="Data Retirada">${new Date(emp.dataRetirada).toLocaleDateString()}</td>
-                    <td data-label="Devolução">${devolucaoTexto}</td>
+                    <td data-label="Livro"><strong>${escapeHTML(emp.livro.titulo)}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${escapeHTML(emp.livro.autor)}</span></td>
+                    <td data-label="Data Retirada">${formatarDataLocal(emp.dataRetirada)}</td>
+                    <td data-label="DevoluÃ§Ã£o">${devolucaoTexto}</td>
                     <td data-label="Multa" style="${emp.valorMulta > 0 ? 'color: #EF4444; font-weight: bold;' : ''}">${multaTexto}</td>
                     <td data-label="Status"><span class="status-badge ${badgeClass}">${emp.status}</span></td>
                 `;
@@ -234,8 +249,8 @@ async function carregarHistorico(usuarioId, token) {
             });
         }
     } catch(e) {
-        console.error('Erro no histórico', e);
-        if(corpoHistorico) corpoHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Erro ao carregar o histórico de empréstimos.</td></tr>';
+        console.error('Erro no histÃ³rico', e);
+        if(corpoHistorico) corpoHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Erro ao carregar o histÃ³rico de emprÃ©stimos.</td></tr>';
     }
 }
 
@@ -246,7 +261,7 @@ async function carregarReservas(usuarioId, token) {
     tbody.innerHTML = '<tr><td colspan="4"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
 
     try {
-        const response = await fetch(`https://bibliotech-api-e9wg.onrender.com/reservas/usuario/${usuarioId}`, {
+        const response = await fetch(`/reservas/usuario/${usuarioId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
             skipLoader: true
         });
@@ -256,7 +271,7 @@ async function carregarReservas(usuarioId, token) {
             tbody.innerHTML = '';
 
             if (reservas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Você não possui reservas no momento.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">VocÃª nÃ£o possui reservas no momento.</td></tr>';
                 return;
             }
 
@@ -265,68 +280,34 @@ async function carregarReservas(usuarioId, token) {
                 let badgeClass = 'status-devolvido';
                 
                 if (r.status === 'NOTIFICADO') {
-                    badgeClass = 'status-ativo'; // Verde
-                    posicaoNaFila = '<strong style="color: var(--primary-color);">LIVRO DISPONÍVEL NO BALCÃO!</strong>';
+                    badgeClass = 'status-ativo'; 
+                    posicaoNaFila = '<strong style="color: var(--primary-color);">LIVRO DISPONÃ VEL NO BALCÃƒO!</strong>';
                 } else if (r.status === 'AGUARDANDO') {
-                    badgeClass = 'status-atrasado'; // Laranja/Atrasado style
+                    badgeClass = 'status-atrasado'; 
                     
-                    // Descobrir a posição real batendo na fila do livro
-                    try {
-                        const filaRes = await fetch(`https://bibliotech-api-e9wg.onrender.com/reservas/livro/${r.livro.id}`, { headers: { 'Authorization': `Bearer ${token}` }, skipLoader: true });
-                        if (filaRes.ok) {
-                            const fila = await filaRes.json();
-                            const index = fila.findIndex(f => f.usuario.id === usuarioId);
-                            if(index !== -1) {
-                                posicaoNaFila = `<strong>${index + 1}º da fila</strong>`;
-                            }
-                        }
-                    } catch(e) {}
+                    let filaTexto = '-';
+                    if (r.status === 'AGUARDANDO') {
+                        filaTexto = `VocÃª Ã© o #${r.posicaoFila} da fila`;
+                    }
+                    posicaoNaFila = `<strong>${r.posicaoFila}Âº da fila</strong>`;
                 }
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td data-label="Livro"><strong>${r.livro.titulo}</strong></td>
-                    <td data-label="Data Solicitação">${new Date(r.dataSolicitacao).toLocaleDateString()}</td>
+                    <td data-label="Livro"><strong>${escapeHTML(r.livro.titulo)}</strong></td>
+                    <td data-label="Data SolicitaÃ§Ã£o">${formatarDataLocal(r.dataSolicitacao)}</td>
                     <td data-label="Status"><span class="status-badge ${badgeClass}">${r.status}</span></td>
-                    <td data-label="Posição na Fila">${posicaoNaFila}</td>
+                    <td data-label="PosiÃ§Ã£o na Fila">${posicaoNaFila}</td>
                 `;
                 tbody.appendChild(tr);
             }
         }
     } catch (e) {
         console.error('Erro ao carregar reservas', e);
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Erro ao carregar histórico de reservas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Erro ao carregar histÃ³rico de reservas.</td></tr>';
+    }
+        showToast('Falha na comunicaÃ§Ã£o com o servidor.', 'error');
     }
 }
 
-window.renovarEmprestimo = async function(emprestimoId) {
-    const confirmed = await showCustomConfirm('Renovar Empréstimo', 'Deseja renovar este empréstimo por mais 14 dias? (Regra: Apenas 1 renovação permitida por livro)', 'info');
-    if(!confirmed) return;
-    
-    const token = localStorage.getItem('jwtToken');
-    try {
-        const res = await fetch(`https://bibliotech-api-e9wg.onrender.com/emprestimos/${emprestimoId}/renovar`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (res.ok) {
-            showToast('Empréstimo renovado com sucesso!', 'success');
-            if (dadosUsuarioGlobal) {
-                carregarHistorico(dadosUsuarioGlobal.id, token);
-            }
-        } else {
-            const err = await res.text();
-            let msgErro = 'Não foi possível renovar.';
-            try {
-                const parsed = JSON.parse(err);
-                msgErro = parsed.message || parsed.error || err;
-            } catch(e) {
-                msgErro = err;
-            }
-            showToast(msgErro, 'error');
-        }
-    } catch(e) {
-        showToast('Falha na comunicação com o servidor.', 'error');
-    }
-}
+

@@ -26,19 +26,19 @@ public class ReservaService {
 
     public Reserva entrarNaFila(Long usuarioId, Long livroId) {
         Livro livro = livroRepository.findById(livroId)
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Livro não encontrado."));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Livro nÃ£o encontrado."));
                 
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Usuário não encontrado."));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("UsuÃ¡rio nÃ£o encontrado."));
 
-        // Regra de Negócio: Se o livro tem estoque, o sistema bloqueia a reserva e manda o usuário fazer o empréstimo normal
+        // Regra de NegÃ³cio: Se o livro tem estoque, o sistema bloqueia a reserva e manda o usuÃ¡rio fazer o emprÃ©stimo normal
         if (livro.getQuantidadeDisponivel() > 0) {
-            throw new RuntimeException("Operação negada: O livro está disponível nas prateleiras. Faça o empréstimo diretamente.");
+            throw new RuntimeException("OperaÃ§Ã£o negada: O livro estÃ¡ disponÃ­vel nas prateleiras. FaÃ§a o emprÃ©stimo diretamente.");
         }
 
-        // Regra de Negócio: O usuário não pode entrar duas vezes na mesma fila
-        if (reservaRepository.existsByUsuarioIdAndLivroIdAndStatus(usuarioId, livroId, "AGUARDANDO")) {
-            throw new RuntimeException("Operação negada: Você já está na fila de espera para este livro.");
+        // Regra de NegÃ³cio: O usuÃ¡rio nÃ£o pode entrar duas vezes na mesma fila
+        if (reservaRepository.existsByUsuarioIdAndLivroIdAndStatus(usuarioId, livroId, com.bibliotech.api.model.ReservaStatus.AGUARDANDO)) {
+            throw new RuntimeException("OperaÃ§Ã£o negada: VocÃª jÃ¡ estÃ¡ na fila de espera para este livro.");
         }
 
         // Cria a reserva
@@ -46,13 +46,13 @@ public class ReservaService {
         novaReserva.setUsuario(usuario);
         novaReserva.setLivro(livro);
         novaReserva.setDataSolicitacao(LocalDateTime.now());
-        novaReserva.setStatus("AGUARDANDO");
+        novaReserva.setStatus(com.bibliotech.api.model.ReservaStatus.AGUARDANDO);
 
         return reservaRepository.save(novaReserva);
     }
 
     public List<Reserva> consultarFilaDoLivro(Long livroId) {
-        return reservaRepository.findByLivroIdAndStatusOrderByDataSolicitacaoAsc(livroId, "AGUARDANDO");
+        return reservaRepository.findByLivroIdAndStatusOrderByDataSolicitacaoAsc(livroId, com.bibliotech.api.model.ReservaStatus.AGUARDANDO);
     }
 
     public List<Reserva> listarTodas() {
@@ -60,6 +60,19 @@ public class ReservaService {
     }
 
     public List<Reserva> listarPorUsuario(Long usuarioId) {
-        return reservaRepository.findByUsuarioIdOrderByDataSolicitacaoDesc(usuarioId);
+        List<Reserva> reservas = reservaRepository.findByUsuarioIdOrderByDataSolicitacaoDesc(usuarioId);
+        for (Reserva r : reservas) {
+            if (com.bibliotech.api.model.ReservaStatus.AGUARDANDO.equals(r.getStatus())) {
+                int count = reservaRepository.countByLivroIdAndStatusAndDataSolicitacaoBefore(
+                    r.getLivro().getId(), 
+                    com.bibliotech.api.model.ReservaStatus.AGUARDANDO, 
+                    r.getDataSolicitacao()
+                );
+                r.setPosicaoFila(count + 1);
+            }
+        }
+        return reservas;
     }
 }
+
+

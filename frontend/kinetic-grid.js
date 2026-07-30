@@ -1,4 +1,4 @@
-class KineticGrid {
+﻿class KineticGrid {
     constructor(options = {}) {
         this.canvas = document.getElementById(options.canvasId || 'kinetic-canvas');
         if (!this.canvas) return;
@@ -226,3 +226,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+

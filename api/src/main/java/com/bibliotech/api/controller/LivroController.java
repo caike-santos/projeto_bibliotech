@@ -238,9 +238,8 @@ public class LivroController {
                 .toList();
                 
         // 3. Busca o catálogo atual do sistema (Apenas livros ativos)
-        // Usamos findAll() e filtramos para simplificar, mapeando Título e Gênero para ajudar a IA
-        String catalogoDisponivel = livroRepository.findAll().stream()
-                .filter(com.bibliotech.api.model.Livro::isAtivo)
+        // Busca apenas livros ativos direto no SQL, mapeando Título e Gênero para ajudar a IA
+        String catalogoDisponivel = livroRepository.findByAtivoTrue().stream()
                 .map(livro -> livro.getTitulo() + " (" + livro.getGeneroPrincipal() + ")")
                 .collect(java.util.stream.Collectors.joining(", "));
                 
@@ -260,11 +259,10 @@ public class LivroController {
                 .distinct()
                 .toList();
 
-        // 2. Busca histórico de todos os outros usuários
-        List<com.bibliotech.api.model.Emprestimo> todosEmprestimos = emprestimoRepository.findAll();
+        // 2. Busca histórico de todos os outros usuários direto do banco
+        List<com.bibliotech.api.model.Emprestimo> outrosEmprestimos = emprestimoRepository.findByUsuarioIdNot(usuarioId);
         
-        java.util.Map<Long, java.util.List<String>> agrupamentoLeitores = todosEmprestimos.stream()
-            .filter(e -> !e.getUsuario().getId().equals(usuarioId))
+        java.util.Map<Long, java.util.List<String>> agrupamentoLeitores = outrosEmprestimos.stream()
             .collect(
                 java.util.stream.Collectors.groupingBy(
                     e -> e.getUsuario().getId(),
@@ -277,9 +275,8 @@ public class LivroController {
             .map(entry -> "Leitor " + entry.getKey() + ": " + entry.getValue())
             .collect(java.util.stream.Collectors.joining("; "));
 
-        // 3. Busca catálogo disponível
-        String catalogoDisponivel = livroRepository.findAll().stream()
-                .filter(com.bibliotech.api.model.Livro::isAtivo)
+        // 3. Busca catálogo disponível direto do banco
+        String catalogoDisponivel = livroRepository.findByAtivoTrue().stream()
                 .map(livro -> livro.getTitulo() + " (" + livro.getGeneroPrincipal() + ")")
                 .collect(java.util.stream.Collectors.joining(", "));
 

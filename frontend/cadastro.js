@@ -1,4 +1,4 @@
-document.getElementById('formCadastro').addEventListener('submit', async function(event) {
+﻿document.getElementById('formCadastro').addEventListener('submit', async function(event) {
     event.preventDefault();
 
     const nome = document.getElementById('cadNome').value;
@@ -11,7 +11,7 @@ document.getElementById('formCadastro').addEventListener('submit', async functio
     btnSubmit.disabled = true;
 
     try {
-        const resposta = await fetch('https://bibliotech-api-e9wg.onrender.com/usuarios', {
+        const resposta = await fetch(API_BASE_URL + '/usuarios', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nome, email, senha, tipo: 'LEITOR', status: 'ATIVO', enabled: true })
@@ -38,3 +38,4 @@ function restaurarBotao(botao, texto) {
     botao.disabled = false;
     botao.style.opacity = '1';
 }
+

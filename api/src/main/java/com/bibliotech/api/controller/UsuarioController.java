@@ -14,10 +14,10 @@ import java.util.Map;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/usuarios") // Todas as URLs dessa classe vão começar com /usuarios
+@RequestMapping("/usuarios") // Todas as URLs dessa classe vÃ£o comeÃ§ar com /usuarios
 public class UsuarioController {
 
-    // Injeta o repository automaticamente (o Spring instancia para nós)
+    // Injeta o repository automaticamente (o Spring instancia para nÃ³s)
     private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final EmprestimoRepository emprestimoRepository;
@@ -30,18 +30,18 @@ public class UsuarioController {
         this.notificacaoRepository = notificacaoRepository;
     }
 
-    // Rota para CADASTRAR um usuário (Método POST)
+    // Rota para CADASTRAR um usuÃ¡rio (MÃ©todo POST)
     @PostMapping
     public Usuario cadastrarUsuario(@RequestBody Usuario novoUsuario) {
         String senhaCriptografada = passwordEncoder.encode(novoUsuario.getSenha());
         novoUsuario.setSenha(senhaCriptografada);
         Usuario usuarioSalvo = repository.save(novoUsuario);
 
-        // Gera notificação de Boas-vindas automática
+        // Gera notificaÃ§Ã£o de Boas-vindas automÃ¡tica
         if ("LEITOR".equalsIgnoreCase(usuarioSalvo.getTipo())) {
             Notificacao boasVindas = new Notificacao();
             boasVindas.setUsuario(usuarioSalvo);
-            boasVindas.setMensagem("Bem-vindo ao BiblioTech AI! Explore nosso catálogo e converse com a Lumina para receber recomendações personalizadas.");
+            boasVindas.setMensagem("Bem-vindo ao BiblioTech AI! Explore nosso catÃ¡logo e converse com a Lumina para receber recomendaÃ§Ãµes personalizadas.");
             boasVindas.setDataEnvio(LocalDateTime.now());
             boasVindas.setLida(false);
             notificacaoRepository.save(boasVindas);
@@ -56,7 +56,7 @@ public class UsuarioController {
         // O findByEnabledTrue() vai no banco, pega todos os registros com enabled=true e converte para uma lista JSON!
         return repository.findByEnabledTrue();
     }
-    // Rota para LISTAR UM USUÁRIO ESPECÍFICO (GET) com tratamento de erro 404
+    // Rota para LISTAR UM USUÃRIO ESPECÃFICO (GET) com tratamento de erro 404
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> buscarUsuarioPorId(@PathVariable Long id) {
         Usuario usuario = repository.findById(id)
@@ -65,20 +65,49 @@ public class UsuarioController {
         return ResponseEntity.ok(usuario);
     }
 
-    // Rota PUT para atualizar dados do usuário
+    // Rota para o usuÃ¡rio logado pegar seus prÃ³prios dados
+    @GetMapping("/me")
+    public ResponseEntity<Usuario> buscarUsuarioLogado() {
+        Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof Usuario)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "UsuÃ¡rio nÃ£o autenticado.");
+        }
+        return ResponseEntity.ok((Usuario) principal);
+    }
+
+    // Rota PUT para atualizar dados do usuÃ¡rio
     @PutMapping("/{id}")
     public Usuario atualizarUsuario(@PathVariable Long id, @RequestBody Usuario usuarioAtualizado) {
         
+        Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof Usuario)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "UsuÃ¡rio nÃ£o autenticado.");
+        }
+        Usuario usuarioLogado = (Usuario) principal;
+        
+        if (!usuarioLogado.getTipo().equalsIgnoreCase("ADMIN") && !usuarioLogado.getId().equals(id)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.FORBIDDEN, 
+                "VocÃª nÃ£o tem permissÃ£o para alterar os dados de outro usuÃ¡rio."
+            );
+        }
+
         Usuario usuarioExistente = repository.findById(id)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException());
 
-        // Atualiza os dados básicos
+        // ProteÃ§Ã£o: se nÃ£o for admin, nÃ£o pode alterar o prÃ³prio tipo ou status
+        if (!usuarioLogado.getTipo().equalsIgnoreCase("ADMIN")) {
+            usuarioAtualizado.setTipo(usuarioExistente.getTipo());
+            usuarioAtualizado.setStatus(usuarioExistente.getStatus());
+        }
+
+        // Atualiza os dados bÃ¡sicos
         usuarioExistente.setNome(usuarioAtualizado.getNome());
         usuarioExistente.setEmail(usuarioAtualizado.getEmail());
         usuarioExistente.setTipo(usuarioAtualizado.getTipo());
         usuarioExistente.setStatus(usuarioAtualizado.getStatus());
 
-        // Se o usuário mandou uma senha na requisição (não está nula nem vazia), atualiza o Hash
+        // Se o usuÃ¡rio mandou uma senha na requisiÃ§Ã£o (nÃ£o estÃ¡ nula nem vazia), atualiza o Hash
         if (usuarioAtualizado.getSenha() != null && !usuarioAtualizado.getSenha().trim().isEmpty()) {
             String senhaCriptografada = passwordEncoder.encode(usuarioAtualizado.getSenha());
             usuarioExistente.setSenha(senhaCriptografada);
@@ -87,44 +116,64 @@ public class UsuarioController {
         return repository.save(usuarioExistente);
     }
 
-    // Rota DELETE (Soft Delete) para inativar o usuário sem perder o histórico
+    // Rota DELETE (Soft Delete) para inativar o usuÃ¡rio sem perder o histÃ³rico
     @DeleteMapping("/{id}")
     public void inativarUsuario(@PathVariable Long id) {
         
+        Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof Usuario)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "UsuÃ¡rio nÃ£o autenticado.");
+        }
+        Usuario usuarioLogado = (Usuario) principal;
+        
+        if (!usuarioLogado.getTipo().equalsIgnoreCase("ADMIN") && !usuarioLogado.getId().equals(id)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.FORBIDDEN, 
+                "VocÃª nÃ£o tem permissÃ£o para inativar outro usuÃ¡rio."
+            );
+        }
+
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException());
 
         // Muda o status visual e bloqueia o acesso no Spring Security
-        usuario.setStatus("INATIVO");
+        usuario.setStatus(com.bibliotech.api.model.UsuarioStatus.INATIVO);
         usuario.setEnabled(false);
 
         repository.save(usuario);
     }
 
-    // Rota de Gamificação (Calcula o nível do usuário baseado em empréstimos)
+    // Rota de GamificaÃ§Ã£o (Calcula o nÃ­vel do usuÃ¡rio baseado em emprÃ©stimos)
     @GetMapping("/{id}/gamificacao")
     public ResponseEntity<Map<String, Object>> obterGamificacao(@PathVariable Long id) {
-        // Verifica se o usuário existe
+        // Verifica se o usuÃ¡rio existe
         repository.findById(id).orElseThrow(() -> new jakarta.persistence.EntityNotFoundException());
 
-        // Busca o número de empréstimos
-        int totalEmprestimos = emprestimoRepository.findByUsuarioId(id).size();
+        // Busca o nÃºmero de emprÃ©stimos vÃ¡lidos (nÃ£o conta os cancelados)
+        int totalEmprestimos = emprestimoRepository.countByUsuarioIdAndStatusIn(
+            id, 
+            java.util.List.of(
+                com.bibliotech.api.model.EmprestimoStatus.ATIVO,
+                com.bibliotech.api.model.EmprestimoStatus.ATRASADO,
+                com.bibliotech.api.model.EmprestimoStatus.DEVOLVIDO
+            )
+        );
 
         String nivel;
         String selo;
 
         if (totalEmprestimos >= 10) {
             nivel = "Mestre da Leitura";
-            selo = "🏆";
+            selo = "ðŸ†";
         } else if (totalEmprestimos >= 5) {
-            nivel = "Leitor Assíduo";
-            selo = "🥇";
+            nivel = "Leitor AssÃ­duo";
+            selo = "ðŸ¥‡";
         } else if (totalEmprestimos >= 1) {
             nivel = "Leitor Iniciante";
-            selo = "🥈";
+            selo = "ðŸ¥ˆ";
         } else {
             nivel = "Visitante";
-            selo = "📚";
+            selo = "ðŸ“š";
         }
 
         Map<String, Object> resultado = new HashMap<>();

@@ -43,23 +43,27 @@ public class AutenticacaoController {
         // Empacota o email e senha
         var authenticationToken = new UsernamePasswordAuthenticationToken(dados.email(), dados.senha());
         
-        // O Spring Security vai lá no banco de dados e verifica se a senha bate
+        // O Spring Security vai lÃ¡ no banco de dados e verifica se a senha bate
         var authentication = manager.authenticate(authenticationToken);
         
         // Se a senha bater, geramos a pulseira VIP (Token JWT)
-        var tokenJWT = tokenService.gerarToken((Usuario) authentication.getPrincipal());
+        var usuario = (Usuario) authentication.getPrincipal();
+        var tokenJWT = tokenService.gerarToken(usuario);
         
-        // Devolvemos o token na tela
-        return ResponseEntity.ok(new DadosTokenJWT(tokenJWT));
+        // Devolvemos o token na tela junto com a role
+        return ResponseEntity.ok(new DadosTokenJWT(tokenJWT, usuario.getTipo()));
     }
     
+    @org.springframework.beans.factory.annotation.Value("${GOOGLE_CLIENT_ID}")
+    private String googleClientId;
+
     @PostMapping("/google")
     public ResponseEntity loginComGoogle(@RequestBody DadosGoogleToken dados) {
         try {
             NetHttpTransport transport = new NetHttpTransport();
             var jsonFactory = com.google.api.client.json.gson.GsonFactory.getDefaultInstance();
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
-                .setAudience(Collections.singletonList("931451427463-9ejo8fhqk52f1cd9n73otq7fse7ruimv.apps.googleusercontent.com"))
+                .setAudience(Collections.singletonList(googleClientId))
                 .build();
 
             GoogleIdToken idToken = verifier.verify(dados.token());
@@ -76,23 +80,23 @@ public class AutenticacaoController {
                     usuario.setEmail(email);
                     usuario.setSenha(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
                     usuario.setTipo("LEITOR");
-                    usuario.setStatus("ATIVO");
+                    usuario.setStatus(com.bibliotech.api.model.UsuarioStatus.ATIVO);
                     usuario.setPontosGamificacao(0);
                     usuario = usuarioRepository.save(usuario);
                     
                     Notificacao boasVindas = new Notificacao();
                     boasVindas.setUsuario(usuario);
-                    boasVindas.setMensagem("Olá, " + name + "! Bem-vindo(a) à BiblioTech AI! Que bom que conectou com o Google. Explore nosso acervo!");
+                    boasVindas.setMensagem("OlÃ¡, " + name + "! Bem-vindo(a) Ã  BiblioTech AI! Que bom que conectou com o Google. Explore nosso acervo!");
                     boasVindas.setLida(false);
                     boasVindas.setDataEnvio(java.time.LocalDateTime.now());
                     notificacaoRepository.save(boasVindas);
                 }
 
                 String tokenJWT = tokenService.gerarToken(usuario);
-                return ResponseEntity.ok(new DadosTokenJWT(tokenJWT));
+                return ResponseEntity.ok(new DadosTokenJWT(tokenJWT, usuario.getTipo()));
 
             } else {
-                return ResponseEntity.status(403).body("Token Google inválido.");
+                return ResponseEntity.status(403).body("Token Google invÃ¡lido.");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -100,8 +104,8 @@ public class AutenticacaoController {
         }
     }
     
-    // Pequenos Records (DTOs) para estruturar a entrada e saída do JSON
+    // Pequenos Records (DTOs) para estruturar a entrada e saÃ­da do JSON
     public record DadosAutenticacao(String email, String senha) {}
-    public record DadosTokenJWT(String token) {}
+    public record DadosTokenJWT(String token, String role) {}
     public record DadosGoogleToken(String token) {}
 }

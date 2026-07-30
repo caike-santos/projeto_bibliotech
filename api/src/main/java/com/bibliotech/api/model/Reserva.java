@@ -23,7 +23,11 @@ public class Reserva {
     private LocalDateTime dataSolicitacao;
 
     @Column(nullable = false)
-    private String status; // Ex: "AGUARDANDO", "NOTIFICADO", "CANCELADA", "CONCLUIDA"
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    private ReservaStatus status; // Ex: AGUARDANDO, NOTIFICADO, CANCELADA, CONCLUIDA
+
+    @Transient
+    private Integer posicaoFila;
 
     public Reserva() {}
 
@@ -35,6 +39,12 @@ public class Reserva {
     public void setLivro(Livro livro) { this.livro = livro; }
     public LocalDateTime getDataSolicitacao() { return dataSolicitacao; }
     public void setDataSolicitacao(LocalDateTime dataSolicitacao) { this.dataSolicitacao = dataSolicitacao; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public ReservaStatus getStatus() {
+        return status;
+    }
+    public void setStatus(ReservaStatus status) {
+        this.status = status;
+    }
+    public Integer getPosicaoFila() { return posicaoFila; }
+    public void setPosicaoFila(Integer posicaoFila) { this.posicaoFila = posicaoFila; }
 }
