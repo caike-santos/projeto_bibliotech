@@ -143,7 +143,7 @@ public class IaService {
                      "SEJA EXTREMAMENTE CONCISO E DIRETO. Faça um texto muito curto, listando apenas os 3 livros e no máximo 1 frase super curta de justificativa para cada. É estritamente proibido recomendar livros fora do acervo fornecido. Não use markdown.";
         }
 
-        String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt.replace("\"", "\\\"") + "\"}]}]}";
+        String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt.replace("\"", "\\\"").replace("\n", " ") + "\"}]}]}";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
