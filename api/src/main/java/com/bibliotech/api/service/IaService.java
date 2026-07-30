@@ -125,23 +125,23 @@ public class IaService {
     }
 
     public String gerarRecomendacoesParaUsuario(java.util.List<String> livrosLidos, String catalogoDisponivel) {
-        if (livrosLidos == null || livrosLidos.isEmpty()) {
-            return "Parece que você ainda não pegou nenhum livro emprestado. Que tal começar explorando nosso catálogo?";
-        }
-
         if (catalogoDisponivel == null || catalogoDisponivel.isEmpty()) {
             return "Nosso acervo está passando por uma atualização no momento. Volte em breve para novas recomendações!";
         }
 
         String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + apiKey.trim();
+        String prompt;
 
-        // Monta o texto dos livros lidos
-        String titulos = String.join(", ", livrosLidos);
-
-        // Prompt blindado: A IA é obrigada a escolher apenas os livros que enviamos no catálogo
-        String prompt = "Atue como um bibliotecário especialista. Um leitor leu os seguintes livros: " + titulos + 
-                        ". Recomende 3 livros para ele ler a seguir, escolhendo EXCLUSIVAMENTE desta lista do nosso acervo atual: [" + catalogoDisponivel + "]. " +
-                        "SEJA EXTREMAMENTE CONCISO E DIRETO. Faça um texto muito curto, listando apenas os 3 livros e no máximo 1 frase super curta de justificativa para cada. É estritamente proibido recomendar livros fora do acervo fornecido. Não use markdown.";
+        if (livrosLidos == null || livrosLidos.isEmpty()) {
+            prompt = "Atue como um bibliotecário acolhedor e especialista. Um novo leitor acabou de se juntar à biblioteca e ainda não possui histórico de empréstimos. " +
+                     "Dê-lhe as boas-vindas de forma empolgante e recomende 3 livros incríveis, populares ou fundamentais para ele começar, escolhendo EXCLUSIVAMENTE desta lista do nosso acervo atual: [" + catalogoDisponivel + "]. " +
+                     "SEJA EXTREMAMENTE CONCISO E DIRETO. Faça um texto muito curto, listando apenas os 3 livros e no máximo 1 frase super curta de justificativa para cada. É estritamente proibido recomendar livros fora do acervo fornecido. Não use markdown.";
+        } else {
+            String titulos = String.join(", ", livrosLidos);
+            prompt = "Atue como um bibliotecário especialista. Um leitor leu os seguintes livros: " + titulos + 
+                     ". Recomende 3 livros para ele ler a seguir, escolhendo EXCLUSIVAMENTE desta lista do nosso acervo atual: [" + catalogoDisponivel + "]. " +
+                     "SEJA EXTREMAMENTE CONCISO E DIRETO. Faça um texto muito curto, listando apenas os 3 livros e no máximo 1 frase super curta de justificativa para cada. É estritamente proibido recomendar livros fora do acervo fornecido. Não use markdown.";
+        }
 
         String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt.replace("\"", "\\\"") + "\"}]}]}";
 
