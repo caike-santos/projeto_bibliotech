@@ -23,6 +23,7 @@ public class EmprestimoController {
 
     @PostMapping
     public Emprestimo cadastrarEmprestimo(@RequestBody Emprestimo novoEmprestimo, @RequestParam(defaultValue = "false") boolean balcao) {
+       verificarPermissaoUsuario(novoEmprestimo.getUsuario().getId());
        // Agora quem cuida de salvar é o Service, que vai rodar as regras antes!
        Emprestimo emprestimo = service.realizarEmprestimo(novoEmprestimo);
        if (balcao) {
@@ -46,6 +47,7 @@ public class EmprestimoController {
 
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<Emprestimo>> buscarEmprestimosDoUsuario(@PathVariable Long usuarioId) {
+        verificarPermissaoUsuario(usuarioId);
         List<Emprestimo> historico = repository.findByUsuarioId(usuarioId);
         
         return ResponseEntity.ok(historico);
@@ -65,5 +67,16 @@ public class EmprestimoController {
     @PutMapping("/{id}/confirmar-retirada")
     public Emprestimo confirmarRetirada(@PathVariable Long id) {
         return service.confirmarRetirada(id);
+    }
+
+    private void verificarPermissaoUsuario(Long usuarioIdAlvo) {
+        Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof com.bibliotech.api.model.Usuario)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "UsuÃ¡rio nÃ£o autenticado.");
+        }
+        com.bibliotech.api.model.Usuario usuarioLogado = (com.bibliotech.api.model.Usuario) principal;
+        if (usuarioLogado.getTipo().equalsIgnoreCase("LEITOR") && !usuarioLogado.getId().equals(usuarioIdAlvo)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "Acesso negado: VocÃª nÃ£o tem permissÃ£o para acessar os dados deste usuÃ¡rio.");
+        }
     }
 }

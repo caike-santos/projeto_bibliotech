@@ -23,9 +23,25 @@ document.addEventListener('DOMContentLoaded', () => {
 function verificarAcesso() {
     const token = localStorage.getItem('jwtToken');
     const role = localStorage.getItem('userRole');
-    if (!token || (role !== 'BIBLIOTECARIO' && role !== 'ADMIN')) {
-        showToast('Acesso negado. Apenas administradores e bibliotecÃ¡rios podem acessar este painel.', 'error');
+    if (!token) {
+        showToast('Acesso negado. FaÃ§a login.', 'error');
         setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+        return;
+    }
+    
+    // Se for leitor, escondemos as abas de gestÃ£o
+    if (role === 'LEITOR') {
+        const navBalcao = document.getElementById('navBalcao');
+        const navReservas = document.getElementById('navReservas');
+        const navAcervo = document.getElementById('navAcervo');
+        const navUsuarios = document.getElementById('navUsuarios');
+        const navEmprestimos = document.getElementById('navEmprestimos');
+        
+        if(navBalcao) navBalcao.style.display = 'none';
+        if(navReservas) navReservas.style.display = 'none';
+        if(navAcervo) navAcervo.style.display = 'none';
+        if(navUsuarios) navUsuarios.style.display = 'none';
+        if(navEmprestimos) navEmprestimos.style.display = 'none';
     }
 }
 
@@ -95,7 +111,23 @@ async function carregarDados() {
     if(tabReservas) tabReservas.innerHTML = trLoaderReservas;
 
     try {
-        // Fetch Livros (Trazendo ativos e inativos com limite alto)
+        const role = localStorage.getItem('userRole');
+        
+        if (role === 'LEITOR') {
+            // FLUXO DO LEITOR (SÃ³ busca o seu prÃ³prio histÃ³rico)
+            const resUser = await fetch(API_BASE_URL + '/usuarios/me', { headers, skipLoader: true });
+            if (resUser.ok) {
+                const user = await resUser.json();
+                const resEmp = await fetch(API_BASE_URL + `/emprestimos/usuario/${user.id}`, { headers, skipLoader: true });
+                if (resEmp.ok) {
+                    emprestimos = await resEmp.json();
+                }
+            }
+            atualizarDashboard(); // SÃ³ roda o Analytics
+            return;
+        }
+
+        // FLUXO GESTÃƒO (Admin/BibliotecÃ¡rio)
         const resLivros = await fetch(API_BASE_URL + '/livros?todos=true&size=500', { headers, skipLoader: true });
         if (resLivros.ok) {
             const data = await resLivros.json();
@@ -103,28 +135,24 @@ async function carregarDados() {
             renderizarAcervo();
         }
 
-        // Fetch UsuÃ¡rios
         const resUsuarios = await fetch(API_BASE_URL + '/usuarios', { headers, skipLoader: true });
         if (resUsuarios.ok) {
             usuarios = await resUsuarios.json();
             renderizarUsuarios();
         }
 
-        // Fetch EmprÃ©stimos
         const resEmprestimos = await fetch(API_BASE_URL + '/emprestimos', { headers, skipLoader: true });
         if (resEmprestimos.ok) {
             emprestimos = await resEmprestimos.json();
             renderizarEmprestimos();
         }
 
-        // Fetch Reservas
         const resReservas = await fetch(API_BASE_URL + '/reservas', { headers, skipLoader: true });
         if (resReservas.ok) {
             reservas = await resReservas.json();
             renderizarReservas();
         }
 
-        // Atualizar Dashboard
         atualizarDashboard();
 
     } catch (e) {
@@ -132,27 +160,57 @@ async function carregarDados() {
     }
 }
 
-// ---------------- ANALYTICS ---------------- //
 let chartInstancia = null;
 function atualizarDashboard() {
-    // Atualizar Contadores
-    document.getElementById('statLivros').innerText = livros.length;
-    
-    const leitores = usuarios.filter(u => u.tipo === 'LEITOR');
-    const equipe = usuarios.filter(u => u.tipo === 'ADMIN' || u.tipo === 'BIBLIOTECARIO');
-    
-    document.getElementById('statUsuarios').innerText = leitores.length;
-    
-    const statEquipe = document.getElementById('statEquipe');
-    if (statEquipe) statEquipe.innerText = equipe.length;
-    document.getElementById('statEmprestimos').innerText = emprestimos.length;
-
-    // GrÃ¡fico de GÃªneros
+    const role = localStorage.getItem('userRole');
     const contagemGeneros = {};
-    livros.forEach(l => {
-        const genero = l.generoPrincipal || 'Outros';
-        contagemGeneros[genero] = (contagemGeneros[genero] || 0) + 1;
-    });
+
+    if (role === 'LEITOR') {
+        document.getElementById('labelStat1').innerText = "Livros Lidos";
+        document.getElementById('labelStat2').innerText = "EmprÃ©stimos Ativos";
+        document.getElementById('labelStat3').innerText = "Atrasos no HistÃ³rico";
+        document.getElementById('labelStat4').innerText = "Total em Multas (R$)";
+        document.getElementById('labelChart').innerText = "Seus GÃªneros Favoritos";
+
+        const lidos = emprestimos.filter(e => e.status === 'DEVOLVIDO');
+        const ativos = emprestimos.filter(e => e.status !== 'DEVOLVIDO' && e.status !== 'CANCELADO');
+        const atrasados = emprestimos.filter(e => e.status === 'ATRASADO' || (e.dataDevolucaoReal && new Date(e.dataDevolucaoReal) > new Date(e.dataDevolucaoPrevista)));
+        const multas = emprestimos.reduce((acc, curr) => acc + (curr.valorMulta || 0), 0);
+
+        document.getElementById('statLivros').innerText = lidos.length;
+        document.getElementById('statUsuarios').innerText = ativos.length;
+        
+        const statEquipe = document.getElementById('statEquipe');
+        if(statEquipe) statEquipe.innerText = atrasados.length;
+        
+        document.getElementById('statEmprestimos').innerText = multas.toFixed(2).replace('.', ',');
+
+        emprestimos.forEach(e => {
+            if (e.livro && e.livro.generoPrincipal) {
+                const genero = e.livro.generoPrincipal;
+                contagemGeneros[genero] = (contagemGeneros[genero] || 0) + 1;
+            }
+        });
+
+    } else {
+        // MODO ADMIN GESTAO
+        document.getElementById('statLivros').innerText = livros.length;
+        
+        const leitores = usuarios.filter(u => u.tipo === 'LEITOR');
+        const equipe = usuarios.filter(u => u.tipo === 'ADMIN' || u.tipo === 'BIBLIOTECARIO');
+        
+        document.getElementById('statUsuarios').innerText = leitores.length;
+        
+        const statEquipe = document.getElementById('statEquipe');
+        if (statEquipe) statEquipe.innerText = equipe.length;
+        
+        document.getElementById('statEmprestimos').innerText = emprestimos.length;
+
+        livros.forEach(l => {
+            const genero = l.generoPrincipal || 'Outros';
+            contagemGeneros[genero] = (contagemGeneros[genero] || 0) + 1;
+        });
+    }
 
     const ctx = document.getElementById('chartGeneros').getContext('2d');
     if(chartInstancia) chartInstancia.destroy();
@@ -166,12 +224,12 @@ function atualizarDashboard() {
             labels: Object.keys(contagemGeneros),
             datasets: [{
                 data: Object.values(contagemGeneros),
-                backgroundColor: ['#B6FF2E', '#064E3B', '#374151', '#F8E7C9', '#9CA3AF']
+                backgroundColor: ['#B6FF2E', '#064E3B', '#374151', '#F8E7C9', '#9CA3AF', '#3B82F6', '#EF4444', '#F59E0B']
             }]
         },
         options: {
             responsive: true,
-            plugins: { legend: { position: 'right', labels: { color: '#F8E7C9' } } }
+            plugins: { legend: { position: 'right', labels: { color: 'var(--text-color)' } } }
         }
     });
 }
