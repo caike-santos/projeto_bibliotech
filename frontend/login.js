@@ -20,7 +20,7 @@ document.getElementById('formLogin').addEventListener('submit', async function(e
             const dados = await resposta.json();
             localStorage.setItem('jwtToken', dados.token);
             
-            // O backend agora jÃ¡ devolve o role na resposta do login (dados.role)
+            // O backend agora já devolve o role na resposta do login (dados.role)
             let role = dados.role || 'LEITOR';
 
             localStorage.setItem('userRole', role);
@@ -35,13 +35,13 @@ document.getElementById('formLogin').addEventListener('submit', async function(e
             restaurarBotao(btnSubmit, textoOriginal);
         }
     } catch (error) {
-        console.error('Erro na requisiÃ§Ã£o:', error);
+        console.error('Erro na requisição:', error);
         showToast('Erro ao conectar com o servidor.', 'error');
         restaurarBotao(btnSubmit, textoOriginal);
     }
 });
 
-// Callback chamado pelo Google apÃ³s o usuÃ¡rio selecionar a conta
+// Callback chamado pelo Google após o usuário selecionar a conta
 async function handleGoogleLogin(response) {
     if (!response.credential) {
         showToast('Erro ao obter credenciais do Google', 'error');
@@ -60,8 +60,9 @@ async function handleGoogleLogin(response) {
         if (res.ok) {
             const data = await res.json();
             localStorage.setItem('jwtToken', data.token);
+            localStorage.setItem('userRole', data.role || 'LEITOR');
             
-            // Decodifica o token JWT para pegar os dados do usuÃ¡rio (se precisar) e salva no localStorage
+            // Decodifica o token JWT para pegar os dados do usuário (se precisar) e salva no localStorage
             try {
                 const base64Url = data.token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -81,7 +82,7 @@ async function handleGoogleLogin(response) {
             showToast('Login com Google efetuado com sucesso!', 'success');
             
             setTimeout(() => {
-                const tipo = localStorage.getItem('userTipo');
+                const tipo = data.role || 'LEITOR';
                 if (tipo === 'ADMIN' || tipo === 'BIBLIOTECARIO') {
                     window.location.href = 'dashboard.html';
                 } else {
@@ -99,7 +100,7 @@ async function handleGoogleLogin(response) {
     }
 }
 
-// FunÃ§Ã£o auxiliar para voltar o botÃ£o ao normal em caso de erro
+// Função auxiliar para voltar o botão ao normal em caso de erro
 function restaurarBotao(botao, texto) {
     botao.innerText = texto;
     botao.disabled = false;

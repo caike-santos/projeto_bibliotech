@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         carregarNotificacoes();
     }
     
-    // Bind botÃ£o de clustering manual
+    // Bind botão de clustering manual
     document.getElementById('btnGerarClustering').addEventListener('click', carregarRecomendacoes);
     
     configurarModalMeusEmprestimos();
@@ -64,7 +64,7 @@ async function carregarDadosDoUsuario() {
                 localStorage.setItem('userName', user.nome);
             }
     } catch(e) {
-        console.error('Erro ao buscar dados do usuÃ¡rio logado', e);
+        console.error('Erro ao buscar dados do usuário logado', e);
     }
 }
 
@@ -77,6 +77,10 @@ function verificarAutenticacao() {
     // Logout
     document.getElementById('btnSair').addEventListener('click', () => {
         localStorage.removeItem('jwtToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userTipo');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userName');
         window.location.href = 'index.html';
     });
 }
@@ -99,11 +103,22 @@ async function carregarCatalogo() {
         if (!response.ok) {
             if (response.status === 403 || response.status === 401) {
                 localStorage.removeItem('jwtToken');
-                showToast('SessÃ£o expirada. FaÃ§a login novamente.', 'warning');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userTipo');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('userName');
+                showToast('Sessão expirada. Faça login novamente.', 'warning');
                 setTimeout(() => { window.location.href = 'index.html'; }, 1500);
-                return;
+            } else {
+                showToast('Falha ao conectar. Faça login novamente.', 'error');
+                localStorage.removeItem('jwtToken');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userTipo');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('userName');
+                setTimeout(() => window.location.href = 'index.html', 2000);
             }
-            throw new Error('Erro ao buscar o catÃ¡logo');
+            return;
         }
 
         const data = await response.json();
@@ -112,7 +127,7 @@ async function carregarCatalogo() {
         renderizarLivros(listaGlobalLivros);
 
     } catch (error) {
-        console.error('Erro na requisiÃ§Ã£o:', error);
+        console.error('Erro na requisição:', error);
         gridLivros.innerHTML = '<p style="color: red;">Erro ao carregar o acervo. Verifique a API.</p>';
     }
 }
@@ -143,7 +158,7 @@ function renderizarLivros(livrosLista, resetPagina = true) {
         card.className = 'livro-card';
         card.style.cursor = 'pointer';
         
-        // Ao clicar no card, abre o modal completÃ£o
+        // Ao clicar no card, abre o modal completão
         card.addEventListener('click', () => abrirDetalhesLivro(livro));
 
         card.innerHTML = `
@@ -153,10 +168,10 @@ function renderizarLivros(livrosLista, resetPagina = true) {
                 <h3 class="livro-titulo">${escapeHTML(livro.titulo)}</h3>
                 <p class="livro-autor">${escapeHTML(livro.autor)}</p>
                 <div class="livro-estoque">
-                    <i class="ph ph-books"></i> DisponÃ­veis: ${livro.quantidadeDisponivel}
+                    <i class="ph ph-books"></i> Disponíveis: ${livro.quantidadeDisponivel}
                 </div>
                     ${livro.quantidadeDisponivel > 0 
-                        ? `<button class="btn-primary btn-emprestar" onclick="event.stopPropagation(); abrirModalTermos(${livro.id}, 'EMPRESTIMO')">Solicitar EmprÃ©stimo</button>` 
+                        ? `<button class="btn-primary btn-emprestar" onclick="event.stopPropagation(); abrirModalTermos(${livro.id}, 'EMPRESTIMO')">Solicitar Empréstimo</button>` 
                         : `<button class="btn-primary btn-warning btn-emprestar" onclick="event.stopPropagation(); abrirModalTermos(${livro.id}, 'RESERVA')">Fazer Reserva</button>`
                     }
             </div>
@@ -172,11 +187,11 @@ function renderizarControlesPaginacao(livrosLista, totalPaginas) {
     const container = document.getElementById('paginacaoCatalogo');
     if (!container || totalPaginas <= 1) return;
 
-    // Estilos base para os botÃµes
+    // Estilos base para os botões
     const btnStyle = "padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; background: var(--surface-color); color: var(--text-color); cursor: pointer; transition: all 0.2s;";
     const activeStyle = "background: var(--primary-color); color: var(--bg-color); border-color: var(--primary-color);";
 
-    // BotÃ£o Anterior
+    // Botão Anterior
     const btnPrev = document.createElement('button');
     btnPrev.innerHTML = '<i class="ph ph-caret-left"></i>';
     btnPrev.style.cssText = btnStyle;
@@ -191,7 +206,7 @@ function renderizarControlesPaginacao(livrosLista, totalPaginas) {
     };
     container.appendChild(btnPrev);
 
-    // BotÃµes de PÃ¡ginas
+    // Botões de Páginas
     for (let i = 1; i <= totalPaginas; i++) {
         const btnPage = document.createElement('button');
         btnPage.innerText = i;
@@ -204,7 +219,7 @@ function renderizarControlesPaginacao(livrosLista, totalPaginas) {
         container.appendChild(btnPage);
     }
 
-    // BotÃ£o PrÃ³ximo
+    // Botão Próximo
     const btnNext = document.createElement('button');
     btnNext.innerHTML = '<i class="ph ph-caret-right"></i>';
     btnNext.style.cssText = btnStyle;
@@ -222,11 +237,11 @@ function renderizarControlesPaginacao(livrosLista, totalPaginas) {
 
 function abrirDetalhesLivro(livro) {
     document.getElementById('detalheTituloHeader').innerText = livro.titulo || 'Livro';
-    document.getElementById('detalheTitulo').innerText = livro.titulo || 'Sem tÃ­tulo';
+    document.getElementById('detalheTitulo').innerText = livro.titulo || 'Sem título';
     document.getElementById('detalheAutor').innerText = livro.autor || 'Desconhecido';
     
     // Tratamento com fallbacks caso o banco venha nulo para este livro
-    document.getElementById('detalheEditora').innerText = livro.editora || 'Editora nÃ£o informada';
+    document.getElementById('detalheEditora').innerText = livro.editora || 'Editora não informada';
     document.getElementById('detalheAno').innerText = livro.ano || 'N/D';
     document.getElementById('detalheIsbn').innerText = livro.isbn || 'N/D';
     document.getElementById('detalheGenero').innerText = livro.generoPrincipal || 'Geral';
@@ -249,13 +264,13 @@ function abrirDetalhesLivro(livro) {
             tagsContainer.appendChild(badge);
         });
     } else {
-        tagsContainer.innerHTML = '<span style="font-size: 0.8rem; color: var(--text-muted);">Nenhuma tag secundÃ¡ria.</span>';
+        tagsContainer.innerHTML = '<span style="font-size: 0.8rem; color: var(--text-muted);">Nenhuma tag secundária.</span>';
     }
 
     const btnEmprestar = document.getElementById('btnEmprestarModal');
     const btnReservar = document.getElementById('btnReservarModal');
 
-    // LÃ³gica de Fila de Espera vs EmprÃ©stimo
+    // Lógica de Fila de Espera vs Empréstimo
         if (livro.quantidadeDisponivel > 0) {
             btnEmprestar.style.display = 'block';
             btnReservar.style.display = 'none';
@@ -282,7 +297,7 @@ function fecharDetalhesLivro() {
 }
 
 document.getElementById('btnCloseDetalhes').addEventListener('click', fecharDetalhesLivro);
-// LÃ³gica de Filtragem InstantÃ¢nea na Barra de Pesquisa
+// Lógica de Filtragem Instantânea na Barra de Pesquisa
 function configurarBusca() {
     const inputBusca = document.getElementById('inputBusca');
     
@@ -299,7 +314,7 @@ function configurarBusca() {
     });
 }
 
-// ---------------- LÃ“GICA DO MODAL DE TERMOS ---------------- //
+// ---------------- LGICA DO MODAL DE TERMOS ---------------- //
 let acaoPendente = null;
 
 function abrirModalTermos(livroId, tipo) {
@@ -357,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Rota de EmprÃ©stimo (Conectada ao Back-end)
+// Rota de Empréstimo (Conectada ao Back-end)
 async function realizarEmprestimo(livroId) {
     const token = localStorage.getItem('jwtToken');
     
@@ -375,7 +390,7 @@ async function realizarEmprestimo(livroId) {
         });
 
         if (response.ok) {
-            showToast('EmprÃ©stimo realizado com sucesso! Verifique o prazo de devoluÃ§Ã£o.', 'success');
+            showToast('Empréstimo realizado com sucesso! Verifique o prazo de devolução.', 'success');
             carregarCatalogo();
             if (usuarioLogadoId) {
                 carregarNotificacoes();
@@ -383,15 +398,15 @@ async function realizarEmprestimo(livroId) {
                 carregarMeusEmprestimos();
             }
         } else {
-            await handleApiError(response, 'NÃ£o foi possÃ­vel realizar o emprÃ©stimo.');
+            await handleApiError(response, 'Não foi possível realizar o empréstimo.');
         }
     } catch (erro) {
-        console.error('Erro de conexÃ£o:', erro);
-        showToast('Falha ao comunicar com o servidor de emprÃ©stimos.', 'error');
+        console.error('Erro de conexão:', erro);
+        showToast('Falha ao comunicar com o servidor de empréstimos.', 'error');
     }
 }
 
-// ConfiguraÃ§Ã£o do Chat da Lumina
+// Configuração do Chat da Lumina
 function configurarChatLumina() {
     const btnToggle = document.getElementById('btnLuminaToggle');
     const modal = document.getElementById('luminaChatModal');
@@ -401,7 +416,7 @@ function configurarChatLumina() {
     const messages = document.getElementById('luminaMessages');
     const bubble = document.getElementById('luminaBubble');
 
-    // Mostra o balÃ£o com um pequeno atraso para chamar a atenÃ§Ã£o
+    // Mostra o balão com um pequeno atraso para chamar a atenção
     if (usuarioLogadoId && bubble && !localStorage.getItem(`luminaWelcomeSeen_${usuarioLogadoId}`)) {
         setTimeout(() => {
             bubble.style.display = 'block';
@@ -424,7 +439,7 @@ function configurarChatLumina() {
         } else {
             modal.classList.add('active');
             if(messages.children.length === 0) {
-                adicionarMsg('OlÃ¡! Eu sou a Lumina. Posso te ajudar a encontrar um livro, recomendar leituras ou tirar dÃºvidas sobre a biblioteca. O que deseja hoje?', 'bot');
+                adicionarMsg('Olá! Eu sou a Lumina. Posso te ajudar a encontrar um livro, recomendar leituras ou tirar dúvidas sobre a biblioteca. O que deseja hoje?', 'bot');
             }
         }
     });
@@ -434,10 +449,10 @@ function configurarChatLumina() {
     btnSend.addEventListener('click', enviarMensagem);
     input.addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarMensagem(); });
     
-    // BotÃ£o de sugestÃ£o para recomendar livros
+    // Botão de sugestão para recomendar livros
     document.getElementById('btnLuminaRecomendar').addEventListener('click', async () => {
         adicionarMsg('Me recomende um livro', 'user');
-        const idTemp = adicionarMsg('Analisando seu histÃ³rico de leitura e cruzando com nosso acervo...', 'bot');
+        const idTemp = adicionarMsg('Analisando seu histórico de leitura e cruzando com nosso acervo...', 'bot');
         
         try {
             const token = localStorage.getItem('jwtToken');
@@ -452,7 +467,7 @@ function configurarChatLumina() {
             adicionarMsg(respostaIa, 'bot');
         } catch (e) {
             document.getElementById(idTemp).remove();
-            adicionarMsg('Desculpe, tive um problema ao buscar suas recomendaÃ§Ãµes no momento.', 'bot');
+            adicionarMsg('Desculpe, tive um problema ao buscar suas recomendações no momento.', 'bot');
         }
         messages.scrollTop = messages.scrollHeight;
     });
@@ -486,7 +501,7 @@ function configurarChatLumina() {
             adicionarMsg(respostaIa, 'bot');
         } catch {
             document.getElementById(idTemp).remove();
-            adicionarMsg('Erro de conexÃ£o com os sensores da Lumina.', 'bot');
+            adicionarMsg('Erro de conexão com os sensores da Lumina.', 'bot');
         }
         messages.scrollTop = messages.scrollHeight;
     }
@@ -526,7 +541,7 @@ function exibirNomeUsuario() {
         const dadosUsuario = JSON.parse(atob(base64Payload));
         
         // Usa o nome salvo no localStorage ou cai para o email (sub)
-        const nomeParaExibir = localStorage.getItem('userName') || dadosUsuario.sub || 'UsuÃ¡rio';
+        const nomeParaExibir = localStorage.getItem('userName') || dadosUsuario.sub || 'Usuário';
         
         const badgeUser = document.getElementById('userInfo');
         if (badgeUser) badgeUser.innerText = nomeParaExibir;
@@ -547,7 +562,7 @@ async function entrarFilaEspera(livroId) {
             }
         });
         if (response.ok) {
-            showToast('VocÃª entrou na Fila de Espera! Notificaremos quando estiver disponÃ­vel.', 'success');
+            showToast('Você entrou na Fila de Espera! Notificaremos quando estiver disponível.', 'success');
         } else {
             await handleApiError(response, 'Falha ao entrar na fila.');
         }
@@ -571,7 +586,7 @@ async function carregarGamificacao() {
             badge.innerHTML = `${data.selo} ${data.nivel} (${data.totalEmprestimos} lidos)`;
         }
     } catch(e) {
-        console.error('GamificaÃ§Ã£o falhou', e);
+        console.error('Gamificação falhou', e);
     }
 }
 
@@ -593,11 +608,11 @@ async function carregarRecomendacoes() {
             const texto = await response.text();
             txtRecomendacao.innerText = texto;
         } else {
-            txtRecomendacao.innerText = "NÃ£o foi possÃ­vel gerar a recomendaÃ§Ã£o no momento.";
+            txtRecomendacao.innerText = "Não foi possível gerar a recomendação no momento.";
         }
     } catch(e) {
-        console.error('RecomendaÃ§Ã£o falhou', e);
-        txtRecomendacao.innerText = "Falha de conexÃ£o com os serviÃ§os de inteligÃªncia artificial.";
+        console.error('Recomendação falhou', e);
+        txtRecomendacao.innerText = "Falha de conexão com os serviços de inteligência artificial.";
     } finally {
         btnGerar.disabled = false;
     }
@@ -634,7 +649,7 @@ async function carregarMeusEmprestimos() {
             const emprestimos = historico.filter(emp => emp.status !== 'DEVOLVIDO');
 
             if(emprestimos.length === 0) {
-                lista.innerHTML = '<p style="color: var(--text-muted);">Nenhum emprÃ©stimo ativo no momento.</p>';
+                lista.innerHTML = '<p style="color: var(--text-muted);">Nenhum empréstimo ativo no momento.</p>';
                 return;
             }
             
@@ -645,16 +660,16 @@ async function carregarMeusEmprestimos() {
                 const div = document.createElement('div');
                 div.style = 'border: 1px solid var(--border-color); padding: 1rem; border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center;';
                 
-                let dataDesc = `Devolver atÃ©: ${formatarDataLocal(emp.dataDevolucaoPrevista)} ${isAtrasado ? '(ATRASADO!)' : ''}`;
+                let dataDesc = `Devolver até: ${formatarDataLocal(emp.dataDevolucaoPrevista)} ${isAtrasado ? '(ATRASADO!)' : ''}`;
                 let colorDesc = isAtrasado ? '#EF4444' : 'var(--text-muted)';
                 let actionHtml = '';
 
                 if (isAguardando) {
-                    dataDesc = `VocÃª tem 48h para retirar o livro presencialmente.`;
+                    dataDesc = `Você tem 48h para retirar o livro presencialmente.`;
                     colorDesc = '#F59E0B';
                     actionHtml = `<span style="font-size: 0.75rem; color: #F59E0B; font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 0.25rem 0.5rem; border-radius: 0.5rem; flex-shrink: 0;">Aguardando Retirada</span>`;
                 } else {
-                    actionHtml = (emp.renovacoesFeitas < 1 && !isAtrasado) ? `<button class="btn-primary" onclick="renovarEmprestimo(${emp.id})" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; flex-shrink: 0;">Renovar</button>` : '<span style="font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0;">NÃ£o renovÃ¡vel</span>';
+                    actionHtml = (emp.renovacoesFeitas < 1 && !isAtrasado) ? `<button class="btn-primary" onclick="renovarEmprestimo(${emp.id})" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; flex-shrink: 0;">Renovar</button>` : '<span style="font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0;">Não renovável</span>';
                 }
 
                 div.innerHTML = `
@@ -668,11 +683,11 @@ async function carregarMeusEmprestimos() {
             });
         }
     } catch(e) {
-        lista.innerHTML = '<p style="color: red;">Erro ao carregar emprÃ©stimos.</p>';
+        lista.innerHTML = '<p style="color: red;">Erro ao carregar empréstimos.</p>';
     }
 }
 
-// NotificaÃ§Ãµes
+// Notificações
 async function carregarNotificacoes() {
     if(!usuarioLogadoId) return;
     const token = localStorage.getItem('jwtToken');
@@ -704,7 +719,7 @@ async function carregarNotificacoes() {
 
             lista.innerHTML = '';
             if(notifs.length === 0) {
-                lista.innerHTML = '<span style="color: var(--text-muted);">Nenhuma notificaÃ§Ã£o.</span>';
+                lista.innerHTML = '<span style="color: var(--text-muted);">Nenhuma notificação.</span>';
                 return;
             }
 
@@ -761,7 +776,7 @@ async function carregarNotificacoes() {
             });
         }
     } catch(e) {
-        console.error('Erro ao carregar notificaÃ§Ãµes', e);
+        console.error('Erro ao carregar notificações', e);
     }
 }
 

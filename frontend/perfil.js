@@ -18,15 +18,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        const payload = JSON.parse(jsonPayload);
         const email = payload.sub;
         
-        // Exibe nome/email bÃ¡sicos enquanto carrega
+        // Exibe nome/email básicos enquanto carrega
         document.getElementById('perfilEmail').innerText = email;
         const nomeSalvo = localStorage.getItem('userName');
         if (nomeSalvo) document.getElementById('perfilNome').innerText = nomeSalvo;
 
-        // Busca os dados APENAS do usuÃ¡rio logado
+        // Busca os dados APENAS do usuário logado
         const resUser = await fetch(API_BASE_URL + '/usuarios/me', {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -35,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         if (!resUser.ok) {
-            console.error('Falha ao carregar dados do usuÃ¡rio logado (Status ' + resUser.status + ')');
+            console.error('Falha ao carregar dados do usuário logado (Status ' + resUser.status + ')');
             return;
         }
 
@@ -85,7 +90,7 @@ function configurarEdicaoPerfil() {
         const novaSenha = document.getElementById('editSenha').value.trim();
 
         if(!novoNome || !novoEmail) {
-            showToast('Nome e e-mail sÃ£o obrigatÃ³rios!', 'warning');
+            showToast('Nome e e-mail são obrigatórios!', 'warning');
             return;
         }
 
@@ -126,9 +131,13 @@ function configurarEdicaoPerfil() {
                 modal.style.transform = 'translate(-50%, -50%) scale(0)';
                 
                 if (credenciaisMudaram) {
-                    showToast('Credenciais alteradas. FaÃ§a login novamente.', 'info');
+                    showToast('Credenciais alteradas. Faça login novamente.', 'info');
                     setTimeout(() => {
                         localStorage.removeItem('jwtToken');
+                        localStorage.removeItem('userRole');
+                        localStorage.removeItem('userTipo');
+                        localStorage.removeItem('userId');
+                        localStorage.removeItem('userName');
                         window.location.href = 'index.html';
                     }, 2500);
                 }
@@ -137,10 +146,10 @@ function configurarEdicaoPerfil() {
             }
         } catch(e) {
             console.error(e);
-            showToast('Falha na comunicaÃ§Ã£o com o servidor', 'error');
+            showToast('Falha na comunicação com o servidor', 'error');
         } finally {
             btnSalvar.disabled = false;
-            btnSalvar.innerText = "Salvar AlteraÃ§Ãµes";
+            btnSalvar.innerText = "Salvar Alterações";
         }
     });
 }
@@ -157,7 +166,7 @@ async function carregarGamificacao(usuarioId, token) {
             document.getElementById('perfilPontos').innerText = data.totalEmprestimos;
         }
     } catch(e) {
-        console.error('Erro na gamificaÃ§Ã£o', e);
+        console.error('Erro na gamificação', e);
     }
 }
 
@@ -182,11 +191,11 @@ async function carregarHistorico(usuarioId, token) {
             const inativos = historico.filter(e => e.status === 'DEVOLVIDO');
 
             if (ativos.length === 0 && corpoAtivos) {
-                corpoAtivos.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum emprÃ©stimo ativo no momento.</td></tr>';
+                corpoAtivos.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum empréstimo ativo no momento.</td></tr>';
             }
 
             if (inativos.length === 0 && corpoHistorico) {
-                corpoHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum emprÃ©stimo encontrado no seu histÃ³rico.</td></tr>';
+                corpoHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum empréstimo encontrado no seu histórico.</td></tr>';
             }
 
             ativos.forEach(emp => {
@@ -199,7 +208,7 @@ async function carregarHistorico(usuarioId, token) {
 
                 let devolucaoTexto = formatarDataLocal(emp.dataDevolucaoPrevista);
                 if (isAguardando) {
-                    devolucaoTexto = `Buscar atÃ©: ${devolucaoTexto}`;
+                    devolucaoTexto = `Buscar até: ${devolucaoTexto}`;
                 }
 
                 let acoes = '-';
@@ -207,7 +216,7 @@ async function carregarHistorico(usuarioId, token) {
                     if (emp.renovacoesFeitas === 0) {
                         acoes = `<button class="btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="renovarEmprestimo(${emp.id})">Renovar</button>`;
                     } else {
-                        acoes = '<span style="font-size: 0.75rem; color: var(--text-muted);">JÃ¡ renovado</span>';
+                        acoes = '<span style="font-size: 0.75rem; color: var(--text-muted);">Já renovado</span>';
                     }
                 } else if (isAtrasado) {
                     acoes = '<span style="font-size: 0.75rem; color: #EF4444;">Bloqueado</span>';
@@ -224,9 +233,9 @@ async function carregarHistorico(usuarioId, token) {
                 tr.innerHTML = `
                     <td data-label="Livro"><strong>${escapeHTML(emp.livro.titulo)}</strong></td>
                     <td data-label="Data Retirada">${isAguardando ? '-' : formatarDataLocal(emp.dataRetirada)}</td>
-                    <td data-label="DevoluÃ§Ã£o Prevista" style="${isAtrasado ? 'color: #EF4444; font-weight: bold;' : (isAguardando ? 'color: var(--warning-color); font-weight: bold;' : '')}">${devolucaoTexto}</td>
+                    <td data-label="Devolução Prevista" style="${isAtrasado ? 'color: #EF4444; font-weight: bold;' : (isAguardando ? 'color: var(--warning-color); font-weight: bold;' : '')}">${devolucaoTexto}</td>
                     <td data-label="Status">${statusHtml}</td>
-                    <td data-label="AÃ§Ãµes">${acoes}</td>
+                    <td data-label="Ações">${acoes}</td>
                 `;
                 corpoAtivos.appendChild(tr);
             });
@@ -241,7 +250,7 @@ async function carregarHistorico(usuarioId, token) {
                 tr.innerHTML = `
                     <td data-label="Livro"><strong>${escapeHTML(emp.livro.titulo)}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${escapeHTML(emp.livro.autor)}</span></td>
                     <td data-label="Data Retirada">${formatarDataLocal(emp.dataRetirada)}</td>
-                    <td data-label="DevoluÃ§Ã£o">${devolucaoTexto}</td>
+                    <td data-label="Devolução">${devolucaoTexto}</td>
                     <td data-label="Multa" style="${emp.valorMulta > 0 ? 'color: #EF4444; font-weight: bold;' : ''}">${multaTexto}</td>
                     <td data-label="Status"><span class="status-badge ${badgeClass}">${emp.status}</span></td>
                 `;
@@ -249,8 +258,8 @@ async function carregarHistorico(usuarioId, token) {
             });
         }
     } catch(e) {
-        console.error('Erro no histÃ³rico', e);
-        if(corpoHistorico) corpoHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Erro ao carregar o histÃ³rico de emprÃ©stimos.</td></tr>';
+        console.error('Erro no histórico', e);
+        if(corpoHistorico) corpoHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Erro ao carregar o histórico de empréstimos.</td></tr>';
     }
 }
 
@@ -271,7 +280,7 @@ async function carregarReservas(usuarioId, token) {
             tbody.innerHTML = '';
 
             if (reservas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">VocÃª nÃ£o possui reservas no momento.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Você não possui reservas no momento.</td></tr>';
                 return;
             }
 
@@ -281,32 +290,32 @@ async function carregarReservas(usuarioId, token) {
                 
                 if (r.status === 'NOTIFICADO') {
                     badgeClass = 'status-ativo'; 
-                    posicaoNaFila = '<strong style="color: var(--primary-color);">LIVRO DISPONÃ VEL NO BALCÃƒO!</strong>';
+                    posicaoNaFila = '<strong style="color: var(--primary-color);">LIVRO DISPON VEL NO BALCÒO!</strong>';
                 } else if (r.status === 'AGUARDANDO') {
                     badgeClass = 'status-atrasado'; 
                     
                     let filaTexto = '-';
                     if (r.status === 'AGUARDANDO') {
-                        filaTexto = `VocÃª Ã© o #${r.posicaoFila} da fila`;
+                        filaTexto = `Você é o #${r.posicaoFila} da fila`;
                     }
-                    posicaoNaFila = `<strong>${r.posicaoFila}Âº da fila</strong>`;
+                    posicaoNaFila = `<strong>${r.posicaoFila}º da fila</strong>`;
                 }
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td data-label="Livro"><strong>${escapeHTML(r.livro.titulo)}</strong></td>
-                    <td data-label="Data SolicitaÃ§Ã£o">${formatarDataLocal(r.dataSolicitacao)}</td>
+                    <td data-label="Data Solicitação">${formatarDataLocal(r.dataSolicitacao)}</td>
                     <td data-label="Status"><span class="status-badge ${badgeClass}">${r.status}</span></td>
-                    <td data-label="PosiÃ§Ã£o na Fila">${posicaoNaFila}</td>
+                    <td data-label="Posição na Fila">${posicaoNaFila}</td>
                 `;
                 tbody.appendChild(tr);
             }
         }
     } catch (e) {
         console.error('Erro ao carregar reservas', e);
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Erro ao carregar histÃ³rico de reservas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Erro ao carregar histórico de reservas.</td></tr>';
     }
-        showToast('Falha na comunicaÃ§Ã£o com o servidor.', 'error');
+        showToast('Falha na comunicação com o servidor.', 'error');
     }
 }
 

@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnSair').addEventListener('click', () => {
         localStorage.removeItem('jwtToken');
         localStorage.removeItem('userRole');
+        localStorage.removeItem('userTipo');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userName');
         window.location.href = 'index.html';
     });
 });
@@ -24,13 +27,13 @@ function verificarAcesso() {
     const token = localStorage.getItem('jwtToken');
     const role = localStorage.getItem('userRole');
     if (!token) {
-        showToast('Acesso negado. FaÃ§a login.', 'error');
+        showToast('Acesso negado. Faça login.', 'error');
         setTimeout(() => { window.location.href = 'index.html'; }, 2000);
         return;
     }
     
-    // Se for leitor, escondemos as abas de gestÃ£o
-    if (role === 'LEITOR') {
+    // Se não for Admin/Bibliotecário, escondemos as abas de gestão por segurança (fallback seguro)
+    if (role !== 'ADMIN' && role !== 'BIBLIOTECARIO') {
         const navBalcao = document.getElementById('navBalcao');
         const navReservas = document.getElementById('navReservas');
         const navAcervo = document.getElementById('navAcervo');
@@ -53,7 +56,7 @@ function showSection(sectionId) {
     event.currentTarget.classList.add('active');
 }
 
-// LÃ³gica de Modais
+// Lógica de Modais
 function fecharModais() {
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
     document.getElementById('modalOverlay').classList.remove('active');
@@ -85,7 +88,7 @@ function abrirModalCadastroUsuario() {
     document.getElementById('modalCadastroUsuario').classList.add('active');
 }
 
-// VariÃ¡veis Globais de Dados
+// Variáveis Globais de Dados
 let livros = [];
 let usuarios = [];
 let emprestimos = [];
@@ -113,8 +116,34 @@ async function carregarDados() {
     try {
         const role = localStorage.getItem('userRole');
         
-        if (role === 'LEITOR') {
-            // FLUXO DO LEITOR (SÃ³ busca o seu prÃ³prio histÃ³rico)
+        if (role === 'ADMIN' || role === 'BIBLIOTECARIO') {
+            // FLUXO GESTÃO (Admin/Bibliotecário)
+            const resLivros = await fetch(API_BASE_URL + '/livros?todos=true&size=500', { headers, skipLoader: true });
+            if (resLivros.ok) {
+                const data = await resLivros.json();
+                livros = data.content || data; // Trata Pageable ou List
+                renderizarAcervo();
+            }
+
+            const resUsuarios = await fetch(API_BASE_URL + '/usuarios', { headers, skipLoader: true });
+            if (resUsuarios.ok) {
+                usuarios = await resUsuarios.json();
+                renderizarUsuarios();
+            }
+
+            const resEmprestimos = await fetch(API_BASE_URL + '/emprestimos', { headers, skipLoader: true });
+            if (resEmprestimos.ok) {
+                emprestimos = await resEmprestimos.json();
+                renderizarEmprestimos();
+            }
+
+            const resReservas = await fetch(API_BASE_URL + '/reservas', { headers, skipLoader: true });
+            if (resReservas.ok) {
+                reservas = await resReservas.json();
+                renderizarReservas();
+            }
+        } else {
+            // FLUXO DO LEITOR (Só busca o seu próprio histórico) - FALLBACK SEGURO
             const resUser = await fetch(API_BASE_URL + '/usuarios/me', { headers, skipLoader: true });
             if (resUser.ok) {
                 const user = await resUser.json();
@@ -123,34 +152,6 @@ async function carregarDados() {
                     emprestimos = await resEmp.json();
                 }
             }
-            atualizarDashboard(); // SÃ³ roda o Analytics
-            return;
-        }
-
-        // FLUXO GESTÃƒO (Admin/BibliotecÃ¡rio)
-        const resLivros = await fetch(API_BASE_URL + '/livros?todos=true&size=500', { headers, skipLoader: true });
-        if (resLivros.ok) {
-            const data = await resLivros.json();
-            livros = data.content || data; // Trata Pageable ou List
-            renderizarAcervo();
-        }
-
-        const resUsuarios = await fetch(API_BASE_URL + '/usuarios', { headers, skipLoader: true });
-        if (resUsuarios.ok) {
-            usuarios = await resUsuarios.json();
-            renderizarUsuarios();
-        }
-
-        const resEmprestimos = await fetch(API_BASE_URL + '/emprestimos', { headers, skipLoader: true });
-        if (resEmprestimos.ok) {
-            emprestimos = await resEmprestimos.json();
-            renderizarEmprestimos();
-        }
-
-        const resReservas = await fetch(API_BASE_URL + '/reservas', { headers, skipLoader: true });
-        if (resReservas.ok) {
-            reservas = await resReservas.json();
-            renderizarReservas();
         }
 
         atualizarDashboard();
@@ -165,12 +166,31 @@ function atualizarDashboard() {
     const role = localStorage.getItem('userRole');
     const contagemGeneros = {};
 
-    if (role === 'LEITOR') {
+    if (role === 'ADMIN' || role === 'BIBLIOTECARIO') {
+        // MODO ADMIN GESTÃO
+        document.getElementById('statLivros').innerText = livros.length;
+        
+        const leitores = usuarios.filter(u => u.tipo === 'LEITOR');
+        const equipe = usuarios.filter(u => u.tipo === 'ADMIN' || u.tipo === 'BIBLIOTECARIO');
+        
+        document.getElementById('statUsuarios').innerText = leitores.length;
+        
+        const statEquipe = document.getElementById('statEquipe');
+        if (statEquipe) statEquipe.innerText = equipe.length;
+        
+        document.getElementById('statEmprestimos').innerText = emprestimos.length;
+
+        livros.forEach(l => {
+            const genero = l.generoPrincipal || 'Outros';
+            contagemGeneros[genero] = (contagemGeneros[genero] || 0) + 1;
+        });
+    } else {
+        // MODO LEITOR (Analytics Pessoal)
         document.getElementById('labelStat1').innerText = "Livros Lidos";
-        document.getElementById('labelStat2').innerText = "EmprÃ©stimos Ativos";
-        document.getElementById('labelStat3').innerText = "Atrasos no HistÃ³rico";
+        document.getElementById('labelStat2').innerText = "Empréstimos Ativos";
+        document.getElementById('labelStat3').innerText = "Atrasos no Histórico";
         document.getElementById('labelStat4').innerText = "Total em Multas (R$)";
-        document.getElementById('labelChart').innerText = "Seus GÃªneros Favoritos";
+        document.getElementById('labelChart').innerText = "Seus Gêneros Favoritos";
 
         const lidos = emprestimos.filter(e => e.status === 'DEVOLVIDO');
         const ativos = emprestimos.filter(e => e.status !== 'DEVOLVIDO' && e.status !== 'CANCELADO');
@@ -190,25 +210,6 @@ function atualizarDashboard() {
                 const genero = e.livro.generoPrincipal;
                 contagemGeneros[genero] = (contagemGeneros[genero] || 0) + 1;
             }
-        });
-
-    } else {
-        // MODO ADMIN GESTAO
-        document.getElementById('statLivros').innerText = livros.length;
-        
-        const leitores = usuarios.filter(u => u.tipo === 'LEITOR');
-        const equipe = usuarios.filter(u => u.tipo === 'ADMIN' || u.tipo === 'BIBLIOTECARIO');
-        
-        document.getElementById('statUsuarios').innerText = leitores.length;
-        
-        const statEquipe = document.getElementById('statEquipe');
-        if (statEquipe) statEquipe.innerText = equipe.length;
-        
-        document.getElementById('statEmprestimos').innerText = emprestimos.length;
-
-        livros.forEach(l => {
-            const genero = l.generoPrincipal || 'Outros';
-            contagemGeneros[genero] = (contagemGeneros[genero] || 0) + 1;
         });
     }
 
@@ -243,13 +244,13 @@ function renderizarAcervo() {
             <tr>
                 <td data-label="ID">${l.id}</td>
                 <td data-label="ISBN">${l.isbn || 'N/A'}</td>
-                <td data-label="TÃ­tulo">
+                <td data-label="Título">
                     ${l.titulo} 
                     ${!l.ativo ? '<span style="color: var(--error-color, #ef4444); font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">(Inativo)</span>' : ''}
                 </td>
                 <td data-label="Autor">${l.autor}</td>
                 <td data-label="Estoque">${l.quantidadeDisponivel}/${l.quantidadeTotal}</td>
-                <td data-label="AÃ§Ãµes">
+                <td data-label="Ações">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
                         <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--secondary-color, #10B981);" onclick="abrirVisualizacaoLivro(${l.id})">Ver</button>
                         <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: #3B82F6;" onclick="abrirEdicaoLivro(${l.id})">Editar</button>
@@ -294,8 +295,8 @@ async function buscarEcadastrarLivro() {
         if (response.ok) {
             const livroCadastrado = await response.json();
             
-            // Abre o modal universal de ediÃ§Ã£o para a revisÃ£o final, 
-            // repassando os dados que a IA encontrou (mas que AINDA NÃƒO estÃ£o no banco)
+            // Abre o modal universal de edição para a revisão final, 
+            // repassando os dados que a IA encontrou (mas que AINDA NÒO estão no banco)
             abrirEdicaoLivro(null, livroCadastrado);
             document.getElementById('tituloModalLivro').innerText = 'IA: Revise e Salve';
             
@@ -306,7 +307,7 @@ async function buscarEcadastrarLivro() {
         }
     } catch (e) {
         console.error(e);
-        showToast('Erro de comunicaÃ§Ã£o.', 'error');
+        showToast('Erro de comunicação.', 'error');
     } finally {
         btn.innerText = 'Buscar e Validar via IA';
         btn.disabled = false;
@@ -314,7 +315,7 @@ async function buscarEcadastrarLivro() {
 }
 
 async function inativarLivro(id) {
-    const confirmed = await showCustomConfirm('AtenÃ§Ã£o', 'Tem certeza que deseja inativar este livro? (Ele sairÃ¡ do catÃ¡logo, mas o ISBN continuarÃ¡ reservado)', 'warning');
+    const confirmed = await showCustomConfirm('Atenção', 'Tem certeza que deseja inativar este livro? (Ele sairá do catálogo, mas o ISBN continuará reservado)', 'warning');
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
@@ -327,7 +328,7 @@ async function inativarLivro(id) {
 }
 
 async function excluirLivroDefinitivo(id) {
-    const confirmed = await showCustomConfirm('Cuidado', 'Tem certeza que deseja EXCLUIR DEFINITIVAMENTE este livro? O ISBN serÃ¡ liberado. Esta aÃ§Ã£o nÃ£o pode ser desfeita.', 'danger');
+    const confirmed = await showCustomConfirm('Cuidado', 'Tem certeza que deseja EXCLUIR DEFINITIVAMENTE este livro? O ISBN será liberado. Esta ação não pode ser desfeita.', 'danger');
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
@@ -337,30 +338,30 @@ async function excluirLivroDefinitivo(id) {
         });
 
         if (response.ok) {
-            showToast('Livro excluÃ­do definitivamente com sucesso!', 'success');
+            showToast('Livro excluído definitivamente com sucesso!', 'success');
             carregarDados();
         } else {
             const errorData = await response.json().catch(() => ({}));
-            showToast(errorData.message || 'Erro: O livro nÃ£o pode ser excluÃ­do pois possui histÃ³rico de emprÃ©stimos.', 'error');
+            showToast(errorData.message || 'Erro: O livro não pode ser excluído pois possui histórico de empréstimos.', 'error');
         }
     } catch(e) {
-        showToast('Erro ao se conectar com o servidor para exclusÃ£o.', 'error');
+        showToast('Erro ao se conectar com o servidor para exclusão.', 'error');
     }
 }
 
 
-// ---------------- MODAL DE VISUALIZAÃ‡ÃƒO DE LIVRO ---------------- //
+// ---------------- MODAL DE VISUALIZA!ÒO DE LIVRO ---------------- //
 function abrirVisualizacaoLivro(id) {
     const livro = livros.find(l => l.id === id);
     if (!livro) return;
 
-    document.getElementById('visTitulo').innerText = livro.titulo || 'Sem TÃ­tulo';
+    document.getElementById('visTitulo').innerText = livro.titulo || 'Sem Título';
     document.getElementById('visAutor').innerText = livro.autor || 'Desconhecido';
     document.getElementById('visEditora').innerText = livro.editora || 'Desconhecida';
     document.getElementById('visAno').innerText = livro.ano || 'N/A';
     document.getElementById('visIsbn').innerText = livro.isbn || 'N/A';
     document.getElementById('visGenero').innerText = livro.generoPrincipal || 'N/A';
-    document.getElementById('visSinopse').innerText = livro.sinopse || 'Nenhuma sinopse disponÃ­vel.';
+    document.getElementById('visSinopse').innerText = livro.sinopse || 'Nenhuma sinopse disponível.';
     document.getElementById('visEstoque').innerText = `${livro.quantidadeDisponivel} / ${livro.quantidadeTotal}`;
     
     const capaDiv = document.getElementById('visCapa');
@@ -391,7 +392,7 @@ let livroParaEdicao = null;
 function abrirEdicaoLivro(id, livroIA = null) {
     if (id === null) {
         if (livroIA) {
-            // Modo RevisÃ£o de IA (Preenche com dados recebidos mas sem ID)
+            // Modo Revisão de IA (Preenche com dados recebidos mas sem ID)
             livroParaEdicao = { tagsSecundarias: livroIA.tagsSecundarias || [] };
             document.getElementById('editLivroIsbn').value = livroIA.isbn || '';
             document.getElementById('editLivroTitulo').value = livroIA.titulo || '';
@@ -422,7 +423,7 @@ function abrirEdicaoLivro(id, livroIA = null) {
         }
         document.getElementById('editLivroId').value = '';
     } else {
-        // Modo EdiÃ§Ã£o (Livro jÃ¡ existe no banco)
+        // Modo Edição (Livro já existe no banco)
         livroParaEdicao = livros.find(l => l.id === id);
         if(!livroParaEdicao) return;
         document.getElementById('tituloModalLivro').innerText = 'Editar Livro';
@@ -456,7 +457,7 @@ async function salvarEdicaoLivro() {
     const qtdDisp = document.getElementById('editLivroQtdDisponivel').value ? parseInt(document.getElementById('editLivroQtdDisponivel').value) : 0;
 
     if (qtdDisp > qtdTotal) {
-        showToast('A quantidade disponÃ­vel nÃ£o pode ser maior que a quantidade total.', 'warning');
+        showToast('A quantidade disponível não pode ser maior que a quantidade total.', 'warning');
         return;
     }
 
@@ -495,39 +496,39 @@ async function salvarEdicaoLivro() {
             fecharModais();
             carregarDados();
         } else {
-            // Se o backend retornar status 409 (Conflict), Ã© pq o ISBN duplicou
+            // Se o backend retornar status 409 (Conflict), é pq o ISBN duplicou
             if (response.status === 409) {
-                showToast('Erro: Este ISBN jÃ¡ estÃ¡ cadastrado no sistema!', 'error');
+                showToast('Erro: Este ISBN já está cadastrado no sistema!', 'error');
             } else {
                 await handleApiError(response, isNew ? 'Erro ao cadastrar.' : 'Erro ao atualizar.');
             }
         }
     } catch(e) {
-        showToast('Erro de rede ao salvar ediÃ§Ã£o.', 'error');
+        showToast('Erro de rede ao salvar edição.', 'error');
     }
 }
 
-// ---------------- USUÃRIOS ---------------- //
+// ---------------- USUÁRIOS ---------------- //
 function renderizarUsuarios() {
     const currentUserRole = localStorage.getItem('userRole') || 'LEITOR';
     const tbody = document.getElementById('tabelaUsuarios');
     tbody.innerHTML = '';
     
-    // BibliotecÃ¡rio nÃ£o vÃª admins
+    // Bibliotecário não vê admins
     const usuariosFiltrados = usuarios.filter(u => {
         if (currentUserRole === 'BIBLIOTECARIO' && u.tipo === 'ADMIN') return false;
         return true;
     });
 
-    // Se for bibliotecÃ¡rio, oculta o botÃ£o de "Novo UsuÃ¡rio" (ou restringe)
-    // Conforme pedido: "sÃ³ admin tenha a funÃ§Ã£o de cadastrar funcionarios e admin"
+    // Se for bibliotecário, oculta o botão de "Novo Usuário" (ou restringe)
+    // Conforme pedido: "só admin tenha a função de cadastrar funcionarios e admin"
     const btnNovoUser = document.getElementById('btnNovoUsuario');
     if (btnNovoUser) {
         btnNovoUser.style.display = currentUserRole === 'ADMIN' ? 'inline-block' : 'none';
     }
 
     usuariosFiltrados.forEach(u => {
-        // BibliotecÃ¡rio nÃ£o bloqueia outros bibliotecÃ¡rios
+        // Bibliotecário não bloqueia outros bibliotecários
         let showBlockBtn = true;
         if (currentUserRole === 'BIBLIOTECARIO' && u.tipo !== 'LEITOR') showBlockBtn = false;
         
@@ -537,9 +538,9 @@ function renderizarUsuarios() {
                 <td data-label="Nome">${u.nome} <span style="font-size:0.7rem; color:var(--text-muted);">(${u.tipo || 'LEITOR'})</span></td>
                 <td data-label="E-mail">${u.email}</td>
                 <td data-label="Status"><span style="color: ${u.status === 'INATIVO' || !u.enabled ? 'red' : 'var(--primary-color)'}">${u.status}</span></td>
-                <td data-label="AÃ§Ãµes">
+                <td data-label="Ações">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                        ${showBlockBtn ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: red;" onclick="inativarUsuario(${u.id})">Bloquear</button>` : '<span style="font-size:0.8rem; color:var(--text-muted);">Sem permissÃ£o</span>'}
+                        ${showBlockBtn ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: red;" onclick="inativarUsuario(${u.id})">Bloquear</button>` : '<span style="font-size:0.8rem; color:var(--text-muted);">Sem permissão</span>'}
                     </div>
                 </td>
             </tr>
@@ -568,40 +569,40 @@ async function cadastrarUsuarioInterno() {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // Embora a rota talvez seja pÃºblica, enviamos mesmo assim
+                'Authorization': `Bearer ${token}` // Embora a rota talvez seja pública, enviamos mesmo assim
             },
             body: JSON.stringify({ nome, email, senha, tipo, status: 'ATIVO', enabled: true })
         });
 
         if (response.ok) {
-            showToast('UsuÃ¡rio cadastrado com sucesso!', 'success');
+            showToast('Usuário cadastrado com sucesso!', 'success');
             fecharModais();
             carregarDados();
         } else {
             await handleApiError(response, 'Falha ao cadastrar.');
         }
     } catch(e) {
-        showToast('Erro de conexÃ£o.', 'error');
+        showToast('Erro de conexão.', 'error');
     } finally {
-        btn.innerText = 'Criar UsuÃ¡rio';
+        btn.innerText = 'Criar Usuário';
         btn.disabled = false;
     }
 }
 
 async function inativarUsuario(id) {
-    const confirmed = await showCustomConfirm('Bloquear UsuÃ¡rio', 'Tem certeza que deseja inativar/bloquear este usuÃ¡rio?', 'warning');
+    const confirmed = await showCustomConfirm('Bloquear Usuário', 'Tem certeza que deseja inativar/bloquear este usuário?', 'warning');
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
         await fetch(`/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-        showToast('UsuÃ¡rio inativado com sucesso.', 'info');
+        showToast('Usuário inativado com sucesso.', 'info');
         carregarDados();
     } catch(e) {
-        showToast('Erro ao inativar usuÃ¡rio.', 'error');
+        showToast('Erro ao inativar usuário.', 'error');
     }
 }
 
-// ---------------- EMPRÃ‰STIMOS ---------------- //
+// ---------------- EMPR0STIMOS ---------------- //
 function renderizarEmprestimos() {
     const tbody = document.getElementById('tabelaEmprestimos');
     tbody.innerHTML = '';
@@ -612,9 +613,9 @@ function renderizarEmprestimos() {
                 <td data-label="ID">${e.id}</td>
                 <td data-label="Livro">${escapeHTML(e.livro.titulo)}</td>
                 <td data-label="Leitor">${escapeHTML(e.usuario.nome)}</td>
-                <td data-label="DevoluÃ§Ã£o">${e.status === 'AGUARDANDO_RETIRADA' ? 'Buscar atÃ© ' + dataDev : dataDev}</td>
+                <td data-label="Devolução">${e.status === 'AGUARDANDO_RETIRADA' ? 'Buscar até ' + dataDev : dataDev}</td>
                 <td data-label="Status" style="color: ${e.status === 'ATRASADO' ? 'red' : (e.status === 'AGUARDANDO_RETIRADA' ? 'var(--warning-color)' : 'inherit')}">${e.status}</td>
-                <td data-label="AÃ§Ãµes">
+                <td data-label="Ações">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
                         ${e.status === 'AGUARDANDO_RETIRADA' ? 
                             `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--success-color, #10B981);" onclick="confirmarRetirada(${e.id})">Entregar Livro</button>` : 
@@ -631,20 +632,20 @@ function renderizarEmprestimos() {
 }
 
 async function forcarDevolucao(id) {
-    const confirmed = await showCustomConfirm('DevoluÃ§Ã£o', 'Confirmar devoluÃ§Ã£o deste emprÃ©stimo?', 'info');
+    const confirmed = await showCustomConfirm('Devolução', 'Confirmar devolução deste empréstimo?', 'info');
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
         await fetch(`/emprestimos/${id}/devolver`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
-        showToast('DevoluÃ§Ã£o confirmada com sucesso.', 'success');
+        showToast('Devolução confirmada com sucesso.', 'success');
         carregarDados();
     } catch(e) {
-        showToast('Erro ao confirmar devoluÃ§Ã£o.', 'error');
+        showToast('Erro ao confirmar devolução.', 'error');
     }
 }
 
 async function confirmarRetirada(id) {
-    const confirmed = await showCustomConfirm('Confirmar Retirada', 'O leitor estÃ¡ no balcÃ£o e vocÃª entregarÃ¡ o livro agora? (Isso iniciarÃ¡ o prazo de 14 dias)', 'info');
+    const confirmed = await showCustomConfirm('Confirmar Retirada', 'O leitor está no balcão e você entregará o livro agora? (Isso iniciará o prazo de 14 dias)', 'info');
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
@@ -656,7 +657,7 @@ async function confirmarRetirada(id) {
             showToast('Erro ao confirmar retirada.', 'error');
         }
     } catch(e) {
-        showToast('Erro de conexÃ£o.', 'error');
+        showToast('Erro de conexão.', 'error');
     }
 }
 
@@ -677,10 +678,10 @@ function renderizarReservas() {
                 <td data-label="Leitor">${escapeHTML(r.usuario.nome)}</td>
                 <td data-label="Solicitado">${dataSol}</td>
                 <td data-label="Status"><span style="color: ${podeEfetivar ? 'var(--primary-color)' : 'var(--warning-color)'}">${r.status}</span></td>
-                <td data-label="AÃ§Ãµes">
+                <td data-label="Ações">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
                         ${podeEfetivar 
-                            ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto;" onclick="efetivarEmprestimoDaReserva(${r.livro.id}, ${r.usuario.id})">Efetivar EmprÃ©stimo</button>` 
+                            ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto;" onclick="efetivarEmprestimoDaReserva(${r.livro.id}, ${r.usuario.id})">Efetivar Empréstimo</button>` 
                             : '<span style="font-size:0.8rem; color:var(--text-muted);">Aguardando</span>'}
                     </div>
                 </td>
@@ -690,7 +691,7 @@ function renderizarReservas() {
 }
 
 async function efetivarEmprestimoDaReserva(livroId, usuarioId) {
-    const confirmed = await showCustomConfirm('Efetivar EmprÃ©stimo', 'Deseja registrar o emprÃ©stimo para este usuÃ¡rio que estava na fila?', 'info');
+    const confirmed = await showCustomConfirm('Efetivar Empréstimo', 'Deseja registrar o empréstimo para este usuário que estava na fila?', 'info');
     if(!confirmed) return;
     
     const token = localStorage.getItem('jwtToken');
@@ -708,17 +709,17 @@ async function efetivarEmprestimoDaReserva(livroId, usuarioId) {
         });
 
         if (response.ok) {
-            showToast('EmprÃ©stimo efetivado a partir da reserva!', 'success');
+            showToast('Empréstimo efetivado a partir da reserva!', 'success');
             carregarDados();
         } else {
-            await handleApiError(response, 'Falha ao efetivar emprÃ©stimo da reserva.');
+            await handleApiError(response, 'Falha ao efetivar empréstimo da reserva.');
         }
     } catch(e) {
-        showToast('Erro de conexÃ£o.', 'error');
+        showToast('Erro de conexão.', 'error');
     }
 }
 
-// ---------------- BALCÃƒO (AUTOCOMPLETE & EMPRÃ‰STIMO) ---------------- //
+// ---------------- BALCÒO (AUTOCOMPLETE & EMPR0STIMO) ---------------- //
 function setupAutocomplete() {
     const userSearch = document.getElementById('balcaoUserSearch');
     const userDropdown = document.getElementById('balcaoUserDropdown');
@@ -743,7 +744,7 @@ function setupAutocomplete() {
     // Autocomplete Leitor
     userSearch.addEventListener('input', (e) => {
         const termo = e.target.value.toLowerCase();
-        userIdInput.value = ''; // reseta seleÃ§Ã£o
+        userIdInput.value = ''; // reseta seleção
         userSelected.style.display = 'none';
         
         if (termo.length < 2) {
@@ -776,7 +777,7 @@ function setupAutocomplete() {
     // Autocomplete Livro
     bookSearch.addEventListener('input', (e) => {
         const termo = e.target.value.toLowerCase();
-        bookIdInput.value = ''; // reseta seleÃ§Ã£o
+        bookIdInput.value = ''; // reseta seleção
         bookSelected.style.display = 'none';
         
         if (termo.length < 2) {
@@ -788,7 +789,7 @@ function setupAutocomplete() {
         
         bookDropdown.innerHTML = '';
         if (filtrados.length === 0) {
-            bookDropdown.innerHTML = '<div class="autocomplete-item" style="color:var(--text-muted)">Nenhum livro disponÃ­vel encontrado</div>';
+            bookDropdown.innerHTML = '<div class="autocomplete-item" style="color:var(--text-muted)">Nenhum livro disponível encontrado</div>';
         } else {
             filtrados.forEach(l => {
                 const item = document.createElement('div');
@@ -813,7 +814,7 @@ async function realizarEmprestimoBalcao() {
     const btn = document.getElementById('btnRealizarEmprestimoBalcao');
 
     if (!usuarioId || !livroId) {
-        showToast('Selecione um Leitor e um Livro usando as sugestÃµes.', 'warning');
+        showToast('Selecione um Leitor e um Livro usando as sugestões.', 'warning');
         return;
     }
 
@@ -835,9 +836,9 @@ async function realizarEmprestimoBalcao() {
         });
 
         if (response.ok) {
-            showToast('EmprÃ©stimo registrado com sucesso!', 'success');
+            showToast('Empréstimo registrado com sucesso!', 'success');
             
-            // Limpa o formulÃ¡rio
+            // Limpa o formulário
             document.getElementById('balcaoUserSearch').value = '';
             document.getElementById('balcaoUserId').value = '';
             document.getElementById('balcaoUserSelected').style.display = 'none';
@@ -848,12 +849,12 @@ async function realizarEmprestimoBalcao() {
 
             carregarDados(); // Atualiza listas globais
         } else {
-            await handleApiError(response, 'Falha ao registrar emprÃ©stimo no balcÃ£o.');
+            await handleApiError(response, 'Falha ao registrar empréstimo no balcão.');
         }
     } catch(e) {
-        showToast('Erro de conexÃ£o.', 'error');
+        showToast('Erro de conexão.', 'error');
     } finally {
-        btn.innerText = 'Confirmar EmprÃ©stimo';
+        btn.innerText = 'Confirmar Empréstimo';
         btn.disabled = false;
     }
 }

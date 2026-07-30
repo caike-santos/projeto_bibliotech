@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark"> <!-- Iniciando no modo escuro pela estÃ©tica sci-fi -->
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark"> <!-- Iniciando no modo escuro pela estética sci-fi -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiblioTech AI | Login</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Ãcones do Phosphor Icons para um visual moderno -->
+    <!-- Ícones do Phosphor Icons para um visual moderno -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="toast.js" defer></script>
     <script src="login.js" defer></script>
@@ -22,7 +22,7 @@
     <main class="login-container">
         <div class="login-card">
             <div class="logo-area">
-                <!-- EspaÃ§o provisÃ³rio para a Lumina -->
+                <!-- Espaço provisório para a Lumina -->
                 <div class="lumina-icon">
                     <i class="ph ph-owl"></i> 
                 </div>
@@ -43,7 +43,7 @@
                     <label for="senha">Senha</label>
                     <div class="input-wrapper">
                         <i class="ph ph-lock-key"></i>
-                        <input type="password" id="senha" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required>
+                        <input type="password" id="senha" placeholder="⬢⬢⬢⬢⬢⬢⬢⬢" required>
                     </div>
                 </div>
 
@@ -55,23 +55,23 @@
                     <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
                 </div>
 
-                <!-- Container DinÃ¢mico do Google Button -->
+                <!-- Container Dinâmico do Google Button -->
                 <div id="googleButtonContainer" style="display: flex; justify-content: center; width: 100%;"></div>
             </form>
 
             <div class="login-footer">
-                <p id="toggleText">Ainda nÃ£o Ã© leitor? <a href="cadastro.html">Cadastre-se</a></p>
+                <p id="toggleText">Ainda não é leitor? <a href="cadastro.html">Cadastre-se</a></p>
             </div>
         </div>
     </main>
 
     <script>
-        // LÃ³gica para alternar e persistir o Tema
+        // Lógica para alternar e persistir o Tema
         const btnTheme = document.getElementById('btnTheme');
         const html = document.documentElement;
         const icon = btnTheme ? btnTheme.querySelector('i') : null;
 
-        // Carrega o tema do localStorage ou usa 'dark' como padrÃ£o
+        // Carrega o tema do localStorage ou usa 'dark' como padrão
         const savedTheme = localStorage.getItem('theme') || 'dark';
         html.setAttribute('data-theme', savedTheme);
         if (icon) {
@@ -82,7 +82,7 @@
             }
         }
 
-        // FunÃ§Ã£o para renderizar o botÃ£o do Google com o tema certo
+        // Função para renderizar o botão do Google com o tema certo
         function renderGoogleBtn(themeStr) {
             const btnContainer = document.getElementById('googleButtonContainer');
             if(!btnContainer || !window.google) return;
@@ -126,7 +126,7 @@
                     icon.classList.replace('ph-sun', 'ph-moon-stars');
                 }
 
-                // Atualiza o botÃ£o do Google instantaneamente!
+                // Atualiza o botão do Google instantaneamente!
                 renderGoogleBtn(newTheme);
             });
         }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BiblioTech AI | CatÃ¡logo Inteligente</title>
+    <title>BiblioTech AI | Catálogo Inteligente</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="shortcut icon" href="imagens/icon.png" type="image/x-icon">
@@ -109,7 +109,7 @@
             gap: 1.5rem;
         }
 
-        /* BotÃ£o Flutuante da Lumina */
+        /* Botão Flutuante da Lumina */
         .lumina-floating-container {
             position: fixed;
             bottom: 2rem;
@@ -315,7 +315,7 @@
             padding: 0.5rem;
         }
 
-        /* Responsividade CatÃ¡logo */
+        /* Responsividade Catálogo */
         @media (max-width: 768px) {
             .navbar {
                 flex-wrap: wrap;
@@ -365,7 +365,7 @@
 </head>
 <body>
 
-    <!-- Menu Superior com Pesquisa e AÃ§Ãµes -->
+    <!-- Menu Superior com Pesquisa e Ações -->
     <nav class="navbar">
         <div class="navbar-brand">
             <i class="ph ph-books" style="font-size: 1.5rem; color: var(--primary-color);"></i>
@@ -376,27 +376,27 @@
             <i class="ph ph-list"></i>
         </button>
 
-        <!-- Barra de Pesquisa de TÃ­tulos -->
+        <!-- Barra de Pesquisa de Títulos -->
         <div class="search-container">
             <i class="ph ph-magnifying-glass"></i>
-            <input type="text" id="inputBusca" class="search-input" placeholder="Pesquisar por tÃ­tulo ou autor...">
+            <input type="text" id="inputBusca" class="search-input" placeholder="Pesquisar por título ou autor...">
         </div>
 
         <div class="user-menu" id="userMenu">
             <!-- Gamification Badge -->
-            <span class="user-badge" id="gamificacaoBadge" style="background: var(--primary-color); color: var(--bg-color); font-weight: bold;" title="NÃ­vel de Leitor"><i class="ph ph-medal"></i> Carregando...</span>
+            <span class="user-badge" id="gamificacaoBadge" style="background: var(--primary-color); color: var(--bg-color); font-weight: bold;" title="Nível de Leitor"><i class="ph ph-medal"></i> Carregando...</span>
             
-            <!-- NotificaÃ§Ãµes -->
+            <!-- Notificações -->
             <div style="position: relative;">
                 <button id="btnNotificacoes" style="background:none; border:none; color:var(--text-color); font-size:1.5rem; cursor:pointer;"><i class="ph ph-bell"></i></button>
                 <div id="notificacoesDropdown" class="lumina-modal" style="width: 300px; height: auto; max-height: 300px; right: 0; bottom: auto; top: 100%; transform: scale(0); transform-origin: top right; padding: 1rem; overflow-y: auto;">
-                    <h4>NotificaÃ§Ãµes</h4>
+                    <h4>Notificações</h4>
                     <div id="listaNotificacoes" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;"></div>
                 </div>
             </div>
 
-            <!-- Meus EmprÃ©stimos -->
-            <button class="btn-primary" id="btnMeusEmprestimos" style="padding: 0.5rem 1rem; font-size: 0.875rem; background-color: var(--surface-color); color: var(--text-color); border: 1px solid var(--border-color);">Meus EmprÃ©stimos</button>
+            <!-- Meus Empréstimos -->
+            <button class="btn-primary" id="btnMeusEmprestimos" style="padding: 0.5rem 1rem; font-size: 0.875rem; background-color: var(--surface-color); color: var(--text-color); border: 1px solid var(--border-color);">Meus Empréstimos</button>
             
             <a href="dashboard.html" style="text-decoration: none; flex-shrink: 0;">
                 <span class="user-badge" style="cursor: pointer; white-space: nowrap; background: rgba(182, 255, 46, 0.1); color: var(--primary-color); border-color: var(--primary-color);">
@@ -416,31 +416,31 @@
         </div>
     </nav>
 
-    <!-- ConteÃºdo Principal -->
+    <!-- Conteúdo Principal -->
     <main class="catalogo-container">
-        <!-- RecomendaÃ§Ãµes da IA -->
+        <!-- Recomendações da IA -->
         <div style="background: linear-gradient(135deg, var(--surface-color), rgba(182, 255, 46, 0.1)); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--primary-color); margin-bottom: 2rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--primary-color); font-weight: bold;">
                     <i class="ph ph-sparkle"></i> IA Recomenda (Baseado em Outros Leitores)
                 </div>
-                <button id="btnGerarClustering" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; width: auto; flex-shrink: 0;"><i class="ph ph-magic-wand"></i> Gerar RecomendaÃ§Ã£o</button>
+                <button id="btnGerarClustering" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; width: auto; flex-shrink: 0;"><i class="ph ph-magic-wand"></i> Gerar Recomendação</button>
             </div>
-            <p id="textoRecomendacao" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-color);">Descubra novos livros baseados no que pessoas com gostos parecidos estÃ£o lendo. Clique no botÃ£o acima para gerar.</p>
+            <p id="textoRecomendacao" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-color);">Descubra novos livros baseados no que pessoas com gostos parecidos estão lendo. Clique no botão acima para gerar.</p>
         </div>
 
         <div class="header-catalogo">
             <div>
-                <h2>Acervo DisponÃ­vel</h2>
+                <h2>Acervo Disponível</h2>
                 <p style="color: var(--text-muted); margin-top: 0.25rem;">Explore os livros cadastrados na base de dados.</p>
             </div>
         </div>
 
-        <!-- Grid onde os livros consumidos da API serÃ£o exibidos -->
+        <!-- Grid onde os livros consumidos da API serão exibidos -->
         <div class="grid-livros" id="gridLivros">
             <p style="color: var(--text-muted);">Conectando aos servidores da biblioteca...</p>
         </div>
-        <!-- PaginaÃ§Ã£o -->
+        <!-- Paginação -->
         <div id="paginacaoCatalogo" style="display:flex; justify-content:center; gap:0.5rem; margin-top:2rem; align-items: center; flex-wrap: wrap;"></div>
     </main>
 
@@ -450,11 +450,11 @@
             <div class="footer-brand">
                 <i class="ph ph-book-open footer-logo-icon"></i>
                 <span class="footer-logo-text">BiblioTech</span>
-                <p class="footer-desc">Transformando a gestÃ£o de bibliotecas com tecnologia e inteligÃªncia.</p>
+                <p class="footer-desc">Transformando a gestão de bibliotecas com tecnologia e inteligência.</p>
             </div>
             <div class="footer-info">
                 <h4>Contato</h4>
-                <p><i class="ph ph-map-pin"></i> Rua FictÃ­cia da Leitura, 1024 - Centro</p>
+                <p><i class="ph ph-map-pin"></i> Rua Fictícia da Leitura, 1024 - Centro</p>
                 <p><i class="ph ph-phone"></i> (11) 98765-4321</p>
             </div>
             <div class="footer-scroll">
@@ -482,7 +482,7 @@
             <div class="lumina-msg-wrapper bot" style="display: flex; align-items: flex-end; gap: 0.5rem; margin-bottom: 0.25rem;">
                 <img src="imagens/lumina.png" alt="Lumina" style="width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--primary-color); object-fit: cover; flex-shrink: 0; background: var(--surface-color);">
                 <div class="lumina-msg bot">
-                    OlÃ¡! Sou a Lumina, sua assistente cibernÃ©tica. Como posso ajudar com o acervo hoje?
+                    Olá! Sou a Lumina, sua assistente cibernética. Como posso ajudar com o acervo hoje?
                 </div>
             </div>
         </div>
@@ -492,7 +492,7 @@
                 <button id="btnLuminaRecomendar" style="background: rgba(182, 255, 46, 0.1); border: 1px solid var(--primary-color); color: var(--primary-color); padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; cursor: pointer; white-space: nowrap;">Me recomende um livro</button>
             </div>
             <div style="display: flex; gap: 0.5rem; width: 100%;">
-                <input type="text" id="luminaInput" placeholder="Digite sua dÃºvida..." autocomplete="off">
+                <input type="text" id="luminaInput" placeholder="Digite sua dúvida..." autocomplete="off">
                 <button id="luminaSend"><i class="ph ph-paper-plane-right"></i></button>
             </div>
         </div>
@@ -509,7 +509,7 @@
         </div>
         <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; color: var(--text-color);">
             
-            <!-- Capa e InformaÃ§Ãµes Principais -->
+            <!-- Capa e Informações Principais -->
             <div style="display: flex; gap: 1rem; align-items: flex-start;">
                 <div id="detalheCapa" style="width: 100px; height: 140px; background-size: cover; background-position: center; border-radius: 0.5rem; border: 1px solid var(--border-color); flex-shrink: 0;"></div>
                 <div>
@@ -527,7 +527,7 @@
                 <p id="detalheSinopse" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;"></p>
             </div>
 
-            <!-- Tags SecundÃ¡rias -->
+            <!-- Tags Secundárias -->
             <div>
                 <strong style="font-size: 0.875rem; color: var(--text-color); display: block; margin-bottom: 0.35rem;">Tags:</strong>
                 <div id="detalheTags" style="display: flex; flex-wrap: wrap; gap: 0.35rem;"></div>
@@ -535,22 +535,22 @@
 
             <!-- Estoque -->
             <div style="background-color: var(--bg-color); padding: 0.75rem; border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; border: 1px solid var(--border-color);">
-                <span>Exemplares DisponÃ­veis:</span>
+                <span>Exemplares Disponíveis:</span>
                 <strong id="detalheEstoque" style="color: var(--primary-color);"></strong>
             </div>
 
-            <!-- BotÃ£o de AÃ§Ã£o -->
-            <button class="btn-primary" id="btnEmprestarModal" style="width: 100%; padding: 0.75rem; margin-top: 0.25rem;">Solicitar EmprÃ©stimo</button>
+            <!-- Botão de Ação -->
+            <button class="btn-primary" id="btnEmprestarModal" style="width: 100%; padding: 0.75rem; margin-top: 0.25rem;">Solicitar Empréstimo</button>
             <button class="btn-primary btn-warning" id="btnReservarModal" style="width: 100%; padding: 0.75rem; margin-top: 0.25rem; display: none;">Entrar na Fila de Espera</button>
         </div>
     </div>
 
-    <!-- Modal de Meus EmprÃ©stimos -->
+    <!-- Modal de Meus Empréstimos -->
     <div id="modalMeusEmprestimos" class="lumina-modal" style="width: 500px; height: auto; max-height: 80vh; overflow-y: auto; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0); transform-origin: center;">
         <div class="lumina-header">
             <div class="lumina-title">
                 <i class="ph ph-books"></i>
-                <span>Meus EmprÃ©stimos Ativos</span>
+                <span>Meus Empréstimos Ativos</span>
             </div>
             <button id="btnCloseMeusEmprestimos" class="lumina-close"><i class="ph ph-x"></i></button>
         </div>
@@ -559,16 +559,16 @@
         </div>
     </div>
 
-    <!-- BotÃ£o Flutuante da Lumina -->
+    <!-- Botão Flutuante da Lumina -->
     <div class="lumina-btn-container" style="position: fixed; bottom: 2rem; right: 2rem; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end;">
         <div id="luminaBubble" class="lumina-bubble" style="display: none; cursor: pointer;" onclick="document.getElementById('btnLuminaToggle').click()">
-            Oi! Sou a Lumina, sua assistente virtual. Clique aqui para falar comigo! âœ¨
+            Oi! Sou a Lumina, sua assistente virtual. Clique aqui para falar comigo! 🦉✨
         </div>
         <button id="btnLuminaToggle" class="lumina-btn" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--primary-color); background: var(--surface-color); cursor: pointer; overflow: hidden; box-shadow: 0 4px 15px rgba(182,255,46,0.3); transition: transform 0.3s; margin-top: 1rem;">
             <img src="imagens/lumina.png" alt="Lumina" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
         </button>
     </div>
-    <!-- Modal de Termos de EmprÃ©stimo / Reserva -->
+    <!-- Modal de Termos de Empréstimo / Reserva -->
     <div id="modalTermos" class="lumina-modal" style="width: 500px; height: auto; max-height: 85vh; overflow-y: auto; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); transform-origin: center;">
         <div class="lumina-header">
             <div class="lumina-title">
@@ -580,13 +580,13 @@
         
         <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
             <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 12px;">
-                <p style="margin-bottom: 1rem; color: var(--text-color);">Antes de confirmar, fique atento Ã s nossas regras:</p>
+                <p style="margin-bottom: 1rem; color: var(--text-color);">Antes de confirmar, fique atento às nossas regras:</p>
                 <ul style="list-style-type: none; padding-left: 0; display: flex; flex-direction: column; gap: 0.75rem; color: var(--text-muted); font-size: 0.9rem;">
-                    <li style="display: flex; gap: 0.5rem;"><span style="color: var(--primary-color);">â€¢</span> <div><b>Prazo de DevoluÃ§Ã£o:</b> O prazo padrÃ£o Ã© de 14 dias corridos a partir da data de retirada.</div></li>
-                    <li style="display: flex; gap: 0.5rem;"><span style="color: var(--primary-color);">â€¢</span> <div><b>Retirada Presencial:</b> VocÃª tem atÃ© <b>48 horas</b> para buscar o livro no balcÃ£o da biblioteca. ApÃ³s este prazo, a solicitaÃ§Ã£o Ã© cancelada automaticamente.</div></li>
-                    <li style="display: flex; gap: 0.5rem;"><span style="color: var(--primary-color);">â€¢</span> <div><b>RenovaÃ§Ã£o:</b> VocÃª pode renovar este exemplar de forma consecutiva apenas 1 (uma) vez (caso nÃ£o tenha reservas).</div></li>
-                    <li style="display: flex; gap: 0.5rem;"><span style="color: var(--primary-color);">â€¢</span> <div><b>Limite de EmprÃ©stimos:</b> Ã‰ permitido possuir no mÃ¡ximo 3 livros emprestados simultaneamente.</div></li>
-                    <li style="display: flex; gap: 0.5rem;"><span style="color: var(--warning-color);">â€¢</span> <div><b>Atrasos:</b> A nÃ£o devoluÃ§Ã£o no prazo altera seu status para Atrasado e bloqueia novos emprÃ©stimos e renovaÃ§Ãµes atÃ© a regularizaÃ§Ã£o.</div></li>
+                    <li style="display: flex; gap: 0.5rem;"><span style="color: var(--primary-color);">⬢</span> <div><b>Prazo de Devolução:</b> O prazo padrão é de 14 dias corridos a partir da data de retirada.</div></li>
+                    <li style="display: flex; gap: 0.5rem;"><span style="color: var(--primary-color);">⬢</span> <div><b>Retirada Presencial:</b> Você tem até <b>48 horas</b> para buscar o livro no balcão da biblioteca. Após este prazo, a solicitação é cancelada automaticamente.</div></li>
+                    <li style="display: flex; gap: 0.5rem;"><span style="color: var(--primary-color);">⬢</span> <div><b>Renovação:</b> Você pode renovar este exemplar de forma consecutiva apenas 1 (uma) vez (caso não tenha reservas).</div></li>
+                    <li style="display: flex; gap: 0.5rem;"><span style="color: var(--primary-color);">⬢</span> <div><b>Limite de Empréstimos:</b> É permitido possuir no máximo 3 livros emprestados simultaneamente.</div></li>
+                    <li style="display: flex; gap: 0.5rem;"><span style="color: var(--warning-color);">⬢</span> <div><b>Atrasos:</b> A não devolução no prazo altera seu status para Atrasado e bloqueia novos empréstimos e renovações até a regularização.</div></li>
                 </ul>
             </div>
 
@@ -606,12 +606,12 @@
     <script src="toast.js"></script>
     <script src="catalogo.js"></script>
     <script>
-        // LÃ³gica para alternar e persistir o Tema
+        // Lógica para alternar e persistir o Tema
         const btnTheme = document.getElementById('btnTheme');
         const html = document.documentElement;
         const icon = btnTheme ? btnTheme.querySelector('i') : null;
 
-        // Carrega o tema do localStorage ou usa 'dark' como padrÃ£o
+        // Carrega o tema do localStorage ou usa 'dark' como padrão
         const savedTheme = localStorage.getItem('theme') || 'dark';
         html.setAttribute('data-theme', savedTheme);
         if (icon) {

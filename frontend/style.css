@@ -1,9 +1,9 @@
-/* Importando uma fonte limpa e tÃ©cnica (Inter) */
+/* Importando uma fonte limpa e técnica (Inter) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* --- VariÃ¡veis de Tema --- */
+/* --- Variáveis de Tema --- */
 :root {
-    /* Modo Claro (Default estrutural, mas o HTML comeÃ§a dark) */
+    /* Modo Claro (Default estrutural, mas o HTML começa dark) */
     --bg-color: #FDFBF7; 
     --surface-color: #FFFFFF;
     --text-color: #23262F;
@@ -28,7 +28,7 @@
     --shadow: 0 10px 30px -5px rgba(182, 255, 46, 0.15);
 }
 
-/* --- Reset BÃ¡sico --- */
+/* --- Reset Básico --- */
 * {
     margin: 0;
     padding: 0;
@@ -50,7 +50,7 @@ body:has(.catalogo-container), body:has(.perfil-container) {
     display: block !important;
 }
 
-/* --- BotÃ£o de Tema --- */
+/* --- Botão de Tema --- */
 .theme-toggle {
     position: absolute;
     top: 2rem;
@@ -94,7 +94,7 @@ body:has(.catalogo-container), body:has(.perfil-container) {
     font-size: 3rem;
     color: var(--primary-color);
     margin-bottom: 0.5rem;
-    /* Efeito de brilho sutil cibernÃ©tico no modo dark */
+    /* Efeito de brilho sutil cibernético no modo dark */
     filter: drop-shadow(0 0 10px var(--primary-color));
 }
 
@@ -113,7 +113,7 @@ body:has(.catalogo-container), body:has(.perfil-container) {
     margin-top: 0.25rem;
 }
 
-/* --- FormulÃ¡rio --- */
+/* --- Formulário --- */
 .input-group {
     margin-bottom: 1.5rem;
 }
@@ -154,7 +154,7 @@ body:has(.catalogo-container), body:has(.perfil-container) {
     box-shadow: 0 0 0 3px rgba(182, 255, 46, 0.1);
 }
 
-/* --- BotÃ£o PrimÃ¡rio --- */
+/* --- Botão Primário --- */
 .btn-primary {
     width: 100%;
     padding: 0.875rem;
@@ -201,7 +201,7 @@ body:has(.catalogo-container), body:has(.perfil-container) {
     text-decoration: underline;
 }
 
-/* --- Estilos do CatÃ¡logo de Livros --- */
+/* --- Estilos do Catálogo de Livros --- */
 
 .livro-card {
     background-color: var(--surface-color);
@@ -224,7 +224,7 @@ body:has(.catalogo-container), body:has(.perfil-container) {
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    background-color: var(--bg-color); /* Fica no fundo se a imagem nÃ£o carregar */
+    background-color: var(--bg-color); /* Fica no fundo se a imagem não carregar */
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -264,7 +264,7 @@ body:has(.catalogo-container), body:has(.perfil-container) {
     gap: 0.5rem;
     font-size: 0.875rem;
     color: var(--text-color);
-    margin-top: auto; /* Empurra o estoque e o botÃ£o para o fundo */
+    margin-top: auto; /* Empurra o estoque e o botão para o fundo */
     margin-bottom: 1rem;
     padding: 0.5rem;
     background-color: var(--bg-color);
@@ -418,7 +418,7 @@ body:has(.catalogo-container), body:has(.perfil-container) {
     -webkit-backdrop-filter: blur(10px);
 }
 
-/* --- Estilos Adicionais para InformaÃ§Ãµes do Livro --- */
+/* --- Estilos Adicionais para Informações do Livro --- */
 .livro-sinopse {
     font-size: 0.8rem;
     color: var(--text-muted);
@@ -444,7 +444,7 @@ body:has(.catalogo-container), body:has(.perfil-container) {
     text-transform: uppercase;
 }
 
-/* --- Hover para o Perfil (Nome do UsuÃ¡rio) --- */
+/* --- Hover para o Perfil (Nome do Usuário) --- */
 .hover-profile {
     display: inline-block;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;

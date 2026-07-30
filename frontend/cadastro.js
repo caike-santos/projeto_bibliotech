@@ -1,4 +1,4 @@
-﻿document.getElementById('formCadastro').addEventListener('submit', async function(event) {
+document.getElementById('formCadastro').addEventListener('submit', async function(event) {
     event.preventDefault();
 
     const nome = document.getElementById('cadNome').value;

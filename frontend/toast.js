@@ -12,7 +12,7 @@ window.formatarDataLocal = function(dataString) {
 };
 
 window.renovarEmprestimo = async function(emprestimoId, renderCallback) {
-    const confirmed = await showCustomConfirm('Renovar EmprÃ©stimo', 'Deseja renovar este emprÃ©stimo por mais 14 dias? (Regra: Apenas 1 renovaÃ§Ã£o permitida por livro)', 'info');
+    const confirmed = await showCustomConfirm('Renovar Empréstimo', 'Deseja renovar este empréstimo por mais 14 dias? (Regra: Apenas 1 renovação permitida por livro)', 'info');
     if (!confirmed) return;
 
     try {
@@ -26,8 +26,8 @@ window.renovarEmprestimo = async function(emprestimoId, renderCallback) {
         });
 
         if (response.ok) {
-            showToast('EmprÃ©stimo renovado com sucesso por mais 14 dias!', 'success');
-            // Se estiver no catÃ¡logo, chama renderCatalog()
+            showToast('Empréstimo renovado com sucesso por mais 14 dias!', 'success');
+            // Se estiver no catálogo, chama renderCatalog()
             if (typeof window.renderCatalog === 'function') {
                 window.renderCatalog();
             }
@@ -36,10 +36,10 @@ window.renovarEmprestimo = async function(emprestimoId, renderCallback) {
                 window.carregarHistorico(window.dadosUsuarioGlobal?.id, token);
             }
         } else {
-            await window.handleApiError(response, 'Falha ao renovar. Verifique se o livro jÃ¡ foi renovado ou hÃ¡ atrasos.');
+            await window.handleApiError(response, 'Falha ao renovar. Verifique se o livro já foi renovado ou há atrasos.');
         }
     } catch (error) {
-        showToast('Erro de conexÃ£o ao tentar renovar o emprÃ©stimo.', 'error');
+        showToast('Erro de conexão ao tentar renovar o empréstimo.', 'error');
     }
 };
 
@@ -93,7 +93,7 @@ function hideGlobalLoader() {
  */
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
-    if (!container) return; // SeguranÃ§a
+    if (!container) return; // Segurança
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
@@ -111,21 +111,21 @@ function showToast(message, type = 'info') {
 
     container.appendChild(toast);
 
-    // Entrada animada (por padrÃ£o o CSS cuidarÃ¡ do estado final se usarmos animaÃ§Ã£o keyframes ou setTimeout)
+    // Entrada animada (por padrão o CSS cuidará do estado final se usarmos animação keyframes ou setTimeout)
     setTimeout(() => {
         toast.classList.add('show');
     }, 10);
 
-    // Remover apÃ³s 5 segundos
+    // Remover após 5 segundos
     setTimeout(() => {
         toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300); // tempo da transiÃ§Ã£o
+        setTimeout(() => toast.remove(), 300); // tempo da transição
     }, 5000);
 }
 
 /**
  * Exibe um alert personalizado
- * @param {string} title - O tÃ­tulo do modal
+ * @param {string} title - O título do modal
  * @param {string} message - A mensagem
  * @param {string} type - 'info', 'warning', 'error', 'success'
  * @returns {Promise<void>}
@@ -195,7 +195,7 @@ function showCustomAlert(title, message, type = 'info') {
 
 /**
  * Exibe um confirm personalizado
- * @param {string} title - O tÃ­tulo do modal
+ * @param {string} title - O título do modal
  * @param {string} message - A mensagem
  * @param {string} type - 'warning', 'danger', 'info'
  * @returns {Promise<boolean>}
@@ -265,7 +265,7 @@ function showCustomConfirm(title, message, type = 'warning') {
 /**
  * Trata erros de API de forma elegante, decodificando JSON caso exista.
  * @param {Response} response - O objeto de resposta do Fetch
- * @param {string} defaultMessage - Mensagem padrÃ£o caso nÃ£o consiga extrair erro
+ * @param {string} defaultMessage - Mensagem padrão caso não consiga extrair erro
  */
 async function handleApiError(response, defaultMessage = 'Ocorreu um erro inesperado.') {
     let finalMessage = defaultMessage;
@@ -297,9 +297,9 @@ async function handleApiError(response, defaultMessage = 'Ocorreu um erro inespe
         console.error('Erro ao ler a resposta da API', e);
     }
     
-    // Tratamento estÃ©tico final: intercepta erros tÃ©cnicos em inglÃªs ou Java e traduz para algo amigÃ¡vel
+    // Tratamento estético final: intercepta erros técnicos em inglês ou Java e traduz para algo amigável
     if (finalMessage.includes('Cannot invoke') || finalMessage.includes('java.lang') || finalMessage.includes('com.bibliotech')) {
-        finalMessage = 'Ocorreu um erro interno no servidor ao tentar processar esta aÃ§Ã£o. Tente novamente mais tarde.';
+        finalMessage = 'Ocorreu um erro interno no servidor ao tentar processar esta ação. Tente novamente mais tarde.';
     }
 
     showToast(finalMessage, 'error');
@@ -316,7 +316,7 @@ window.fetch = async function(...args) {
     
     if (options && options.skipLoader) {
         skipLoader = true;
-        // Remove a propriedade customizada para não poluir o RequestInit nativo
+        // Remove a propriedade customizada para no poluir o RequestInit nativo
         const { skipLoader: _, ...rest } = options;
         args[1] = rest;
     }
@@ -332,10 +332,10 @@ window.fetch = async function(...args) {
     let msg = 'Carregando...';
     
     if (url.includes('/login')) msg = 'Autenticando credenciais...';
-    else if (url.includes('/cadastrar-por-isbn')) msg = 'A Lumina estÃ¡ lendo e catalogando o livro...';
-    else if (url.includes('/recomendacoes') || url.includes('/clustering')) msg = 'Analisando perfis e recomendaÃ§Ãµes...';
-    else if (url.includes('/emprestimos') && url.includes('/renovar')) msg = 'Renovando emprÃ©stimo...';
-    else if (url.includes('/emprestimos') && !url.includes('/usuario')) msg = 'Registrando transaÃ§Ã£o...';
+    else if (url.includes('/cadastrar-por-isbn')) msg = 'A Lumina está lendo e catalogando o livro...';
+    else if (url.includes('/recomendacoes') || url.includes('/clustering')) msg = 'Analisando perfis e recomendações...';
+    else if (url.includes('/emprestimos') && url.includes('/renovar')) msg = 'Renovando empréstimo...';
+    else if (url.includes('/emprestimos') && !url.includes('/usuario')) msg = 'Registrando transação...';
     else if (url.includes('/reservas')) msg = 'Processando reserva...';
     else if (url.includes('/livros') && args[1]?.method === 'POST') msg = 'Salvando livro...';
     
@@ -346,7 +346,7 @@ window.fetch = async function(...args) {
         return response;
     } catch (error) {
         if (error.message === 'Failed to fetch') {
-            showToast('O servidor de IA estÃ¡ acordando da inatividade. Isso pode levar atÃ© 60 segundos. Aguarde um instante e tente novamente.', 'warning');
+            showToast('O servidor de IA está acordando da inatividade. Isso pode levar até 60 segundos. Aguarde um instante e tente novamente.', 'warning');
         }
         throw error;
     } finally {
