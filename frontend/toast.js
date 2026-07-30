@@ -17,7 +17,7 @@ window.renovarEmprestimo = async function(emprestimoId, renderCallback) {
 
     try {
         const token = localStorage.getItem('jwtToken');
-        const response = await fetch(`/emprestimos/${emprestimoId}/renovar`, {
+        const response = await fetch(API_BASE_URL + `/emprestimos/${emprestimoId}/renovar`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,

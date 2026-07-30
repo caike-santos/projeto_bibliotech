@@ -110,7 +110,7 @@ function configurarEdicaoPerfil() {
 
         try {
             const token = localStorage.getItem('jwtToken');
-            const res = await fetch(`/usuarios/${dadosUsuarioGlobal.id}`, {
+            const res = await fetch(API_BASE_URL + `/usuarios/${dadosUsuarioGlobal.id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -156,7 +156,7 @@ function configurarEdicaoPerfil() {
 
 async function carregarGamificacao(usuarioId, token) {
     try {
-        const response = await fetch(`/usuarios/${usuarioId}/gamificacao`, {
+        const response = await fetch(API_BASE_URL + `/usuarios/${usuarioId}/gamificacao`, {
             headers: { 'Authorization': `Bearer ${token}` },
             skipLoader: true
         });
@@ -178,7 +178,7 @@ async function carregarHistorico(usuarioId, token) {
     if(corpoAtivos) corpoAtivos.innerHTML = '<tr><td colspan="5"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
     
     try {
-        const response = await fetch(`/emprestimos/usuario/${usuarioId}`, {
+        const response = await fetch(API_BASE_URL + `/emprestimos/usuario/${usuarioId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
             skipLoader: true
         });
@@ -270,7 +270,7 @@ async function carregarReservas(usuarioId, token) {
     tbody.innerHTML = '<tr><td colspan="4"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
 
     try {
-        const response = await fetch(`/reservas/usuario/${usuarioId}`, {
+        const response = await fetch(API_BASE_URL + `/reservas/usuario/${usuarioId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
             skipLoader: true
         });
