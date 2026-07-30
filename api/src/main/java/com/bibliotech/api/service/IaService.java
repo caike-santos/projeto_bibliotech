@@ -202,19 +202,21 @@ public class IaService {
     }
 
     public String gerarRecomendacoesDeClustering(java.util.List<String> livrosLidos, String outrosLeitores, String catalogoDisponivel) {
-        if (livrosLidos == null || livrosLidos.isEmpty()) {
-            return "Para lhe sugerir leituras baseadas em pessoas parecidas com você, leia seu primeiro livro conosco!";
-        }
-
         String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + apiKey.trim();
+        String prompt;
 
-        String titulos = String.join(", ", livrosLidos);
-
-        // Prompt para clustering via IA Gemini
-        String prompt = "Atue como um sistema de recomendação colaborativa (clustering). Um leitor atual leu: [" + titulos + "]. " +
-                        "Aqui estão outros leitores e os livros que eles leram: [" + outrosLeitores + "]. " +
-                        "Analisando os padrões, identifique quais leitores têm gosto semelhante ao leitor atual e recomende 2 livros diferentes que eles leram e que estão no nosso catálogo atual: [" + catalogoDisponivel + "]. " +
-                        "Responda de forma amigável e direta (ex: 'Leitores com o seu perfil também favoritaram...'). Não use markdown.";
+        if (livrosLidos == null || livrosLidos.isEmpty()) {
+            prompt = "Atue como um bibliotecário acolhedor. Um novo leitor acabou de se juntar à biblioteca e ainda não possui histórico de empréstimos, então não podemos cruzar o perfil dele com os outros leitores. " +
+                     "Dê-lhe as boas-vindas de forma empolgante e recomende 2 livros excelentes ou essenciais para ele começar, escolhendo EXCLUSIVAMENTE desta lista do nosso acervo atual: [" + catalogoDisponivel + "]. " +
+                     "Responda de forma direta e concisa (ex: 'Bem-vindo! Como você é novo por aqui, sugiro...'). Não use markdown.";
+        } else {
+            String titulos = String.join(", ", livrosLidos);
+            // Prompt para clustering via IA Gemini
+            prompt = "Atue como um sistema de recomendação colaborativa (clustering). Um leitor atual leu: [" + titulos + "]. " +
+                     "Aqui estão outros leitores e os livros que eles leram: [" + outrosLeitores + "]. " +
+                     "Analisando os padrões, identifique quais leitores têm gosto semelhante ao leitor atual e recomende 2 livros diferentes que eles leram e que estão no nosso catálogo atual: [" + catalogoDisponivel + "]. " +
+                     "Responda de forma amigável e direta (ex: 'Leitores com o seu perfil também favoritaram...'). Não use markdown.";
+        }
 
         String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt.replace("\"", "\\\"").replace("\n", " ") + "\"}]}]}";
 
