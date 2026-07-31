@@ -554,6 +554,7 @@ function renderizarUsuarios() {
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
                         <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: #3B82F6;" onclick="abrirInfoUsuario(${u.id})">Info</button>
                         ${showBlockBtn && !estaBloqueado ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: red;" onclick="inativarUsuario(${u.id})">Bloquear</button>` : ''}
+                        ${showBlockBtn && estaBloqueado ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: var(--primary-color); color: #000;" onclick="desbloquearUsuario(${u.id})">Desbloquear</button>` : ''}
                         ${!showBlockBtn ? '<span style="font-size:0.8rem; color:var(--text-muted);">Sem permissão</span>' : ''}
                     </div>
                 </td>
@@ -632,6 +633,19 @@ async function inativarUsuario(id) {
         carregarDados();
     } catch(e) {
         showToast('Erro ao inativar usuário.', 'error');
+    }
+}
+
+async function desbloquearUsuario(id) {
+    const confirmed = await showCustomConfirm('Desbloquear Usuário', 'Tem certeza que deseja reativar o acesso deste usuário?', 'info');
+    if(!confirmed) return;
+    const token = localStorage.getItem('jwtToken');
+    try {
+        await fetch(API_BASE_URL + `/usuarios/${id}/desbloquear`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}` } });
+        showToast('Usuário desbloqueado com sucesso!', 'success');
+        carregarDados();
+    } catch(e) {
+        showToast('Erro ao desbloquear usuário.', 'error');
     }
 }
 

@@ -142,6 +142,33 @@ public class UsuarioController {
         repository.save(usuario);
     }
 
+    // Rota PATCH para desbloquear/reativar o usuÃ¡rio
+    @org.springframework.web.bind.annotation.PatchMapping("/{id}/desbloquear")
+    public void desbloquearUsuario(@PathVariable Long id) {
+        
+        Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof Usuario)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "UsuÃ¡rio nÃ£o autenticado.");
+        }
+        Usuario usuarioLogado = (Usuario) principal;
+        
+        if (!usuarioLogado.getTipo().equalsIgnoreCase("ADMIN") && !usuarioLogado.getId().equals(id)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.FORBIDDEN, 
+                "VocÃª nÃ£o tem permissÃ£o para desbloquear este usuÃ¡rio."
+            );
+        }
+
+        Usuario usuario = repository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException());
+
+        // Muda o status visual e libera o acesso no Spring Security
+        usuario.setStatus(com.bibliotech.api.model.UsuarioStatus.ATIVO);
+        usuario.setEnabled(true);
+
+        repository.save(usuario);
+    }
+
     // Rota de GamificaÃ§Ã£o (Calcula o nÃ­vel do usuÃ¡rio baseado em emprÃ©stimos)
     @GetMapping("/{id}/gamificacao")
     public ResponseEntity<Map<String, Object>> obterGamificacao(@PathVariable Long id) {
