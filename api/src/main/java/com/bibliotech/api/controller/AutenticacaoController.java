@@ -46,8 +46,15 @@ public class AutenticacaoController {
         // O Spring Security vai lÃ¡ no banco de dados e verifica se a senha bate
         var authentication = manager.authenticate(authenticationToken);
         
-        // Se a senha bater, geramos a pulseira VIP (Token JWT)
+        // Se a senha bater, pegamos o usuário
         var usuario = (Usuario) authentication.getPrincipal();
+        
+        if (!usuario.isEnabled()) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                .body("Sua conta foi bloqueada. Entre em contato com a administração.");
+        }
+        
+        // Geramos a pulseira VIP (Token JWT)
         var tokenJWT = tokenService.gerarToken(usuario);
         
         // Devolvemos o token na tela junto com a role
@@ -90,6 +97,11 @@ public class AutenticacaoController {
                     boasVindas.setLida(false);
                     boasVindas.setDataEnvio(java.time.LocalDateTime.now());
                     notificacaoRepository.save(boasVindas);
+                }
+
+                if (!usuario.isEnabled()) {
+                    return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                        .body("Sua conta foi bloqueada. Entre em contato com a administração.");
                 }
 
                 String tokenJWT = tokenService.gerarToken(usuario);

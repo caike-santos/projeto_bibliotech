@@ -31,7 +31,12 @@ document.getElementById('formLogin').addEventListener('submit', async function(e
                 window.location.href = 'catalogo.html';
             }
         } else {
-            showToast('E-mail ou senha incorretos.', 'error');
+            if (resposta.status === 403) {
+                const msg = await resposta.text();
+                showToast(msg, 'error');
+            } else {
+                showToast('E-mail ou senha incorretos.', 'error');
+            }
             restaurarBotao(btnSubmit, textoOriginal);
         }
     } catch (error) {
