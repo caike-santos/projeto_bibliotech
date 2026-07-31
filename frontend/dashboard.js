@@ -319,7 +319,7 @@ async function inativarLivro(id) {
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(`/livros/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(API_BASE_URL + `/livros/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
         showToast('Livro inativado com sucesso.', 'info');
         carregarDados();
     } catch(e) {
@@ -332,7 +332,7 @@ async function excluirLivroDefinitivo(id) {
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        const response = await fetch(`/livros/hard/${id}`, { 
+        const response = await fetch(API_BASE_URL + `/livros/hard/${id}`, { 
             method: 'DELETE', 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
@@ -594,7 +594,7 @@ async function inativarUsuario(id) {
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(`/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(API_BASE_URL + `/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
         showToast('Usuário inativado com sucesso.', 'info');
         carregarDados();
     } catch(e) {
@@ -636,7 +636,7 @@ async function forcarDevolucao(id) {
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(`/emprestimos/${id}/devolver`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(API_BASE_URL + `/emprestimos/${id}/devolver`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
         showToast('Devolução confirmada com sucesso.', 'success');
         carregarDados();
     } catch(e) {
@@ -649,7 +649,7 @@ async function confirmarRetirada(id) {
     if(!confirmed) return;
     const token = localStorage.getItem('jwtToken');
     try {
-        const res = await fetch(`/emprestimos/${id}/confirmar-retirada`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(API_BASE_URL + `/emprestimos/${id}/confirmar-retirada`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
         if(res.ok) {
             showToast('Retirada confirmada! Prazo iniciado.', 'success');
             carregarDados();

@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await resUser.json();
         
         if (user) {
-            window.dadosUsuarioGlobal = user;
+            dadosUsuarioGlobal = user;
             document.getElementById('perfilNome').innerText = user.nome;
             localStorage.setItem('userName', user.nome);
             await carregarGamificacao(user.id, token);
