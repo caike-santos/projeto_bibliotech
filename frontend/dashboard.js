@@ -45,6 +45,10 @@ function verificarAcesso() {
         if(navAcervo) navAcervo.style.display = 'none';
         if(navUsuarios) navUsuarios.style.display = 'none';
         if(navEmprestimos) navEmprestimos.style.display = 'none';
+    } else {
+        // Se FOR Admin/Bibliotecário, escondemos o botão de voltar ao catálogo
+        const navVoltarCatalogo = document.getElementById('navVoltarCatalogo');
+        if (navVoltarCatalogo) navVoltarCatalogo.style.display = 'none';
     }
 }
 
@@ -230,7 +234,7 @@ function atualizarDashboard() {
         },
         options: {
             responsive: true,
-            plugins: { legend: { position: 'right', labels: { color: 'var(--text-color)' } } }
+            plugins: { legend: { position: 'right', labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#F3F4F6' } } }
         }
     });
 }
