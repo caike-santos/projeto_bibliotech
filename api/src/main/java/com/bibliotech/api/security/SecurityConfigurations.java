@@ -71,7 +71,7 @@ public class SecurityConfigurations {
             "http://127.0.0.1:5500", 
             "http://localhost:5500"
         ));
-        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         
         // Alteramos para "*" para aceitar qualquer cabeçalho que o navegador mandar no Preflight
         configuration.setAllowedHeaders(java.util.Arrays.asList("*")); 
