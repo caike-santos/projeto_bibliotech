@@ -305,9 +305,14 @@
 
             <!-- USUARIOS -->
             <section id="usuarios" class="section">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <h2>Gestão de Leitores e Equipe</h2>
-                    <button id="btnNovoUsuario" class="btn-primary" onclick="abrirModalCadastroUsuario()" style="width: auto; padding: 0.5rem 1rem;">+ Novo Usuário</button>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.9rem; cursor: pointer;">
+                            <input type="checkbox" id="checkMostrarInativos" onchange="renderizarUsuarios()" style="accent-color: var(--primary-color);"> Mostrar Inativos
+                        </label>
+                        <button id="btnNovoUsuario" class="btn-primary" onclick="abrirModalCadastroUsuario()" style="width: auto; padding: 0.5rem 1rem;">+ Novo Usuário</button>
+                    </div>
                 </div>
                 <div class="card table-container">
                     <table>
@@ -569,6 +574,33 @@
 
         <button class="btn-primary" id="btnSalvarUsuario" onclick="cadastrarUsuarioInterno()">Criar Usuário</button>
         <button class="btn-primary" onclick="fecharModais()" style="margin-top:0.5rem; background:transparent; color:var(--text-color); border:1px solid var(--border-color);">Cancelar</button>
+    </div>
+    <!-- MODAL INFO USUARIO -->
+    <div class="modal" id="modalInfoUsuario" style="max-height: 90vh; overflow-y: auto;">
+        <h2>Informações do Leitor</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; margin-bottom: 1.5rem; text-align: left;">
+            <div>
+                <label style="font-size: 0.8rem; color: var(--text-muted);">Nome</label>
+                <div id="infoUserNome" style="font-weight: bold; font-size: 1.1rem; color: var(--primary-color);"></div>
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; color: var(--text-muted);">Status</label>
+                <div id="infoUserStatus" style="font-weight: bold; font-size: 1.1rem;"></div>
+            </div>
+            <div style="grid-column: span 2;">
+                <label style="font-size: 0.8rem; color: var(--text-muted);">E-mail</label>
+                <div id="infoUserEmail" style="font-size: 1rem;"></div>
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; color: var(--text-muted);">Cargo / Tipo</label>
+                <div id="infoUserTipo" style="font-size: 1rem;"></div>
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; color: var(--text-muted);">Pontos (Gamificação)</label>
+                <div id="infoUserPontos" style="font-size: 1.1rem; color: #F59E0B; font-weight: bold;"></div>
+            </div>
+        </div>
+        <button class="btn-primary" onclick="fecharModais()" style="width: 100%;">Fechar</button>
     </div>
 
     <script src="toast.js"></script>

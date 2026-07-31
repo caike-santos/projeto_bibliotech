@@ -516,16 +516,21 @@ async function salvarEdicaoLivro() {
 function renderizarUsuarios() {
     const currentUserRole = localStorage.getItem('userRole') || 'LEITOR';
     const tbody = document.getElementById('tabelaUsuarios');
+    const mostrarInativos = document.getElementById('checkMostrarInativos') ? document.getElementById('checkMostrarInativos').checked : false;
     tbody.innerHTML = '';
     
     // Bibliotecário não vê admins
-    const usuariosFiltrados = usuarios.filter(u => {
+    let usuariosFiltrados = usuarios.filter(u => {
         if (currentUserRole === 'BIBLIOTECARIO' && u.tipo === 'ADMIN') return false;
         return true;
     });
 
+    // Filtra inativos pelo checkbox
+    if (!mostrarInativos) {
+        usuariosFiltrados = usuariosFiltrados.filter(u => u.status !== 'INATIVO' && u.enabled !== false);
+    }
+
     // Se for bibliotecário, oculta o botão de "Novo Usuário" (ou restringe)
-    // Conforme pedido: "só admin tenha a função de cadastrar funcionarios e admin"
     const btnNovoUser = document.getElementById('btnNovoUsuario');
     if (btnNovoUser) {
         btnNovoUser.style.display = currentUserRole === 'ADMIN' ? 'inline-block' : 'none';
@@ -535,22 +540,46 @@ function renderizarUsuarios() {
         // Bibliotecário não bloqueia outros bibliotecários
         let showBlockBtn = true;
         if (currentUserRole === 'BIBLIOTECARIO' && u.tipo !== 'LEITOR') showBlockBtn = false;
+        // Se já está inativo, talvez seja bom ocultar ou desabilitar o botão de bloquear? O botão fica! 
+        // O user apenas pediu pra listar e ver info.
+        const estaBloqueado = u.status === 'INATIVO' || !u.enabled;
         
         tbody.innerHTML += `
             <tr>
                 <td data-label="ID">${u.id}</td>
                 <td data-label="Nome">${u.nome} <span style="font-size:0.7rem; color:var(--text-muted);">(${u.tipo || 'LEITOR'})</span></td>
                 <td data-label="E-mail">${u.email}</td>
-                <td data-label="Status"><span style="color: ${u.status === 'INATIVO' || !u.enabled ? 'red' : 'var(--primary-color)'}">${u.status}</span></td>
+                <td data-label="Status"><span style="color: ${estaBloqueado ? 'red' : 'var(--primary-color)'}">${estaBloqueado ? 'BLOQUEADO' : 'ATIVO'}</span></td>
                 <td data-label="Ações">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                        ${showBlockBtn ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: red;" onclick="inativarUsuario(${u.id})">Bloquear</button>` : '<span style="font-size:0.8rem; color:var(--text-muted);">Sem permissão</span>'}
+                        <button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: #3B82F6;" onclick="abrirInfoUsuario(${u.id})">Info</button>
+                        ${showBlockBtn && !estaBloqueado ? `<button class="btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; background: red;" onclick="inativarUsuario(${u.id})">Bloquear</button>` : ''}
+                        ${!showBlockBtn ? '<span style="font-size:0.8rem; color:var(--text-muted);">Sem permissão</span>' : ''}
                     </div>
                 </td>
             </tr>
         `;
     });
 }
+
+function abrirInfoUsuario(id) {
+    const usuario = usuarios.find(u => u.id === id);
+    if(!usuario) return;
+    
+    document.getElementById('infoUserNome').innerText = usuario.nome;
+    document.getElementById('infoUserEmail').innerText = usuario.email;
+    document.getElementById('infoUserTipo').innerText = usuario.tipo || 'LEITOR';
+    document.getElementById('infoUserPontos').innerText = usuario.pontosGamificacao || '0';
+    
+    const statusEl = document.getElementById('infoUserStatus');
+    const estaBloqueado = usuario.status === 'INATIVO' || !usuario.enabled;
+    statusEl.innerText = estaBloqueado ? 'BLOQUEADO' : 'ATIVO';
+    statusEl.style.color = estaBloqueado ? 'red' : 'var(--primary-color)';
+    
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('modalInfoUsuario').classList.add('active');
+}
+
 
 async function cadastrarUsuarioInterno() {
     const nome = document.getElementById('cadUserNome').value.trim();

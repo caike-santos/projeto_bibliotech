@@ -53,8 +53,7 @@ public class UsuarioController {
     // Rota para LISTAR TODOS (GET)
     @GetMapping
     public List<Usuario> listarUsuarios() {
-        // O findByEnabledTrue() vai no banco, pega todos os registros com enabled=true e converte para uma lista JSON!
-        return repository.findByEnabledTrue();
+        return repository.findAll();
     }
     // Rota para LISTAR UM USUÃRIO ESPECÃFICO (GET) com tratamento de erro 404
     @GetMapping("/{id}")
