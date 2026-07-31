@@ -17,6 +17,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    const userRole = localStorage.getItem('userRole') || '';
+    if (userRole === 'ADMIN' || userRole === 'BIBLIOTECARIO') {
+        const linkVoltar = document.getElementById('linkVoltar');
+        if (linkVoltar) {
+            linkVoltar.href = 'dashboard.html';
+            linkVoltar.innerHTML = '<i class="ph ph-arrow-left"></i> Voltar ao Dashboard';
+        }
+    }
+
     try {
         const base64Url = token.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
