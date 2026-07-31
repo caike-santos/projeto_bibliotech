@@ -200,6 +200,29 @@ public class EmprestimoService {
         emprestimo.setDataDevolucaoPrevista(LocalDate.now().plusDays(14));
         return emprestimoRepository.save(emprestimo);
     }
+
+    @Transactional
+    public Emprestimo cancelarEmprestimo(Long emprestimoId, Long usuarioLogadoId, boolean isAdmin) {
+        Emprestimo emprestimo = emprestimoRepository.findById(emprestimoId)
+                .orElseThrow(() -> new RuntimeException("Empréstimo não encontrado."));
+
+        if (!isAdmin && !emprestimo.getUsuario().getId().equals(usuarioLogadoId)) {
+            throw new RuntimeException("Acesso negado: você só pode cancelar os seus próprios pedidos.");
+        }
+
+        if (!com.bibliotech.api.model.EmprestimoStatus.AGUARDANDO_RETIRADA.equals(emprestimo.getStatus())) {
+            throw new RuntimeException("Apenas empréstimos aguardando retirada podem ser cancelados.");
+        }
+
+        emprestimo.setStatus(com.bibliotech.api.model.EmprestimoStatus.CANCELADO);
+        
+        // Devolve livro pro acervo
+        Livro livro = emprestimo.getLivro();
+        livro.setQuantidadeDisponivel(livro.getQuantidadeDisponivel() + 1);
+        livroRepository.save(livro);
+
+        return emprestimoRepository.save(emprestimo);
+    }
 }
 
 

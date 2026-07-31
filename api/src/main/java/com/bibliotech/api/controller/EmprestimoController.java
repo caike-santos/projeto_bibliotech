@@ -69,6 +69,18 @@ public class EmprestimoController {
         return service.confirmarRetirada(id);
     }
 
+    @PutMapping("/{id}/cancelar")
+    public Emprestimo cancelarEmprestimo(@PathVariable Long id) {
+        Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof com.bibliotech.api.model.Usuario)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Usuário não autenticado.");
+        }
+        com.bibliotech.api.model.Usuario usuarioLogado = (com.bibliotech.api.model.Usuario) principal;
+        boolean isAdmin = usuarioLogado.getTipo().equalsIgnoreCase("ADMIN") || usuarioLogado.getTipo().equalsIgnoreCase("BIBLIOTECARIO");
+        
+        return service.cancelarEmprestimo(id, usuarioLogado.getId(), isAdmin);
+    }
+
     private void verificarPermissaoUsuario(Long usuarioIdAlvo) {
         Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof com.bibliotech.api.model.Usuario)) {

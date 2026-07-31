@@ -218,6 +218,8 @@ async function carregarHistorico(usuarioId, token) {
                     } else {
                         acoes = '<span style="font-size: 0.75rem; color: var(--text-muted);">Já renovado</span>';
                     }
+                } else if (emp.status === 'AGUARDANDO_RETIRADA') {
+                    acoes = `<button class="btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background-color: #EF4444; border-color: #EF4444; color: white;" onclick="cancelarEmprestimo(${emp.id})">Cancelar Pedido</button>`;
                 } else if (isAtrasado) {
                     acoes = '<span style="font-size: 0.75rem; color: #EF4444;">Bloqueado</span>';
                 } else if (isAguardando) {
@@ -319,4 +321,30 @@ async function carregarReservas(usuarioId, token) {
     }
 }
 
+window.cancelarEmprestimo = async function(id) {
+    if (!confirm('Tem certeza que deseja cancelar este pedido? O livro será devolvido ao acervo e você perderá sua reserva.')) return;
+    
+    const token = localStorage.getItem('jwtToken');
+    if (!token) return;
 
+    try {
+        const response = await fetch(API_BASE_URL + `/emprestimos/${id}/cancelar`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            showToast('Pedido cancelado com sucesso. Livro devolvido ao acervo!', 'success');
+            if (dadosUsuarioGlobal) {
+                await carregarHistorico(dadosUsuarioGlobal.id, token);
+            }
+        } else {
+            const err = await response.text();
+            showToast('Falha ao cancelar: ' + err, 'error');
+        }
+    } catch (e) {
+        showToast('Erro de conexão ao tentar cancelar o pedido.', 'error');
+    }
+};
