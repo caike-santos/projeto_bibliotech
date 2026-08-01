@@ -22,15 +22,15 @@ public class NotificacaoTask {
         this.notificacaoRepository = notificacaoRepository;
     }
 
-    // Roda todos os dias Ã  meia-noite
+    // Roda todos os dias à meia-noite
     @Scheduled(cron = "0 0 0 * * ?")
     public void gerarAlertasVencimentoProximo() {
         // Data alvo: Daqui a exatos 2 dias
         LocalDate dataAlvo = LocalDate.now().plusDays(2);
         
-        System.out.println("Iniciando rotina de cobranÃ§a: Buscando emprÃ©stimos que vencem em " + dataAlvo);
+        System.out.println("Iniciando rotina de cobrança: Buscando empréstimos que vencem em " + dataAlvo);
 
-        // Busca emprÃ©stimos que estÃ£o ATIVOS e com a data de devoluÃ§Ã£o prevista para a data alvo
+        // Busca empréstimos que estão ATIVOS e com a data de devolução prevista para a data alvo
         List<Emprestimo> emprestimosPertoDoVencimento = emprestimoRepository.findByDataDevolucaoPrevistaAndStatus(dataAlvo, com.bibliotech.api.model.EmprestimoStatus.ATIVO);
 
         for (Emprestimo emprestimo : emprestimosPertoDoVencimento) {
@@ -38,15 +38,15 @@ public class NotificacaoTask {
             
             Notificacao aviso = new Notificacao();
             aviso.setUsuario(emprestimo.getUsuario());
-            aviso.setMensagem("Aviso: Seu emprÃ©stimo do livro '" + tituloLivro + "' vence em 2 dias! NÃ£o esqueÃ§a de devolver no balcÃ£o.");
+            aviso.setMensagem("Aviso: Seu empréstimo do livro '" + tituloLivro + "' vence em 2 dias! Não esqueça de devolver no balcão.");
             aviso.setDataEnvio(LocalDateTime.now());
             aviso.setLida(false);
             
             notificacaoRepository.save(aviso);
-            System.out.println("Alerta gerado para o usuÃ¡rio " + emprestimo.getUsuario().getEmail() + " referente ao livro " + tituloLivro);
+            System.out.println("Alerta gerado para o usuário " + emprestimo.getUsuario().getEmail() + " referente ao livro " + tituloLivro);
         }
         
-        System.out.println("Rotina de cobranÃ§a finalizada. Foram gerados " + emprestimosPertoDoVencimento.size() + " alertas.");
+        System.out.println("Rotina de cobrança finalizada. Foram gerados " + emprestimosPertoDoVencimento.size() + " alertas.");
     }
 }
 

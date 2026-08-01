@@ -1,10 +1,7 @@
 package com.bibliotech.api.model;
 
 import java.util.Collection;
-
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
-
 import jakarta.persistence.*;
 
 @Entity // Avisa ao Spring que esta classe vai virar uma tabela no banco
@@ -21,6 +18,7 @@ public class Usuario implements org.springframework.security.core.userdetails.Us
     @Column(nullable = false, unique = true, length = 100) // E-mail único para cada usuário
     private String email;
 
+    //o @JsonIgnore evita que a senha seja exposta em respostas JSON
     @com.fasterxml.jackson.annotation.JsonIgnore
     @Column(nullable = false)
     private String senha;
@@ -29,6 +27,7 @@ public class Usuario implements org.springframework.security.core.userdetails.Us
     private String tipo; // ADMIN, BIBLIOTECARIO ou LEITOR
 
     @Column(nullable = false)
+    // Define que o campo é do tipo ENUM no banco, e que os valores serão armazenados como Strings
     @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
     private UsuarioStatus status; // Ex: ATIVO, INATIVO
 

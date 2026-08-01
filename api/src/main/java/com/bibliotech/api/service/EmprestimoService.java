@@ -27,9 +27,8 @@ public class EmprestimoService {
     private final ReservaRepository reservaRepository;
     private final NotificacaoRepository notificacaoRepository;
 
-    public EmprestimoService(EmprestimoRepository emprestimoRepository, UsuarioRepository usuarioRepository, 
-                             LivroRepository livroRepository, ReservaRepository reservaRepository, 
-                             NotificacaoRepository notificacaoRepository) {
+    public EmprestimoService(EmprestimoRepository emprestimoRepository, UsuarioRepository usuarioRepository, LivroRepository livroRepository, ReservaRepository reservaRepository, 
+    NotificacaoRepository notificacaoRepository) {
         this.emprestimoRepository = emprestimoRepository;
         this.usuarioRepository = usuarioRepository;
         this.livroRepository = livroRepository;
@@ -43,31 +42,33 @@ public class EmprestimoService {
 
         int quantidadeAtivos = emprestimoRepository.countByUsuarioIdAndStatus(usuarioId, com.bibliotech.api.model.EmprestimoStatus.ATIVO);
         if (quantidadeAtivos >= 3) {
-            throw new RuntimeException("Limite excedido: O leitor jÃ¡ possui 3 livros emprestados.");
+            throw new RuntimeException("Limite excedido: O leitor já possui 3 livros emprestados.");
         }
 
         if (emprestimoRepository.existsByUsuarioIdAndStatus(usuarioId, com.bibliotech.api.model.EmprestimoStatus.ATRASADO)) {
-            throw new RuntimeException("Bloqueado: O leitor possui livros em atraso e precisa regularizar sua situaÃ§Ã£o.");
+            throw new RuntimeException("Bloqueado: O leitor possui livros em atraso e precisa regularizar sua situação.");
         }
 
         Livro livro = livroRepository.findById(novoEmprestimo.getLivro().getId())
-                .orElseThrow(() -> new RuntimeException("Livro nÃ£o encontrado no sistema."));
+                .orElseThrow(() -> new RuntimeException("Livro não encontrado no sistema."));
 
         if (emprestimoRepository.existsByUsuarioIdAndLivroIdAndStatusIn(usuarioId, livro.getId(), java.util.Arrays.asList(com.bibliotech.api.model.EmprestimoStatus.ATIVO, com.bibliotech.api.model.EmprestimoStatus.ATRASADO, com.bibliotech.api.model.EmprestimoStatus.AGUARDANDO_RETIRADA))) {
-            throw new RuntimeException("OperaÃ§Ã£o negada: VocÃª jÃ¡ possui (ou solicitou) um exemplar deste livro.");
+            throw new RuntimeException("Operação negada: Você já possui (ou solicitou) um exemplar deste livro.");
         }
 
-        // --- NOVA REGRA: VERIFICA SE O USUÃRIO Ã‰ O DONO DA RESERVA ---
+        //VERIFICA SE O USUÁRIO É O DONO DA RESERVA ---
+        //Se a reserva estiver NOTIFICADO, ele é o primeiro da fila. 
         java.util.Optional<Reserva> reservaNotificada = reservaRepository.findFirstByUsuarioIdAndLivroIdAndStatus(usuarioId, livro.getId(), com.bibliotech.api.model.ReservaStatus.NOTIFICADO);
+        //Se a reserva estiver AGUARDANDO, ele está na fila, mas não é o primeiro.
         java.util.Optional<Reserva> reservaAguardando = reservaRepository.findFirstByUsuarioIdAndLivroIdAndStatus(usuarioId, livro.getId(), com.bibliotech.api.model.ReservaStatus.AGUARDANDO);
 
         if (reservaNotificada.isPresent()) {
-            // Ã‰ a pessoa da fila! Libera o emprÃ©stimo e conclui a reserva.
+            // É a primeira pessoa da fila! Libera o empréstimo e conclui a reserva.
             Reserva reserva = reservaNotificada.get();
             reserva.setStatus(com.bibliotech.api.model.ReservaStatus.CONCLUIDA);
             reservaRepository.save(reserva);
             
-            // Marca a notificaÃ§Ã£o como lida automaticamente
+            // Marca a notificação como lida automaticamente
             List<Notificacao> notifs = notificacaoRepository.findByUsuarioIdOrderByDataEnvioDesc(usuarioId);
             for (Notificacao n : notifs) {
                 if (!n.isLida() && n.getMensagem().contains(livro.getTitulo())) {
@@ -75,13 +76,13 @@ public class EmprestimoService {
                     notificacaoRepository.save(n);
                 }
             }
-            // AtenÃ§Ã£o: NÃ£o diminuÃ­mos o estoque aqui porque ele jÃ¡ foi "congelado" na devoluÃ§Ã£o!
+            // Atenção: Não diminuímos o estoque aqui porque ele já foi "congelado" na devolução!
         } else {
-            // Ã‰ um usuÃ¡rio comum tentando pegar o livro
+            // É um usuário comum tentando pegar o livro
             if (livro.getQuantidadeDisponivel() <= 0) {
-                throw new RuntimeException("OperaÃ§Ã£o negada: O livro '" + livro.getTitulo() + "' estÃ¡ sem estoque no momento.");
+                throw new RuntimeException("Operação negada: O livro '" + livro.getTitulo() + "' está sem estoque no momento.");
             }
-            // Se ele estava sÃ³ aguardando, mas pegou o livro (alguÃ©m devolveu outra cÃ³pia, por ex), resolvemos a fila.
+            // Se ele estava só aguardando, mas pegou o livro (alguém devolveu outra cópia, por ex), resolvemos a fila.
             if (reservaAguardando.isPresent()) {
                 Reserva r = reservaAguardando.get();
                 r.setStatus(com.bibliotech.api.model.ReservaStatus.CONCLUIDA);
@@ -103,20 +104,20 @@ public class EmprestimoService {
 
     public Emprestimo renovarEmprestimo(Long emprestimoId) {
         Emprestimo emprestimo = emprestimoRepository.findById(emprestimoId)
-                .orElseThrow(() -> new RuntimeException("EmprÃ©stimo nÃ£o encontrado."));
+                .orElseThrow(() -> new RuntimeException("Empréstimo não encontrado."));
 
         if (emprestimoRepository.existsByUsuarioIdAndStatus(emprestimo.getUsuario().getId(), com.bibliotech.api.model.EmprestimoStatus.ATRASADO)) {
-            throw new RuntimeException("Bloqueado: O leitor nÃ£o pode fazer renovaÃ§Ãµes pois possui livros em atraso.");
+            throw new RuntimeException("Bloqueado: O leitor não pode fazer renovações pois possui livros em atraso.");
         }
 
         if (emprestimo.getRenovacoesFeitas() >= 1) {
-            throw new RuntimeException("Limite de renovaÃ§Ã£o: Este livro jÃ¡ foi renovado o limite mÃ¡ximo de vezes permitidas.");
+            throw new RuntimeException("Limite de renovação: Este livro já foi renovado o limite máximo de vezes permitidas.");
         }
         
-        // RN07 - Bloqueio de renovaÃ§Ã£o se houver fila de espera
+        // RN07 - Bloqueio de renovação se houver fila de espera
         boolean temFilaDeEspera = reservaRepository.existsByLivroIdAndStatus(emprestimo.getLivro().getId(), com.bibliotech.api.model.ReservaStatus.AGUARDANDO);
         if (temFilaDeEspera) {
-            throw new RuntimeException("RenovaÃ§Ã£o negada: HÃ¡ leitores na fila de espera aguardando este livro.");
+            throw new RuntimeException("Renovação negada: Há leitores na fila de espera aguardando este livro.");
         }
 
         emprestimo.setRenovacoesFeitas(emprestimo.getRenovacoesFeitas() + 1);
@@ -128,14 +129,13 @@ public class EmprestimoService {
     @Transactional
     public Emprestimo devolverLivro(Long emprestimoId) {
         Emprestimo emprestimo = emprestimoRepository.findById(emprestimoId)
-                .orElseThrow(() -> new RuntimeException("EmprÃ©stimo nÃ£o encontrado com o ID: " + emprestimoId));
+                .orElseThrow(() -> new RuntimeException("Empréstimo não encontrado com o ID: " + emprestimoId));
 
         if (com.bibliotech.api.model.EmprestimoStatus.DEVOLVIDO.equals(emprestimo.getStatus())) {
-            throw new RuntimeException("Este livro jÃ¡ consta como devolvido no sistema.");
+            throw new RuntimeException("Este livro já consta como devolvido no sistema.");
         }
 
-        boolean oLivroFoiRetirado = com.bibliotech.api.model.EmprestimoStatus.ATIVO.equals(emprestimo.getStatus()) || 
-                                    com.bibliotech.api.model.EmprestimoStatus.ATRASADO.equals(emprestimo.getStatus());
+        boolean oLivroFoiRetirado = com.bibliotech.api.model.EmprestimoStatus.ATIVO.equals(emprestimo.getStatus()) || com.bibliotech.api.model.EmprestimoStatus.ATRASADO.equals(emprestimo.getStatus());
 
         emprestimo.setDataDevolucaoReal(LocalDate.now());
         emprestimo.setStatus(com.bibliotech.api.model.EmprestimoStatus.DEVOLVIDO);
@@ -143,7 +143,7 @@ public class EmprestimoService {
         Livro livro = emprestimo.getLivro();
         livro.setQuantidadeDisponivel(livro.getQuantidadeDisponivel() + 1);
         
-        // --- NOVA REGRA: AVISAR A FILA DE ESPERA ---
+        // --- AVISAR A FILA DE ESPERA ---
         List<Reserva> fila = reservaRepository.findByLivroIdAndStatusOrderByDataSolicitacaoAsc(livro.getId(), com.bibliotech.api.model.ReservaStatus.AGUARDANDO);
         
         if (!fila.isEmpty()) {
@@ -155,12 +155,12 @@ public class EmprestimoService {
             // Gera o alerta no sistema
             Notificacao aviso = new Notificacao();
             aviso.setUsuario(proximoDaFila.getUsuario());
-            aviso.setMensagem("Boas notÃ­cias! O livro '" + livro.getTitulo() + "' que vocÃª reservou acabou de ser devolvido. Ele estÃ¡ reservado para vocÃª no balcÃ£o por 48 horas.");
+            aviso.setMensagem("Boas notícias! O livro '" + livro.getTitulo() + "' que você reservou acabou de ser devolvido. Ele está reservado para você no balcão por 48 horas.");
             aviso.setDataEnvio(java.time.LocalDateTime.now());
             aviso.setLida(false);
             notificacaoRepository.save(aviso);
             
-            // "Congela" o livro para o prÃ³ximo da fila, impedindo que outro leitor pegue antes
+            // "Congela" o livro para o próximo da fila, impedindo que outro leitor pegue antes
             livro.setQuantidadeDisponivel(livro.getQuantidadeDisponivel() - 1);
         }
 
@@ -189,10 +189,10 @@ public class EmprestimoService {
     @Transactional
     public Emprestimo confirmarRetirada(Long emprestimoId) {
         Emprestimo emprestimo = emprestimoRepository.findById(emprestimoId)
-                .orElseThrow(() -> new RuntimeException("EmprÃ©stimo nÃ£o encontrado."));
+                .orElseThrow(() -> new RuntimeException("Empréstimo não encontrado."));
 
         if (!com.bibliotech.api.model.EmprestimoStatus.AGUARDANDO_RETIRADA.equals(emprestimo.getStatus())) {
-            throw new RuntimeException("Este emprÃ©stimo nÃ£o estÃ¡ aguardando retirada.");
+            throw new RuntimeException("Este empréstimo não está aguardando retirada.");
         }
 
         emprestimo.setStatus(com.bibliotech.api.model.EmprestimoStatus.ATIVO);

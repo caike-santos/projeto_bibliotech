@@ -14,10 +14,10 @@ import java.util.Map;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/usuarios") // Todas as URLs dessa classe vÃ£o comeÃ§ar com /usuarios
+@RequestMapping("/usuarios") // Todas as URLs dessa classe vão começar com /usuarios
 public class UsuarioController {
 
-    // Injeta o repository automaticamente (o Spring instancia para nÃ³s)
+    // Injeta o repository automaticamente (o Spring instancia para nós)
     private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final EmprestimoRepository emprestimoRepository;
@@ -30,18 +30,18 @@ public class UsuarioController {
         this.notificacaoRepository = notificacaoRepository;
     }
 
-    // Rota para CADASTRAR um usuÃ¡rio (MÃ©todo POST)
+    // Rota para CADASTRAR um usuário (Método POST)
     @PostMapping
     public Usuario cadastrarUsuario(@RequestBody Usuario novoUsuario) {
         String senhaCriptografada = passwordEncoder.encode(novoUsuario.getSenha());
         novoUsuario.setSenha(senhaCriptografada);
         Usuario usuarioSalvo = repository.save(novoUsuario);
 
-        // Gera notificaÃ§Ã£o de Boas-vindas automÃ¡tica
+        // Gera notificação de Boas-vindas automática
         if ("LEITOR".equalsIgnoreCase(usuarioSalvo.getTipo())) {
             Notificacao boasVindas = new Notificacao();
             boasVindas.setUsuario(usuarioSalvo);
-            boasVindas.setMensagem("Bem-vindo ao BiblioTech AI! Explore nosso catÃ¡logo e converse com a Lumina para receber recomendaÃ§Ãµes personalizadas.");
+            boasVindas.setMensagem("Bem-vindo ao BiblioTech AI! Explore nosso catálogo e converse com a Lumina para receber recomendações personalizadas.");
             boasVindas.setDataEnvio(LocalDateTime.now());
             boasVindas.setLida(false);
             notificacaoRepository.save(boasVindas);
@@ -55,7 +55,7 @@ public class UsuarioController {
     public List<Usuario> listarUsuarios() {
         return repository.findAll();
     }
-    // Rota para LISTAR UM USUÃRIO ESPECÃFICO (GET) com tratamento de erro 404
+    // Rota para LISTAR UM USUÁRIO ESPECÍFICO (GET) com tratamento de erro 404
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> buscarUsuarioPorId(@PathVariable Long id) {
         Usuario usuario = repository.findById(id)
@@ -64,49 +64,49 @@ public class UsuarioController {
         return ResponseEntity.ok(usuario);
     }
 
-    // Rota para o usuÃ¡rio logado pegar seus prÃ³prios dados
+    // Rota para o usuário logado pegar seus próprios dados
     @GetMapping("/me")
     public ResponseEntity<Usuario> buscarUsuarioLogado() {
         Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof Usuario)) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "UsuÃ¡rio nÃ£o autenticado.");
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Usuário não autenticado.");
         }
         return ResponseEntity.ok((Usuario) principal);
     }
 
-    // Rota PUT para atualizar dados do usuÃ¡rio
+    // Rota PUT para atualizar dados do usuário
     @PutMapping("/{id}")
     public Usuario atualizarUsuario(@PathVariable Long id, @RequestBody Usuario usuarioAtualizado) {
         
         Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof Usuario)) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "UsuÃ¡rio nÃ£o autenticado.");
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Usuário não autenticado.");
         }
         Usuario usuarioLogado = (Usuario) principal;
         
         if (!usuarioLogado.getTipo().equalsIgnoreCase("ADMIN") && !usuarioLogado.getId().equals(id)) {
             throw new org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.FORBIDDEN, 
-                "VocÃª nÃ£o tem permissÃ£o para alterar os dados de outro usuÃ¡rio."
+                "Você não tem permissão para alterar os dados de outro usuário."
             );
         }
 
         Usuario usuarioExistente = repository.findById(id)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException());
 
-        // ProteÃ§Ã£o: se nÃ£o for admin, nÃ£o pode alterar o prÃ³prio tipo ou status
+        // Proteção: se não for admin, não pode alterar o próprio tipo ou status
         if (!usuarioLogado.getTipo().equalsIgnoreCase("ADMIN")) {
             usuarioAtualizado.setTipo(usuarioExistente.getTipo());
             usuarioAtualizado.setStatus(usuarioExistente.getStatus());
         }
 
-        // Atualiza os dados bÃ¡sicos
+        // Atualiza os dados básicos
         usuarioExistente.setNome(usuarioAtualizado.getNome());
         usuarioExistente.setEmail(usuarioAtualizado.getEmail());
         usuarioExistente.setTipo(usuarioAtualizado.getTipo());
         usuarioExistente.setStatus(usuarioAtualizado.getStatus());
 
-        // Se o usuÃ¡rio mandou uma senha na requisiÃ§Ã£o (nÃ£o estÃ¡ nula nem vazia), atualiza o Hash
+        // Se o usuário mandou uma senha na requisição (não está nula nem vazia), atualiza o Hash
         if (usuarioAtualizado.getSenha() != null && !usuarioAtualizado.getSenha().trim().isEmpty()) {
             String senhaCriptografada = passwordEncoder.encode(usuarioAtualizado.getSenha());
             usuarioExistente.setSenha(senhaCriptografada);
@@ -115,20 +115,20 @@ public class UsuarioController {
         return repository.save(usuarioExistente);
     }
 
-    // Rota DELETE (Soft Delete) para inativar o usuÃ¡rio sem perder o histÃ³rico
+    // Rota DELETE (Soft Delete) para inativar o usuário sem perder o histórico
     @DeleteMapping("/{id}")
     public void inativarUsuario(@PathVariable Long id) {
         
         Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof Usuario)) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "UsuÃ¡rio nÃ£o autenticado.");
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Usuário não autenticado.");
         }
         Usuario usuarioLogado = (Usuario) principal;
         
         if (!usuarioLogado.getTipo().equalsIgnoreCase("ADMIN") && !usuarioLogado.getId().equals(id)) {
             throw new org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.FORBIDDEN, 
-                "VocÃª nÃ£o tem permissÃ£o para inativar outro usuÃ¡rio."
+                "Você não tem permissão para inativar outro usuário."
             );
         }
 
@@ -142,20 +142,20 @@ public class UsuarioController {
         repository.save(usuario);
     }
 
-    // Rota PATCH para desbloquear/reativar o usuÃ¡rio
+    // Rota PATCH para desbloquear/reativar o usuário
     @org.springframework.web.bind.annotation.PatchMapping("/{id}/desbloquear")
     public void desbloquearUsuario(@PathVariable Long id) {
         
         Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof Usuario)) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "UsuÃ¡rio nÃ£o autenticado.");
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Usuário não autenticado.");
         }
         Usuario usuarioLogado = (Usuario) principal;
         
         if (!usuarioLogado.getTipo().equalsIgnoreCase("ADMIN") && !usuarioLogado.getId().equals(id)) {
             throw new org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.FORBIDDEN, 
-                "VocÃª nÃ£o tem permissÃ£o para desbloquear este usuÃ¡rio."
+                "Você não tem permissão para desbloquear este usuário."
             );
         }
 
@@ -169,13 +169,13 @@ public class UsuarioController {
         repository.save(usuario);
     }
 
-    // Rota de GamificaÃ§Ã£o (Calcula o nÃ­vel do usuÃ¡rio baseado em emprÃ©stimos)
+    // Rota de Gamificação (Calcula o nível do usuário baseado em empréstimos)
     @GetMapping("/{id}/gamificacao")
     public ResponseEntity<Map<String, Object>> obterGamificacao(@PathVariable Long id) {
-        // Verifica se o usuÃ¡rio existe
+        // Verifica se o usuário existe
         repository.findById(id).orElseThrow(() -> new jakarta.persistence.EntityNotFoundException());
 
-        // Busca o nÃºmero de emprÃ©stimos vÃ¡lidos (nÃ£o conta os cancelados)
+        // Busca o número de empréstimos válidos (não conta os cancelados)
         int totalEmprestimos = emprestimoRepository.countByUsuarioIdAndStatusIn(
             id, 
             java.util.List.of(

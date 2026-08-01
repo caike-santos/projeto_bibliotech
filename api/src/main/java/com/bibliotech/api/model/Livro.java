@@ -23,9 +23,8 @@ public class Livro {
     private Integer ano;
 
     private String capaUrl;
-
+    // O @Column(columnDefinition = "TEXT") é usado para definir que o campo sinopse será armazenado como um tipo de dado TEXT no banco de dados, permitindo que ele contenha uma quantidade maior de texto do que um campo VARCHAR padrão(255).
     @Column(columnDefinition = "TEXT")
-
     private String sinopse;
 
     private String generoPrincipal;
@@ -36,7 +35,7 @@ public class Livro {
 
     private boolean ativo = true;
 
-    // Relacionamento Muitos para Muitos com a nova entidade Tag
+    // Relacionamento Muitos para Muitos com a entidade Tag
     @ManyToMany
     @JoinTable(
         name = "livro_tags",
@@ -45,7 +44,6 @@ public class Livro {
     )
     private java.util.List<Tag> tagsSecundarias = new java.util.ArrayList<>();
 
-    // Não se esqueça de gerar o Getter e Setter para tagsSecundarias no final do arquivo!
     public java.util.List<Tag> getTagsSecundarias() { return tagsSecundarias; }
     public void setTagsSecundarias(java.util.List<Tag> tagsSecundarias) { this.tagsSecundarias = tagsSecundarias; }
 

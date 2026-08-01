@@ -36,7 +36,7 @@ public class Emprestimo {
     private int renovacoesFeitas = 0; // Inicia com 0
 
     // Campo para armazenar o valor financeiro da multa
-    private Double valorMulta;
+    private Double valorMulta = 0.0; // Inicia com 0.0
 
     // Construtor vazio obrigatório
     public Emprestimo() {

@@ -26,19 +26,19 @@ public class ReservaService {
 
     public Reserva entrarNaFila(Long usuarioId, Long livroId) {
         Livro livro = livroRepository.findById(livroId)
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Livro nÃ£o encontrado."));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Livro não encontrado."));
                 
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("UsuÃ¡rio nÃ£o encontrado."));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Usuário não encontrado."));
 
-        // Regra de NegÃ³cio: Se o livro tem estoque, o sistema bloqueia a reserva e manda o usuÃ¡rio fazer o emprÃ©stimo normal
+        // Regra de Negócio: Se o livro tem estoque, o sistema bloqueia a reserva e manda o usuário fazer o empréstimo normal
         if (livro.getQuantidadeDisponivel() > 0) {
-            throw new RuntimeException("OperaÃ§Ã£o negada: O livro estÃ¡ disponÃ­vel nas prateleiras. FaÃ§a o emprÃ©stimo diretamente.");
+            throw new RuntimeException("Operação negada: O livro está disponível nas prateleiras. Faça o empréstimo diretamente.");
         }
 
-        // Regra de NegÃ³cio: O usuÃ¡rio nÃ£o pode entrar duas vezes na mesma fila
+        // Regra de Negócio: O usuário não pode entrar duas vezes na mesma fila
         if (reservaRepository.existsByUsuarioIdAndLivroIdAndStatus(usuarioId, livroId, com.bibliotech.api.model.ReservaStatus.AGUARDANDO)) {
-            throw new RuntimeException("OperaÃ§Ã£o negada: VocÃª jÃ¡ estÃ¡ na fila de espera para este livro.");
+            throw new RuntimeException("Operação negada: Você já está na fila de espera para este livro.");
         }
 
         // Cria a reserva

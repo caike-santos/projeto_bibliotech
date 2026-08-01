@@ -27,10 +27,10 @@ public class VerificadorAtrasosJob {
     @Autowired
     private LivroRepository livroRepository;
 
-    // Roda 10 segundos apÃ³s o servidor iniciar e depois a cada 1 hora (3600000 ms)
+    // Roda 10 segundos após o servidor iniciar e depois a cada 1 hora (3600000 ms)
     @Scheduled(initialDelay = 10000, fixedRate = 3600000)
     public void verificarAtrasos() {
-        System.out.println("Iniciando verificaÃ§Ã£o diÃ¡ria de atrasos...");
+        System.out.println("Iniciando verificação diária de atrasos...");
         
         LocalDate hoje = LocalDate.now();
         List<Emprestimo> emprestimosVencidos = emprestimoRepository.findByStatusAndDataDevolucaoPrevistaBefore(com.bibliotech.api.model.EmprestimoStatus.ATIVO, hoje);
@@ -42,7 +42,7 @@ public class VerificadorAtrasosJob {
             
             Notificacao notificacao = new Notificacao();
             notificacao.setUsuario(e.getUsuario());
-            notificacao.setMensagem("O livro '" + e.getLivro().getTitulo() + "' passou do prazo de devoluÃ§Ã£o. Sua conta estÃ¡ bloqueada para novos emprÃ©stimos atÃ© a regularizaÃ§Ã£o.");
+            notificacao.setMensagem("O livro '" + e.getLivro().getTitulo() + "' passou do prazo de devolução. Sua conta está bloqueada para novos empréstimos até a regularização.");
             notificacao.setLida(false);
             notificacao.setDataEnvio(java.time.LocalDateTime.now());
             notificacoesAtraso.add(notificacao);
@@ -55,9 +55,9 @@ public class VerificadorAtrasosJob {
             notificacaoRepository.saveAll(notificacoesAtraso);
         }
         
-        System.out.println("VerificaÃ§Ã£o concluÃ­da. " + count + " emprÃ©stimos atualizados para ATRASADO.");
+        System.out.println("Verificação concluída. " + count + " empréstimos atualizados para ATRASADO.");
         
-        System.out.println("Iniciando verificaÃ§Ã£o de pendÃªncias de retirada expiradas...");
+        System.out.println("Iniciando verificação de pendências de retirada expiradas...");
         List<Emprestimo> retiradasExpiradas = emprestimoRepository.findByStatusAndDataDevolucaoPrevistaBefore(com.bibliotech.api.model.EmprestimoStatus.AGUARDANDO_RETIRADA, hoje);
         int countCancelados = 0;
         List<Notificacao> notificacoesCancelamento = new ArrayList<>();
@@ -72,7 +72,7 @@ public class VerificadorAtrasosJob {
             
             Notificacao notificacao = new Notificacao();
             notificacao.setUsuario(e.getUsuario());
-            notificacao.setMensagem("Sua solicitaÃ§Ã£o do livro '" + livro.getTitulo() + "' foi cancelada, pois vocÃª nÃ£o o retirou no prazo de 48 horas.");
+            notificacao.setMensagem("Sua solicitação do livro '" + livro.getTitulo() + "' foi cancelada, pois você não o retirou no prazo de 48 horas.");
             notificacao.setLida(false);
             notificacao.setDataEnvio(java.time.LocalDateTime.now());
             notificacoesCancelamento.add(notificacao);
@@ -86,7 +86,7 @@ public class VerificadorAtrasosJob {
             notificacaoRepository.saveAll(notificacoesCancelamento);
         }
         
-        System.out.println("VerificaÃ§Ã£o concluÃ­da. " + countCancelados + " solicitaÃ§Ãµes CANCELADAS.");
+        System.out.println("Verificação concluída. " + countCancelados + " solicitações CANCELADAS.");
     }
 }
 

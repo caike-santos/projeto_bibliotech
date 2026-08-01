@@ -43,7 +43,7 @@ public class AutenticacaoController {
         // Empacota o email e senha
         var authenticationToken = new UsernamePasswordAuthenticationToken(dados.email(), dados.senha());
         
-        // O Spring Security vai lÃ¡ no banco de dados e verifica se a senha bate
+        // O Spring Security vai lá no banco de dados e verifica se a senha bate
         var authentication = manager.authenticate(authenticationToken);
         
         // Se a senha bater, pegamos o usuário
@@ -93,7 +93,7 @@ public class AutenticacaoController {
                     
                     Notificacao boasVindas = new Notificacao();
                     boasVindas.setUsuario(usuario);
-                    boasVindas.setMensagem("OlÃ¡, " + name + "! Bem-vindo(a) Ã  BiblioTech AI! Que bom que conectou com o Google. Explore nosso acervo!");
+                    boasVindas.setMensagem("Olá, " + name + "! Bem-vindo(a) à BiblioTech AI! Que bom que conectou com o Google. Explore nosso acervo!");
                     boasVindas.setLida(false);
                     boasVindas.setDataEnvio(java.time.LocalDateTime.now());
                     notificacaoRepository.save(boasVindas);
@@ -108,7 +108,7 @@ public class AutenticacaoController {
                 return ResponseEntity.ok(new DadosTokenJWT(tokenJWT, usuario.getTipo()));
 
             } else {
-                return ResponseEntity.status(403).body("Token Google invÃ¡lido.");
+                return ResponseEntity.status(403).body("Token Google inválido.");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,7 +116,7 @@ public class AutenticacaoController {
         }
     }
     
-    // Pequenos Records (DTOs) para estruturar a entrada e saÃ­da do JSON
+    // Pequenos Records (DTOs) para estruturar a entrada e saída do JSON
     public record DadosAutenticacao(String email, String senha) {}
     public record DadosTokenJWT(String token, String role) {}
     public record DadosGoogleToken(String token) {}

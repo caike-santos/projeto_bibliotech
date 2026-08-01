@@ -26,6 +26,7 @@ public class Reserva {
     @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
     private ReservaStatus status; // Ex: AGUARDANDO, NOTIFICADO, CANCELADA, CONCLUIDA
 
+    // O @Transient indica que este campo não será persistido no banco de dados, ele é apenas para uso temporário na aplicação.
     @Transient
     private Integer posicaoFila;
 
