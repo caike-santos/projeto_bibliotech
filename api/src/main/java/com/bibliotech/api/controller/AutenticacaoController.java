@@ -57,8 +57,19 @@ public class AutenticacaoController {
         // Geramos a pulseira VIP (Token JWT)
         var tokenJWT = tokenService.gerarToken(usuario);
         
-        // Devolvemos o token na tela junto com a role
-        return ResponseEntity.ok(new DadosTokenJWT(tokenJWT, usuario.getTipo()));
+        // Criamos o Cookie Seguro (HttpOnly)
+        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("jwtToken", tokenJWT)
+            .httpOnly(true)
+            .secure(true) // Exige HTTPS ou localhost
+            .sameSite("None") // Permite cookies cross-origin (ex: do 8080 para o 5500)
+            .path("/")
+            .maxAge(2 * 60 * 60) // Expira em 2 horas
+            .build();
+            
+        // Devolvemos o cookie no cabeçalho e os dados no JSON
+        return ResponseEntity.ok()
+            .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+            .body(new DadosUsuarioResponse(usuario.getTipo(), usuario.getId(), usuario.getNome(), usuario.getEmail()));
     }
     
     @org.springframework.beans.factory.annotation.Value("${GOOGLE_CLIENT_ID}")
@@ -105,7 +116,18 @@ public class AutenticacaoController {
                 }
 
                 String tokenJWT = tokenService.gerarToken(usuario);
-                return ResponseEntity.ok(new DadosTokenJWT(tokenJWT, usuario.getTipo()));
+                
+                org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("jwtToken", tokenJWT)
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("None")
+                    .path("/")
+                    .maxAge(2 * 60 * 60)
+                    .build();
+
+                return ResponseEntity.ok()
+                    .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(new DadosUsuarioResponse(usuario.getTipo(), usuario.getId(), usuario.getNome(), usuario.getEmail()));
 
             } else {
                 return ResponseEntity.status(403).body("Token Google inválido.");
@@ -116,8 +138,24 @@ public class AutenticacaoController {
         }
     }
     
+    @PostMapping("/logout")
+    public ResponseEntity logout() {
+        // Cria um cookie com o mesmo nome, vazio e expirado (maxAge = 0)
+        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("jwtToken", "")
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("None")
+            .path("/")
+            .maxAge(0) 
+            .build();
+            
+        return ResponseEntity.ok()
+            .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+            .body("Logout efetuado com sucesso.");
+    }
+    
     // Pequenos Records (DTOs) para estruturar a entrada e saída do JSON
     public record DadosAutenticacao(String email, String senha) {}
-    public record DadosTokenJWT(String token, String role) {}
+    public record DadosUsuarioResponse(String role, Long userId, String userName, String email) {}
     public record DadosGoogleToken(String token) {}
 }

@@ -16,11 +16,9 @@ window.renovarEmprestimo = async function(emprestimoId, renderCallback) {
     if (!confirmed) return;
 
     try {
-        const token = localStorage.getItem('jwtToken');
         const response = await fetch(API_BASE_URL + `/emprestimos/${emprestimoId}/renovar`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -311,7 +309,12 @@ let activeRequests = 0;
 const originalFetch = window.fetch;
 
 window.fetch = async function(...args) {
-    let options = args[1];
+    let options = args[1] || {};
+    
+    // NOVO: Sempre envia os cookies HttpOnly em todas as requisições
+    options.credentials = 'include';
+    args[1] = options;
+
     let skipLoader = false;
     
     if (options && options.skipLoader) {
