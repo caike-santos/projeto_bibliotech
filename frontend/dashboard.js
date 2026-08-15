@@ -99,7 +99,6 @@ let emprestimos = [];
 let reservas = [];
 
 async function carregarDados() {
-    const headers = { 'Authorization': `Bearer ${token}` };
 
     const trLoaderAcervo = '<tr><td colspan="6"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
     const trLoaderUsuarios = '<tr><td colspan="5"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
@@ -595,8 +594,7 @@ async function cadastrarUsuarioInterno() {
         const response = await fetch(API_BASE_URL + '/usuarios', {
             method: 'POST',
             headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // Embora a rota talvez seja pública, enviamos mesmo assim
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ nome, email, senha, tipo, status: 'ATIVO', enabled: true })
         });

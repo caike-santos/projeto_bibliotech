@@ -51,9 +51,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             dadosUsuarioGlobal = user;
             document.getElementById('perfilNome').innerText = user.nome;
             localStorage.setItem('userName', user.nome);
-            await carregarGamificacao(user.id, token);
-            await carregarHistorico(user.id, token);
-            await carregarReservas(user.id, token);
+            await carregarGamificacao(user.id);
+            await carregarHistorico(user.id);
+            await carregarReservas(user.id);
         }
 
     } catch (e) {
@@ -154,7 +154,7 @@ function configurarEdicaoPerfil() {
     });
 }
 
-async function carregarGamificacao(usuarioId, token) {
+async function carregarGamificacao(usuarioId) {
     try {
         const response = await fetch(API_BASE_URL + `/usuarios/${usuarioId}/gamificacao`, {
             headers: {},
@@ -170,7 +170,7 @@ async function carregarGamificacao(usuarioId, token) {
     }
 }
 
-async function carregarHistorico(usuarioId, token) {
+async function carregarHistorico(usuarioId) {
     const corpoHistorico = document.getElementById('tabelaCorpo');
     const corpoAtivos = document.getElementById('tabelaMeusEmprestimos');
     
@@ -265,7 +265,7 @@ async function carregarHistorico(usuarioId, token) {
     }
 }
 
-async function carregarReservas(usuarioId, token) {
+async function carregarReservas(usuarioId) {
     const tbody = document.getElementById('tabelaMinhasReservas');
     if (!tbody) return;
 
@@ -323,9 +323,7 @@ async function carregarReservas(usuarioId, token) {
 
 window.cancelarEmprestimo = async function(id) {
     const confirmed = await showCustomConfirm('Cancelar Pedido', 'Tem certeza que deseja cancelar este pedido? O livro será devolvido ao acervo e você perderá sua reserva.', 'warning');
-    if (!confirmed) return;
-    
-    if (!token) return;
+    // Verifica expiração do empréstimo (já processado via endpoint)
 
     try {
         const response = await fetch(API_BASE_URL + `/emprestimos/${id}/cancelar`, {
@@ -337,7 +335,7 @@ window.cancelarEmprestimo = async function(id) {
         if (response.ok) {
             showToast('Pedido cancelado com sucesso. Livro devolvido ao acervo!', 'success');
             if (dadosUsuarioGlobal) {
-                await carregarHistorico(dadosUsuarioGlobal.id, token);
+                await carregarHistorico(dadosUsuarioGlobal.id);
             }
         } else {
             const err = await response.text();
