@@ -13,20 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarDados();
     setupAutocomplete();
     
-    document.getElementById('btnSair').addEventListener('click', () => {
-        localStorage.removeItem('jwtToken');
+    document.getElementById('btnSair').addEventListener('click', async () => {
+        try { await fetch(API_BASE_URL + '/login/logout', { method: 'POST' }); } catch(e) {}
         localStorage.removeItem('userRole');
         localStorage.removeItem('userTipo');
         localStorage.removeItem('userId');
         localStorage.removeItem('userName');
+        localStorage.removeItem('userEmail');
         window.location.href = 'index.html';
     });
 });
 
 function verificarAcesso() {
-    const token = localStorage.getItem('jwtToken');
     const role = localStorage.getItem('userRole');
-    if (!token) {
+    if (!role) {
         showToast('Acesso negado. Faça login.', 'error');
         setTimeout(() => { window.location.href = 'index.html'; }, 2000);
         return;
@@ -99,7 +99,6 @@ let emprestimos = [];
 let reservas = [];
 
 async function carregarDados() {
-    const token = localStorage.getItem('jwtToken');
     const headers = { 'Authorization': `Bearer ${token}` };
 
     const trLoaderAcervo = '<tr><td colspan="6"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
@@ -276,7 +275,6 @@ async function buscarEcadastrarLivro() {
     const autorHint = document.getElementById('inputAutorHint') ? document.getElementById('inputAutorHint').value.trim() : '';
 
     const btn = document.getElementById('btnBuscarIsbn');
-    const token = localStorage.getItem('jwtToken');
     
     if(!isbn) {
         showToast('Digite um ISBN.', 'warning');
@@ -293,7 +291,7 @@ async function buscarEcadastrarLivro() {
 
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: {}
         });
 
         if (response.ok) {
@@ -321,9 +319,8 @@ async function buscarEcadastrarLivro() {
 async function inativarLivro(id) {
     const confirmed = await showCustomConfirm('Atenção', 'Tem certeza que deseja inativar este livro? (Ele sairá do catálogo, mas o ISBN continuará reservado)', 'warning');
     if(!confirmed) return;
-    const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(API_BASE_URL + `/livros/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(API_BASE_URL + `/livros/${id}`, { method: 'DELETE', headers: {} });
         showToast('Livro inativado com sucesso.', 'info');
         carregarDados();
     } catch(e) {
@@ -334,11 +331,10 @@ async function inativarLivro(id) {
 async function excluirLivroDefinitivo(id) {
     const confirmed = await showCustomConfirm('Cuidado', 'Tem certeza que deseja EXCLUIR DEFINITIVAMENTE este livro? O ISBN será liberado. Esta ação não pode ser desfeita.', 'danger');
     if(!confirmed) return;
-    const token = localStorage.getItem('jwtToken');
     try {
         const response = await fetch(API_BASE_URL + `/livros/hard/${id}`, { 
             method: 'DELETE', 
-            headers: { 'Authorization': `Bearer ${token}` } 
+            headers: {} 
         });
 
         if (response.ok) {
@@ -480,7 +476,6 @@ async function salvarEdicaoLivro() {
         tagsSecundarias: tagsArray
     };
 
-    const token = localStorage.getItem('jwtToken');
     try {
         const isNew = !id;
         const url = isNew ? `/livros` : `/livros/${id}`;
@@ -489,7 +484,6 @@ async function salvarEdicaoLivro() {
         const response = await fetch(url, {
             method: method,
             headers: { 
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
@@ -598,7 +592,6 @@ async function cadastrarUsuarioInterno() {
     btn.disabled = true;
 
     try {
-        const token = localStorage.getItem('jwtToken');
         const response = await fetch(API_BASE_URL + '/usuarios', {
             method: 'POST',
             headers: { 
@@ -626,9 +619,8 @@ async function cadastrarUsuarioInterno() {
 async function inativarUsuario(id) {
     const confirmed = await showCustomConfirm('Bloquear Usuário', 'Tem certeza que deseja inativar/bloquear este usuário?', 'warning');
     if(!confirmed) return;
-    const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(API_BASE_URL + `/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(API_BASE_URL + `/usuarios/${id}`, { method: 'DELETE', headers: {} });
         showToast('Usuário inativado com sucesso.', 'info');
         carregarDados();
     } catch(e) {
@@ -639,9 +631,8 @@ async function inativarUsuario(id) {
 async function desbloquearUsuario(id) {
     const confirmed = await showCustomConfirm('Desbloquear Usuário', 'Tem certeza que deseja reativar o acesso deste usuário?', 'info');
     if(!confirmed) return;
-    const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(API_BASE_URL + `/usuarios/${id}/desbloquear`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(API_BASE_URL + `/usuarios/${id}/desbloquear`, { method: 'PATCH', headers: {} });
         showToast('Usuário desbloqueado com sucesso!', 'success');
         carregarDados();
     } catch(e) {
@@ -681,9 +672,8 @@ function renderizarEmprestimos() {
 async function forcarDevolucao(id) {
     const confirmed = await showCustomConfirm('Devolução', 'Confirmar devolução deste empréstimo?', 'info');
     if(!confirmed) return;
-    const token = localStorage.getItem('jwtToken');
     try {
-        await fetch(API_BASE_URL + `/emprestimos/${id}/devolver`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        await fetch(API_BASE_URL + `/emprestimos/${id}/devolver`, { method: 'PUT', headers: {} });
         showToast('Devolução confirmada com sucesso.', 'success');
         carregarDados();
     } catch(e) {
@@ -694,9 +684,8 @@ async function forcarDevolucao(id) {
 async function confirmarRetirada(id) {
     const confirmed = await showCustomConfirm('Confirmar Retirada', 'O leitor está no balcão e você entregará o livro agora? (Isso iniciará o prazo de 14 dias)', 'info');
     if(!confirmed) return;
-    const token = localStorage.getItem('jwtToken');
     try {
-        const res = await fetch(API_BASE_URL + `/emprestimos/${id}/confirmar-retirada`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(API_BASE_URL + `/emprestimos/${id}/confirmar-retirada`, { method: 'PUT', headers: {} });
         if(res.ok) {
             showToast('Retirada confirmada! Prazo iniciado.', 'success');
             carregarDados();
@@ -741,13 +730,11 @@ async function efetivarEmprestimoDaReserva(livroId, usuarioId) {
     const confirmed = await showCustomConfirm('Efetivar Empréstimo', 'Deseja registrar o empréstimo para este usuário que estava na fila?', 'info');
     if(!confirmed) return;
     
-    const token = localStorage.getItem('jwtToken');
     try {
         const response = await fetch(API_BASE_URL + '/emprestimos?balcao=true', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ 
                 livro: { id: parseInt(livroId) }, 
@@ -869,12 +856,10 @@ async function realizarEmprestimoBalcao() {
     btn.disabled = true;
 
     try {
-        const token = localStorage.getItem('jwtToken');
         const response = await fetch(API_BASE_URL + '/emprestimos?balcao=true', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ 
                 livro: { id: parseInt(livroId) }, 

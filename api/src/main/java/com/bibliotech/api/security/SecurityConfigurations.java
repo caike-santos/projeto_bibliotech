@@ -33,6 +33,7 @@ public class SecurityConfigurations {
                     // NOVO: Libera a rota de login para qualquer pessoa tentar entrar
                     req.requestMatchers(org.springframework.http.HttpMethod.POST, "/login").permitAll();
                     req.requestMatchers(org.springframework.http.HttpMethod.POST, "/login/google").permitAll();
+                    req.requestMatchers(org.springframework.http.HttpMethod.POST, "/login/logout").permitAll();
                     
                     // Restrições baseadas em ROLE (ADMIN e BIBLIOTECARIO) para o painel de controle
                     req.requestMatchers(org.springframework.http.HttpMethod.POST, "/livros/**").hasAnyRole("ADMIN", "BIBLIOTECARIO");
@@ -75,6 +76,9 @@ public class SecurityConfigurations {
         
         // Alteramos para "*" para aceitar qualquer cabeçalho que o navegador mandar no Preflight
         configuration.setAllowedHeaders(java.util.Arrays.asList("*")); 
+        
+        // Habilita o envio de cookies para origens cruzadas
+        configuration.setAllowCredentials(true);
         
         org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

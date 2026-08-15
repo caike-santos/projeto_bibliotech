@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     verificarAutenticacao();
-    await carregarDadosDoUsuario();
     carregarCatalogo();
     configurarBusca();
     configurarChatLumina();
@@ -40,58 +39,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     configurarModalMeusEmprestimos();
 });
-
-async function carregarDadosDoUsuario() {
-    const token = localStorage.getItem('jwtToken');
-    if (!token) return;
-    
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        const payload = JSON.parse(jsonPayload);
-        const email = payload.sub;
-        
-        const response = await fetch(API_BASE_URL + '/usuarios/me', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
-            skipLoader: true
-        });
-        
-        if (!response.ok) return;
-        const user = await response.json();
-        if (user) {
-            usuarioLogadoId = user.id;
-            usuarioLogadoNome = user.nome;
-            localStorage.setItem('userName', user.nome);
-        }
-    } catch(e) {
-        console.error('Erro ao buscar dados do usuário logado', e);
-    }
-}
+});
 
 function verificarAutenticacao() {
-    const token = localStorage.getItem('jwtToken');
-    if (!token) {
+    if (!localStorage.getItem('userRole')) {
         window.location.href = 'index.html';
     }
 
+    // Puxa as variáveis de estado do localStorage
+    usuarioLogadoId = localStorage.getItem('userId');
+    usuarioLogadoNome = localStorage.getItem('userName');
+
     // Logout
-    document.getElementById('btnSair').addEventListener('click', () => {
-        localStorage.removeItem('jwtToken');
+    document.getElementById('btnSair').addEventListener('click', async () => {
+        try {
+            await fetch(API_BASE_URL + '/login/logout', { method: 'POST' });
+        } catch(e) {}
         localStorage.removeItem('userRole');
         localStorage.removeItem('userTipo');
         localStorage.removeItem('userId');
         localStorage.removeItem('userName');
+        localStorage.removeItem('userEmail');
         window.location.href = 'index.html';
     });
 }
 
 async function carregarCatalogo() {
-    const token = localStorage.getItem('jwtToken');
     const gridLivros = document.getElementById('gridLivros');
     gridLivros.innerHTML = '<div style="display:flex; justify-content:center; width:100%; padding:3rem;"><div class="loader-spinner"></div></div>';
 
@@ -99,7 +72,6 @@ async function carregarCatalogo() {
         const response = await fetch(API_BASE_URL + '/livros', {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             skipLoader: true
@@ -107,7 +79,6 @@ async function carregarCatalogo() {
 
         if (!response.ok) {
             if (response.status === 403 || response.status === 401) {
-                localStorage.removeItem('jwtToken');
                 localStorage.removeItem('userRole');
                 localStorage.removeItem('userTipo');
                 localStorage.removeItem('userId');
@@ -116,7 +87,6 @@ async function carregarCatalogo() {
                 setTimeout(() => { window.location.href = 'index.html'; }, 1500);
             } else {
                 showToast('Falha ao conectar. Faça login novamente.', 'error');
-                localStorage.removeItem('jwtToken');
                 localStorage.removeItem('userRole');
                 localStorage.removeItem('userTipo');
                 localStorage.removeItem('userId');
@@ -379,13 +349,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Rota de Empréstimo (Conectada ao Back-end)
 async function realizarEmprestimo(livroId) {
-    const token = localStorage.getItem('jwtToken');
     
     try {
         const response = await fetch(API_BASE_URL + '/emprestimos', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ 
@@ -460,9 +428,8 @@ function configurarChatLumina() {
         const idTemp = adicionarMsg('Analisando seu histórico de leitura e cruzando com nosso acervo...', 'bot');
         
         try {
-            const token = localStorage.getItem('jwtToken');
             const res = await fetch(API_BASE_URL + `/livros/recomendacoes/usuario/${usuarioLogadoId}`, {
-                headers: { 'Authorization': `Bearer ${token}` },
+                headers: {},
                 skipLoader: true
             });
             if (!res.ok) throw new Error();
@@ -479,7 +446,6 @@ function configurarChatLumina() {
 
     async function enviarMensagem() {
         const texto = input.value.trim();
-        const token = localStorage.getItem('jwtToken');
         if (!texto) return;
 
         adicionarMsg(texto, 'user');
@@ -492,7 +458,6 @@ function configurarChatLumina() {
             const res = await fetch(API_BASE_URL + '/assistente/chat', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 skipLoader: true,
@@ -539,7 +504,6 @@ function configurarChatLumina() {
 }
 
 function exibirNomeUsuario() {
-    const token = localStorage.getItem('jwtToken');
     if (!token) return;
     try {
         const base64Url = token.split('.')[1];
@@ -562,12 +526,10 @@ function exibirNomeUsuario() {
 // ----------------- Novas Funcionalidades ----------------- //
 
 async function entrarFilaEspera(livroId) {
-    const token = localStorage.getItem('jwtToken');
     try {
         const response = await fetch(API_BASE_URL + `/reservas?usuarioId=${usuarioLogadoId}&livroId=${livroId}`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`
             }
         });
         if (response.ok) {
@@ -583,10 +545,9 @@ async function entrarFilaEspera(livroId) {
 
 async function carregarGamificacao() {
     if(!usuarioLogadoId) return;
-    const token = localStorage.getItem('jwtToken');
     try {
         const response = await fetch(API_BASE_URL + `/usuarios/${usuarioLogadoId}/gamificacao`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: {},
             skipLoader: true
         });
         if(response.ok) {
@@ -601,7 +562,6 @@ async function carregarGamificacao() {
 
 async function carregarRecomendacoes() {
     if(!usuarioLogadoId) return;
-    const token = localStorage.getItem('jwtToken');
     const txtRecomendacao = document.getElementById('textoRecomendacao');
     const btnGerar = document.getElementById('btnGerarClustering');
     
@@ -610,7 +570,7 @@ async function carregarRecomendacoes() {
 
     try {
         const response = await fetch(API_BASE_URL + `/livros/clustering/usuario/${usuarioLogadoId}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: {},
             skipLoader: true
         });
         if(response.ok) {
@@ -644,13 +604,12 @@ function configurarModalMeusEmprestimos() {
 
 async function carregarMeusEmprestimos() {
     if(!usuarioLogadoId) return;
-    const token = localStorage.getItem('jwtToken');
     const lista = document.getElementById('listaMeusEmprestimos');
     lista.innerHTML = '<div style="display:flex; justify-content:center; width:100%; padding:1rem;"><div class="loader-spinner"></div></div>';
 
     try {
         const response = await fetch(API_BASE_URL + `/emprestimos/usuario/${usuarioLogadoId}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: {},
             skipLoader: true
         });
         if(response.ok) {
@@ -699,7 +658,6 @@ async function carregarMeusEmprestimos() {
 // Notificações
 async function carregarNotificacoes() {
     if(!usuarioLogadoId) return;
-    const token = localStorage.getItem('jwtToken');
     const btn = document.getElementById('btnNotificacoes');
     const dropdown = document.getElementById('notificacoesDropdown');
     const lista = document.getElementById('listaNotificacoes');
@@ -713,7 +671,7 @@ async function carregarNotificacoes() {
 
     try {
         const response = await fetch(API_BASE_URL + `/notificacoes/usuario/${usuarioLogadoId}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: {},
             skipLoader: true
         });
         if(response.ok) {
@@ -772,7 +730,7 @@ async function carregarNotificacoes() {
 
                         await fetch(API_BASE_URL + `/notificacoes/${n.id}/ler`, {
                             method: 'PUT',
-                            headers: { 'Authorization': `Bearer ${token}` }
+                            headers: {}
                         });
 
                         // Reavalia a bolinha vermelha

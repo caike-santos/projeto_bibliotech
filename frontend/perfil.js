@@ -11,8 +11,7 @@ function escapeHTML(str) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const token = localStorage.getItem('jwtToken');
-    if (!token) {
+    if (!localStorage.getItem('userRole')) {
         window.location.href = 'index.html';
         return;
     }
@@ -27,13 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        const payload = JSON.parse(jsonPayload);
-        const email = payload.sub;
+        const email = localStorage.getItem('userEmail');
         
         // Exibe nome/email básicos enquanto carrega
         document.getElementById('perfilEmail').innerText = email;
@@ -43,7 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Busca os dados APENAS do usuário logado
         const resUser = await fetch(API_BASE_URL + '/usuarios/me', {
             headers: {
-                'Authorization': `Bearer ${token}`
             },
             skipLoader: true
         });
@@ -118,11 +110,9 @@ function configurarEdicaoPerfil() {
         btnSalvar.innerText = "Salvando...";
 
         try {
-            const token = localStorage.getItem('jwtToken');
             const res = await fetch(API_BASE_URL + `/usuarios/${dadosUsuarioGlobal.id}`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
@@ -142,11 +132,12 @@ function configurarEdicaoPerfil() {
                 if (credenciaisMudaram) {
                     showToast('Credenciais alteradas. Faça login novamente.', 'info');
                     setTimeout(() => {
-                        localStorage.removeItem('jwtToken');
+                        try { await fetch(API_BASE_URL + '/login/logout', { method: 'POST' }); } catch(e) {}
                         localStorage.removeItem('userRole');
                         localStorage.removeItem('userTipo');
                         localStorage.removeItem('userId');
                         localStorage.removeItem('userName');
+                        localStorage.removeItem('userEmail');
                         window.location.href = 'index.html';
                     }, 2500);
                 }
@@ -166,7 +157,7 @@ function configurarEdicaoPerfil() {
 async function carregarGamificacao(usuarioId, token) {
     try {
         const response = await fetch(API_BASE_URL + `/usuarios/${usuarioId}/gamificacao`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: {},
             skipLoader: true
         });
         if (response.ok) {
@@ -188,7 +179,7 @@ async function carregarHistorico(usuarioId, token) {
     
     try {
         const response = await fetch(API_BASE_URL + `/emprestimos/usuario/${usuarioId}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: {},
             skipLoader: true
         });
         if (response.ok) {
@@ -282,7 +273,7 @@ async function carregarReservas(usuarioId, token) {
 
     try {
         const response = await fetch(API_BASE_URL + `/reservas/usuario/${usuarioId}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: {},
             skipLoader: true
         });
 
@@ -334,14 +325,12 @@ window.cancelarEmprestimo = async function(id) {
     const confirmed = await showCustomConfirm('Cancelar Pedido', 'Tem certeza que deseja cancelar este pedido? O livro será devolvido ao acervo e você perderá sua reserva.', 'warning');
     if (!confirmed) return;
     
-    const token = localStorage.getItem('jwtToken');
     if (!token) return;
 
     try {
         const response = await fetch(API_BASE_URL + `/emprestimos/${id}/cancelar`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${token}`
             }
         });
 

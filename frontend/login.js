@@ -18,12 +18,13 @@ document.getElementById('formLogin').addEventListener('submit', async function(e
 
         if (resposta.ok) {
             const dados = await resposta.json();
-            localStorage.setItem('jwtToken', dados.token);
+            // O cookie jwtToken será recebido automaticamente via cabeçalho Set-Cookie
             
-            // O backend agora já devolve o role na resposta do login (dados.role)
             let role = dados.role || 'LEITOR';
-
             localStorage.setItem('userRole', role);
+            if(dados.userId) localStorage.setItem('userId', dados.userId);
+            if(dados.userName) localStorage.setItem('userName', dados.userName);
+            if(dados.email) localStorage.setItem('userEmail', dados.email);
 
             if (role === 'BIBLIOTECARIO' || role === 'ADMIN') {
                 window.location.href = 'dashboard.html';
@@ -64,25 +65,11 @@ async function handleGoogleLogin(response) {
 
         if (res.ok) {
             const data = await res.json();
-            localStorage.setItem('jwtToken', data.token);
+            // O cookie jwtToken será recebido automaticamente via cabeçalho Set-Cookie
             localStorage.setItem('userRole', data.role || 'LEITOR');
-            
-            // Decodifica o token JWT para pegar os dados do usuário (se precisar) e salva no localStorage
-            try {
-                const base64Url = data.token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                const tokenData = JSON.parse(jsonPayload);
-                
-                // O token da API Bibliotech atual guarda "id", "nome", "tipo", etc.
-                if(tokenData.id) localStorage.setItem('userId', tokenData.id);
-                if(tokenData.nome) localStorage.setItem('userName', tokenData.nome);
-                if(tokenData.tipo) localStorage.setItem('userTipo', tokenData.tipo);
-            } catch(e) {
-                console.log("Erro ao decodificar token", e);
-            }
+            if(data.userId) localStorage.setItem('userId', data.userId);
+            if(data.userName) localStorage.setItem('userName', data.userName);
+            if(data.email) localStorage.setItem('userEmail', data.email);
 
             showToast('Login com Google efetuado com sucesso!', 'success');
             
