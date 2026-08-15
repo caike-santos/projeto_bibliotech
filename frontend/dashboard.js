@@ -99,7 +99,7 @@ let emprestimos = [];
 let reservas = [];
 
 async function carregarDados() {
-
+    const headers = {};
     const trLoaderAcervo = '<tr><td colspan="6"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
     const trLoaderUsuarios = '<tr><td colspan="5"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
     const trLoaderEmprestimos = '<tr><td colspan="6"><div style="display:flex; justify-content:center; padding:1rem;"><div class="loader-spinner"></div></div></td></tr>';
