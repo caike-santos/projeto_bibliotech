@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     configurarModalMeusEmprestimos();
 });
-});
 
 function verificarAutenticacao() {
     if (!localStorage.getItem('userRole')) {
