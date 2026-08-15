@@ -131,7 +131,7 @@ function configurarEdicaoPerfil() {
                 
                 if (credenciaisMudaram) {
                     showToast('Credenciais alteradas. Faça login novamente.', 'info');
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         try { await fetch(API_BASE_URL + '/login/logout', { method: 'POST' }); } catch(e) {}
                         localStorage.removeItem('userRole');
                         localStorage.removeItem('userTipo');
