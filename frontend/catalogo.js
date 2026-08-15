@@ -503,23 +503,9 @@ function configurarChatLumina() {
 }
 
 function exibirNomeUsuario() {
-    if (!token) return;
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        const dadosUsuario = JSON.parse(jsonPayload);
-        
-        // Usa o nome salvo no localStorage ou cai para o email (sub)
-        const nomeParaExibir = localStorage.getItem('userName') || dadosUsuario.sub || 'Usuário';
-        
-        const badgeUser = document.getElementById('userInfo');
-        if (badgeUser) badgeUser.innerText = nomeParaExibir;
-    } catch (e) {
-        console.error('Erro ao decodificar o token:', e);
-    }
+    const nomeParaExibir = localStorage.getItem('userName') || localStorage.getItem('userEmail') || 'Usuário';
+    const badgeUser = document.getElementById('userInfo');
+    if (badgeUser) badgeUser.innerText = nomeParaExibir;
 }
 
 // ----------------- Novas Funcionalidades ----------------- //
