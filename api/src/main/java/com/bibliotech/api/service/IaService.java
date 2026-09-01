@@ -20,7 +20,7 @@ import java.util.Optional;
 @Service
 public class IaService {
 
-    @Value("${GEMINI_API_KEY}")
+    @Value("${GEMINI_API_KEY:chave-nao-configurada}")
     private String apiKey;
 
     private final TagRepository tagRepository;

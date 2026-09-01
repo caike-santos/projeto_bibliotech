@@ -15,7 +15,7 @@ import java.time.ZoneOffset;
 public class TokenService {
 
     // Puxa a senha secreta que você acabou de colocar no .env
-    @Value("${JWT_SECRET}")
+    @Value("${JWT_SECRET:minha-senha-secreta-muito-segura-123456789}")
     private String secret;
 
     public String gerarToken(Usuario usuario) {

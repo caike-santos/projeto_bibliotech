@@ -72,7 +72,7 @@ public class AutenticacaoController {
             .body(new DadosUsuarioResponse(usuario.getTipo(), usuario.getId(), usuario.getNome(), usuario.getEmail()));
     }
     
-    @org.springframework.beans.factory.annotation.Value("${GOOGLE_CLIENT_ID}")
+    @org.springframework.beans.factory.annotation.Value("${GOOGLE_CLIENT_ID:chave-nao-configurada}")
     private String googleClientId;
 
     @PostMapping("/google")
