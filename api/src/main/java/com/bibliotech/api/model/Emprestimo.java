@@ -13,12 +13,12 @@ public class Emprestimo {
 
     // Relacionamento: Muitos Empréstimos para Um Usuário
     @ManyToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
+    @JoinColumn(name = "id_usuario", nullable = false, foreignKey = @ForeignKey(name = "fk_emprestimo_usuario"))
     private Usuario usuario;
 
     // Relacionamento: Muitos Empréstimos para Um Livro
     @ManyToOne
-    @JoinColumn(name = "id_livro", nullable = false)
+    @JoinColumn(name = "id_livro", nullable = false, foreignKey = @ForeignKey(name = "fk_emprestimo_livro"))
     private Livro livro;
 
     @Column(nullable = false)

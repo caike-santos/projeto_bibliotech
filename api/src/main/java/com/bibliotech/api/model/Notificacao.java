@@ -12,7 +12,7 @@ public class Notificacao {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
+    @JoinColumn(name = "id_usuario", nullable = false, foreignKey = @ForeignKey(name = "fk_notificacao_usuario"))
     private Usuario usuario;
 
     @Column(nullable = false, length = 500)

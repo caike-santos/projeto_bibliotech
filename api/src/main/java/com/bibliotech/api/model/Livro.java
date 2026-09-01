@@ -39,8 +39,8 @@ public class Livro {
     @ManyToMany
     @JoinTable(
         name = "livro_tags",
-        joinColumns = @JoinColumn(name = "livro_id"),
-        inverseJoinColumns = @JoinColumn(name = "tag_id")
+        joinColumns = @JoinColumn(name = "livro_id", foreignKey = @ForeignKey(name = "fk_livrotags_livro")),
+        inverseJoinColumns = @JoinColumn(name = "tag_id", foreignKey = @ForeignKey(name = "fk_livrotags_tag"))
     )
     private java.util.List<Tag> tagsSecundarias = new java.util.ArrayList<>();
 
