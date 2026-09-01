@@ -1,1 +1,1 @@
-const API_BASE_URL = 'http://localhost:8081';
+const API_BASE_URL = 'https://advertisement-approximately-toxic-generate.trycloudflare.com';
