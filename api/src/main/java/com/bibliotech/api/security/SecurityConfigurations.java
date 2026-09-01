@@ -66,12 +66,7 @@ public class SecurityConfigurations {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        // Permitimos apenas as origens confiáveis (Frontend no GitHub Pages e ambiente de desenvolvimento local)
-        configuration.setAllowedOrigins(java.util.Arrays.asList(
-            "https://caike-santos.github.io", 
-            "http://127.0.0.1:5500", 
-            "http://localhost:5500"
-        ));
+        configuration.setAllowedOriginPatterns(java.util.Arrays.asList("*"));
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         
         // Alteramos para "*" para aceitar qualquer cabeçalho que o navegador mandar no Preflight
